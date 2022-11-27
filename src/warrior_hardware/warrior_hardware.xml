@@ -1,0 +1,9 @@
+<library path="warrior_hardware">
+  <class name="warrior_hardware/TestHardwareInterface"
+         type="warrior_hardware::TestHardwareInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+        Test Hardware interface for warrior
+    </description>
+  </class>
+</library>

@@ -1,16 +1,18 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>dbus</name>
+  <name>warrior_interface</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="linking@todo.todo">linking</maintainer>
-  <license>TODO: License declaration</license>
+  <description>package of `warrior` interface</description>
+  <maintainer email="linkingo8@outlook.com">linking</maintainer>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>rclcpp</depend>
-  <depend>interface</depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <depend>rosidl_default_generators</depend>
+  <depend>builtin_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

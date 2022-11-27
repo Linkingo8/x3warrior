@@ -26,7 +26,7 @@ void DBus::init(const char* serial)
 
   if (fd == -1)
   {
-    std::cout<<"[rt_dbus] Unable to open dbus\n"<<std::endl;
+    std::cout<<"[warrior_dbus] Unable to open dbus\n"<<std::endl;
   }
 
   // Even parity(8E1):
@@ -131,7 +131,7 @@ void DBus::unpack()
   is_success = true;
 }
 
-void DBus::getData(interface::msg::DbusData* d_bus_data) const
+void DBus::getData(warrior_interface::msg::DbusData* d_bus_data) const
 {
   if (is_success)
   {

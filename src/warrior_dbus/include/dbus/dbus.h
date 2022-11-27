@@ -2,7 +2,7 @@
 #define DBUS_H_
 
 #include <cstdint>
-#include "interface/msg/dbus_data.hpp"
+#include "warrior_interface/msg/dbus_data.hpp"
 
 typedef struct
 {
@@ -30,7 +30,7 @@ public:
   DBus() = default;
   ~DBus() = default;
   void init(const char* serial);
-  void getData(interface::msg::DbusData * d_bus_data) const;
+  void getData(warrior_interface::msg::DbusData * d_bus_data) const;
   void read();
   bool get_uart_state(){return (port_ != -1 ? true : false);};
 

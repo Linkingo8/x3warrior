@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(interface)
+project(warrior_dbus)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -17,12 +17,24 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
-find_package(builtin_interfaces REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(warrior_interface REQUIRED)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/DbusData.msg"
-  DEPENDENCIES builtin_interfaces 
+include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+)
+
+add_executable(dbus_node
+    src/dbus_node.cpp
+    src/dbus.cpp
+    )
+
+ament_target_dependencies(dbus_node rclcpp warrior_interface)
+
+install(TARGETS
+  dbus_node
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 

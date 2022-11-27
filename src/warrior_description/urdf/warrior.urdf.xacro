@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!-- Revolute-Revolute Manipulator -->
+<!--
+Copied and modified from ROS1 example -
+https://github.com/ros-simulation/gazebo_ros_demos/blob/kinetic-devel/rrbot_description/urdf/rrbot.xacro
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="warrior">
+  <!-- Import Robot macro -->
+  <!-- <xacro:include filename="$(find warrior_description)/urdf/warrior_description.urdf.xacro" /> -->
+
+  <!-- Import all Gazebo-customization elements, including Gazebo colors -->
+  <!-- <xacro:include filename="$(find warrior_description)/gazebo/warrior.gazebo.xacro" /> -->
+
+  <!-- Import Rviz colors -->
+  <!-- <xacro:include filename="$(find warrior_description)/gazebo/warrior.materials.xacro" /> -->
+
+  <!-- Import RRBot ros2_control description -->
+  <xacro:include filename="$(find warrior_description)/ros2_control/warrior.ros2_control.xacro" />
+
+
+
+  <xacro:warrior_hardware_interface name="warrior_hardware_interface" prefix="" use_sim ="false" use_hardware="true"/>
+
+</robot>

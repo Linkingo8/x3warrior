@@ -1,0 +1,11 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 500  # Hz
+
+    test_controller:
+      type: warrior_controller/Testcontroller
+
+test_controller:
+  ros__parameters:
+    joint1_name: test_joint1
+    joint2_name: test_joint2
