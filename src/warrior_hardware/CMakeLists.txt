@@ -21,6 +21,7 @@ add_library(
   ${PROJECT_NAME}
   SHARED
   src/test_hardware_interface.cpp
+  src/imu_hardware_interface.cpp
 )
 target_include_directories(
   ${PROJECT_NAME}

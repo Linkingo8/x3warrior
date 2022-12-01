@@ -36,9 +36,11 @@ int main(int argc, char * argv[])
     std::vector<std::string> start_controllers;
     std::vector<std::string> stop_controllers;
     controller_manager_node->load_controller("test_controller", "warrior_controller/TestController");
+    controller_manager_node->load_controller("wheel_balance_controller", "warrior_controller/WheelBalancingController");
     controller_manager_node->configure_controller("test_controller");
-
+    controller_manager_node->configure_controller("wheel_balance_controller");
     start_controllers.push_back("test_controller");
+    start_controllers.push_back("wheel_balance_controller");
     controller_manager_node->switch_controller(start_controllers, stop_controllers, 1, controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT);
 
     // Run the node(s)

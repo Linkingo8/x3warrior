@@ -6,7 +6,7 @@ from launch.substitutions import Command, FindExecutable, LaunchConfiguration, P
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-def generate_launch_description():
+def generate_launch_description(): 
     # Declare arguments
     declared_arguments = []
     declared_arguments.append(
@@ -112,7 +112,7 @@ def generate_launch_description():
 
     nodes = [
         control_node,
-        dbus_node,
+#        dbus_node,
     ]
     
     return LaunchDescription(declared_arguments + nodes)

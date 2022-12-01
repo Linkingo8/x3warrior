@@ -12,7 +12,6 @@ TestController::TestController()
     , command_subsciption_(nullptr)
     , command_ptr_(nullptr)
 {
-
 }
 
 controller_interface::InterfaceConfiguration TestController::command_interface_configuration() const
@@ -224,8 +223,12 @@ std::shared_ptr<TestHandle> TestController::get_handle(const std::string & joint
 
     // Create the TestHandle instance
 
-    return std::make_shared<TestHandle>(std::ref(*position_state),std::ref(*velocity_state),std::ref(*accelration_state),
-                                        std::ref(*position_command),std::ref(*velocity_command),std::ref(*accelration_command));
+    return std::make_shared<TestHandle>(std::ref(*position_state),
+                                        std::ref(*velocity_state),
+                                        std::ref(*accelration_state),
+                                        std::ref(*position_command),
+                                        std::ref(*velocity_command),
+                                        std::ref(*accelration_command));
 }
 
 
