@@ -22,6 +22,8 @@ namespace warrior_hardware
 {
 
 #define ANGLE_NUM 3
+#define RM_IMU_USE
+//#define T_IMU_USE
 
 class ImuHardwareInterface
 : public hardware_interface::BaseInterface<hardware_interface::SensorInterface>
@@ -52,6 +54,7 @@ private:
     double roll  = 0.0;
   };
 
+  imu_data RM_imu_date_;
   imu_data T_imu_date_;
 };
 

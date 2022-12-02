@@ -1,5 +1,5 @@
 
-#include "warrior_controller/imu_handle.hpp"
+#include "warrior_controller/warrior_handle.hpp"
 
 using namespace warrior_controller;
 
@@ -9,6 +9,5 @@ ImuHandle::ImuHandle(
     std::reference_wrapper<const hardware_interface::LoanedStateInterface> roll
     ): pitch_(pitch),yaw_(yaw),roll_(roll)
 {
-
 }
 

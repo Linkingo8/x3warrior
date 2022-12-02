@@ -31,7 +31,7 @@ add_library(
   src/test_controller.cpp
   src/test_handle.cpp
   src/wheel_balancing_controller.cpp
-  src/imu_handle.cpp
+  src/warrior_handle.cpp
 )
 target_include_directories(
   ${PROJECT_NAME}

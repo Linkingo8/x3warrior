@@ -47,16 +47,16 @@
         <state_interface name="acceleration"/>
       </joint>
     </ros2_control>
-  <ros2_control name="${name}" type="sensor">
+    <ros2_control name="imu_hardware" type="sensor">
       <hardware>
         <plugin>warrior_hardware/ImuHardwareInterface</plugin>
       </hardware>
-    <sensor name="imu">
-      <state_interface name="pitch"/>
-      <state_interface name="yaw"/>
-      <state_interface name="roll"/>
-    </sensor>
-  </ros2_control>
+      <sensor name="imu">
+        <state_interface name="pitch"/>
+        <state_interface name="yaw"/>
+        <state_interface name="roll"/>
+      </sensor>
+    </ros2_control>
 
   </xacro:macro>
 

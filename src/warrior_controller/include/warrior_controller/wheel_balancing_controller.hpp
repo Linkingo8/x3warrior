@@ -9,7 +9,7 @@
 #include <string>
 
 #include "warrior_controller/warrior_controller_compiler.h"
-#include "warrior_controller/imu_handle.hpp"
+#include "warrior_controller/warrior_handle.hpp"
 
 namespace warrior_controller
 {
