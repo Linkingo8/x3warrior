@@ -9,7 +9,7 @@
 
   <class name="warrior_hardware/ImuHardwareInterface"
          type="warrior_hardware::ImuHardwareInterface"
-         base_class_type="hardware_interface::SensorInterface">
+         base_class_type="hardware_interface::SystemInterface">
     <description>
         Imu Hardware interface for warrior
     </description>

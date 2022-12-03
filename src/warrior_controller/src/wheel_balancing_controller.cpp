@@ -55,12 +55,12 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
 
 controller_interface::return_type WheelBalancingController::update()
 {
-    RCLCPP_ERROR(get_node()->get_logger(), 
-        "imu_joint pitch %f yaw %f roll %f"
-        ,imu_handles_->get_pitch()
-        ,imu_handles_->get_yaw()
-        ,imu_handles_->get_roll());
-    return controller_interface::return_type::OK;
+    // RCLCPP_ERROR(get_node()->get_logger(), 
+    //     "imu_joint pitch %f yaw %f roll %f"
+    //     ,imu_handles_->get_pitch()
+    //     ,imu_handles_->get_yaw()
+    //     ,imu_handles_->get_roll());
+     return controller_interface::return_type::OK;
 }
 
 CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::State &)

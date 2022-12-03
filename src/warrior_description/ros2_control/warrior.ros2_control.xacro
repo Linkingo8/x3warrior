@@ -47,9 +47,10 @@
         <state_interface name="acceleration"/>
       </joint>
     </ros2_control>
-    <ros2_control name="imu_hardware" type="sensor">
+    <ros2_control name="imu_hardware" type="system">
       <hardware>
         <plugin>warrior_hardware/ImuHardwareInterface</plugin>
+        <param name="imu_id">1025</param>
       </hardware>
       <sensor name="imu">
         <state_interface name="pitch"/>
