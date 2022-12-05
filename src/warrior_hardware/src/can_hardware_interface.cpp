@@ -1,5 +1,5 @@
 
-#include "warrior_hardware/imu_hardware_interface.hpp"
+#include "warrior_hardware/can_hardware_interface.hpp"
 
 #include <chrono>
 #include <cmath>

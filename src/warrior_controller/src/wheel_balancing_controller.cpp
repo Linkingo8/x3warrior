@@ -69,8 +69,6 @@ controller_interface::return_type WheelBalancingController::update()
 {
     LK_L_handles_->set_position(10);
     LK_R_handles_->set_position(10);
-    RCLCPP_ERROR(get_node()->get_logger(), 
-        "iLK_R_joint position");
     /*Test*/
     // RCLCPP_ERROR(get_node()->get_logger(), 
     //     "imu_joint pitch %f yaw %f roll %f"

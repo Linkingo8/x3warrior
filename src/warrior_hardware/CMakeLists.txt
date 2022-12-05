@@ -22,7 +22,7 @@ add_library(
   ${PROJECT_NAME}
   SHARED
   src/test_hardware_interface.cpp
-  src/imu_hardware_interface.cpp
+  src/can_hardware_interface.cpp
   src/can_driver.cpp
 )
 #link extern lib
