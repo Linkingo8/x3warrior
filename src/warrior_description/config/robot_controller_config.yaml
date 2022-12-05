@@ -16,3 +16,7 @@ wheel_balance_controller:
       joint1_name: imu
       joint2_name: left_9025
       joint3_name: right_9025
+      joint_Go_LF_name: Go1_LF
+      joint_Go_LB_name: Go1_LB
+      joint_Go_RF_name: Go1_RF
+      joint_Go_RB_name: Go1_RB

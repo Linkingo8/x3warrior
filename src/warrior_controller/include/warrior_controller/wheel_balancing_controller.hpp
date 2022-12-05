@@ -50,20 +50,23 @@ namespace warrior_controller
 
             WARRIOR_CONTROLLER_PUBLIC
             CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override;
-        
-
-
         private:
+            /*GO1*/
+            std::shared_ptr<Go1Handle> Go1_LF_handles_;
+            std::shared_ptr<Go1Handle> Go1_LR_handles_;
+            std::shared_ptr<Go1Handle> Go1_RF_handles_;
+            std::shared_ptr<Go1Handle> Go1_RB_handles_;
+            std::shared_ptr<Go1Handle> get_Go1_handle(const std::string & joint_name);
+            std::vector<std::string> leg_joint_name_;
             /*MF9025*/
             std::shared_ptr<LK9025Handle> LK_L_handles_;
             std::shared_ptr<LK9025Handle> LK_R_handles_;
-            std::shared_ptr<LK9025Handle> get_LK_state(const std::string & joint_name);
+            std::shared_ptr<LK9025Handle> get_LK_handle(const std::string & joint_name);
+            std::vector<std::string> wheel_joint_name_;
             /*imu*/
             std::shared_ptr<ImuHandle> imu_handles_;
             std::shared_ptr<ImuHandle> get_angle(const std::string & joint_name);
             std::vector<std::string> imu_joint_name_;
-            std::vector<std::string> wheel_joint_name_;
-
     };
 }
 

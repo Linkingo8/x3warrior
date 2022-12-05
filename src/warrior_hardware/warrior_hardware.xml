@@ -15,5 +15,13 @@
     </description>
   </class>
 
+  <class name="warrior_hardware/SerialPorttHardwareInterface"
+         type="warrior_hardware::SerialPorttHardwareInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+        serial port Hardware interface for warrior
+    </description>
+  </class>
+
 
 </library>
