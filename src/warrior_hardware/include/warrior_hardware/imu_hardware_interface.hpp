@@ -18,8 +18,11 @@
 #include "warrior_hardware/can_driver.hpp"
 
 
-#define ANGLE_NUM 3
+#define ANGLE_NUM       3
+#define LK_COMMOND_NUM  3
+#define LK_STATE_NUM    3
 #define RM_IMU_USE
+
 //#define T_IMU_USE
 
 using hardware_interface::return_type;
@@ -83,16 +86,20 @@ private:
       float accel_sen;
       uint8_t data_ready_flag;
   }rm_imu_data_t;
+  /*imu*/
   rm_imu_data_t rm_imu_data;
-
   imu_data RM_imu_date_;
   imu_data T_imu_date_;
   std::string imu_ID_String_;
   int16_t imu_ID_;
-
-
-
-
+  /*MF_9025*/
+  std::vector<double> LK_commands_positions_;/*0 left 1 right*/
+  std::vector<double> LK_commands_velocities_;
+  std::vector<double> LK_commands_moment_;
+  std::vector<double> LK_positions_;
+  std::vector<double> LK_velocities_;
+  std::vector<double> LK_accelerations_;
+  /*usb -can*/
   int can_device_num_;
   VCI_BOARD_INFO pInfo1_[50];
   VCI_BOARD_INFO pInfo_;//用来获取设备信息。
@@ -100,7 +107,10 @@ private:
   int ind_;
   int count_;
   VCI_CAN_OBJ rec_[3000];//接收缓存，设为3000为佳。
-
+  VCI_CAN_OBJ send_9025_[2];
+  int32_t speedControl_LK_L_;
+  int32_t speedControl_LK_R_;
+  double  speedControl_LK_L_d;
 };
 
 }  // namespace warrior_hardware

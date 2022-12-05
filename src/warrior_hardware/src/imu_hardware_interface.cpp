@@ -20,11 +20,19 @@ return_type ImuHardwareInterface::configure(const hardware_interface::HardwareIn
     {
       return return_type::ERROR;
     }
-    auto imu_ID_it_ = info_.hardware_parameters.find("imu_id");
-
-    imu_ID_ = atoi(imu_ID_it_->second.c_str());
-    const auto & state_interfaces = info_.sensors[0].state_interfaces;
-    if (state_interfaces.size() != ANGLE_NUM)
+    /*init interface varible*/
+    LK_commands_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    LK_commands_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    LK_commands_moment_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    LK_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    LK_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    LK_accelerations_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    /*hardware param*/
+    // auto imu_ID_it_ = info_.hardware_parameters.find("imu_id");
+    // imu_ID_ = atoi(imu_ID_it_->second.c_str());
+    /*sensor: there is one senosor so use this way of writting for the time of being*/
+    const auto & sensor_state_interfaces = info_.sensors[0].state_interfaces;
+    if (sensor_state_interfaces.size() != ANGLE_NUM)
     {
       return return_type::ERROR;
     }
@@ -32,14 +40,59 @@ return_type ImuHardwareInterface::configure(const hardware_interface::HardwareIn
     {
       if (
         std::find_if(
-          state_interfaces.begin(), state_interfaces.end(), [&imu_key](const auto & interface_info) {
+          sensor_state_interfaces.begin(), sensor_state_interfaces.end(), [&imu_key](const auto & interface_info) {
             return interface_info.name == imu_key;
-          }) == state_interfaces.end())
+          }) == sensor_state_interfaces.end())
       {
         return return_type::ERROR;
       }
     }
-    fprintf(stderr, "ImuHardwareInterface configured successfully.\n");
+  /*joint*/
+  for (const hardware_interface::ComponentInfo & joint : info_.joints)
+  {
+    // 3 state interfaces and 3 command interfaces on each joint
+    if (joint.command_interfaces.size() != LK_COMMOND_NUM)
+    {
+      RCLCPP_FATAL(
+        rclcpp::get_logger("CanHardwareInterface"),
+        "Joint '%s' has %d command interfaces. 3 expected.", joint.name.c_str());
+      return return_type::ERROR;
+    }
+
+    if (!(joint.command_interfaces[0].name == hardware_interface::HW_IF_POSITION ||
+          joint.command_interfaces[0].name == hardware_interface::HW_IF_VELOCITY ||
+          joint.command_interfaces[0].name == "moment"))
+    {
+      RCLCPP_FATAL(
+        rclcpp::get_logger("CanHardwareInterface"),
+        "Joint '%s' has %s command interface. Expected %s, %s, or %s.", joint.name.c_str(),
+        joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION,
+        hardware_interface::HW_IF_VELOCITY, "moment");
+      return return_type::ERROR;
+    }
+
+    if (joint.state_interfaces.size() != LK_STATE_NUM)
+    {
+      RCLCPP_FATAL(
+        rclcpp::get_logger("CanHardwareInterface"),
+        "Joint '%s'has %d state interfaces. 3 expected.", joint.name.c_str());
+      return return_type::ERROR;
+    }
+
+    if (!(joint.state_interfaces[0].name == hardware_interface::HW_IF_POSITION ||
+          joint.state_interfaces[0].name == hardware_interface::HW_IF_VELOCITY ||
+          joint.state_interfaces[0].name == hardware_interface::HW_IF_ACCELERATION))
+    {
+      RCLCPP_FATAL(
+        rclcpp::get_logger("CanHardwareInterface"),
+        "Joint '%s' has %s state interface. Expected %s, %s, or %s.", joint.name.c_str(),
+        joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION,
+        hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_ACCELERATION);
+      return return_type::ERROR;
+    }
+  }
+
+    fprintf(stderr, "CanHardwareInterface configured successfully.\n");
     // initialize the angle value
     return return_type::OK;
 }
@@ -66,7 +119,12 @@ ImuHardwareInterface::export_state_interfaces()
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(sensor_name, "roll", &T_imu_date_.roll));
   #endif
-
+  for (std::size_t i = 0; i < info_.joints.size(); i++)
+  {
+    state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &LK_positions_[i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &LK_velocities_[i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &LK_accelerations_[i]));
+  }
     return state_interfaces;
 }
 
@@ -74,6 +132,12 @@ std::vector<hardware_interface::CommandInterface>
 ImuHardwareInterface::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
+  for (std::size_t i = 0; i < info_.joints.size(); i++)
+  {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &LK_commands_positions_[i]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &LK_commands_velocities_[i]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "moment",&LK_commands_moment_[i]));
+  }
   return command_interfaces;
 }
 
@@ -113,6 +177,35 @@ return_type ImuHardwareInterface::start()
     T_imu_date_.roll = 0;
   }
   #endif  
+
+  // Set some default values
+  for (std::size_t i = 0; i < info_.joints.size(); i++)
+  {
+    if (std::isnan(LK_commands_positions_[i]))
+    {
+      LK_commands_positions_[i] = 0;
+    }
+    if (std::isnan(LK_commands_velocities_[i]))
+    {
+      LK_commands_velocities_[i] = 0;
+    }
+    if (std::isnan(LK_commands_moment_[i]))
+    {
+      LK_commands_moment_[i] = 0;
+    }
+    if (std::isnan(LK_positions_[i]))
+    {
+      LK_positions_[i] = 0;
+    }
+    if (std::isnan(LK_velocities_[i]))
+    {
+      LK_velocities_[i] = 0;
+    }
+    if (std::isnan(LK_accelerations_[i]))
+    {
+      LK_accelerations_[i] = 0;
+    }
+  }
 
   can_device_num_ = VCI_FindUsbDevice2(pInfo1_);
   RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), ">>USBCAN DEVICE NUM:%d...",can_device_num_);
@@ -215,7 +308,6 @@ return_type ImuHardwareInterface::read()
           {
             if(rm_imu_data.quat_euler && rec_[q1].DataLen == 6)
             {
-              RCLCPP_INFO(rclcpp::get_logger("1"), "1");
               memcpy(rm_imu_data.euler_angle, &rec_[q1].Data[0], rec_[q1].DataLen);
               rm_imu_data.euler_angle_fp32[0] = rm_imu_data.euler_angle[0] * 0.0001f;
               rm_imu_data.euler_angle_fp32[1] = rm_imu_data.euler_angle[1] * 0.0001f;
@@ -223,15 +315,13 @@ return_type ImuHardwareInterface::read()
             }
             else if(rm_imu_data.quat_euler == 0 && rec_[q1].DataLen == 8)
             {
-              RCLCPP_INFO(rclcpp::get_logger("2"), "2");
+
               memcpy(rm_imu_data.quat, &rec_[q1].Data[0], rec_[q1].DataLen);                   // received datas were magnified 10000 timnes
               rm_imu_data.quat_fp32[0] = rm_imu_data.quat[0] * 0.0001f;          // 10000 times smaller
               rm_imu_data.quat_fp32[1] = rm_imu_data.quat[1] * 0.0001f;          // 10000 times smaller
               rm_imu_data.quat_fp32[2] = rm_imu_data.quat[2] * 0.0001f;          // 10000 times smaller
               rm_imu_data.quat_fp32[3] = rm_imu_data.quat[3] * 0.0001f;          // 10000 times smaller 
             }
-            
-            
             break;
           }
           case IMU_GYRO_ID:
@@ -261,8 +351,7 @@ return_type ImuHardwareInterface::read()
              memcpy(rm_imu_data.mag_int16, &rec_[q1].Data[0],6);
              break;
           }
-          
-      }
+        }
         // if(rec_[q1].ExternFlag==0) RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware")," Standard ");//帧格式：标准帧
         // if(rec_[q1].ExternFlag==1) RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware")," Extend   ");//帧格式：扩展帧
         // if(rec_[q1].RemoteFlag==0) RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware")," Data   ");//帧类型：数据帧
@@ -275,13 +364,13 @@ return_type ImuHardwareInterface::read()
         // }
         // RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware")," TimeStamp:0x%08X",rec_[q1].TimeStamp);//时间标识。
 			}
+      RM_imu_date_.yaw   = atan2f(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[3]+rm_imu_data.quat_fp32[1]*rm_imu_data.quat_fp32[2],
+                              rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[0]+rm_imu_data.quat_fp32[1]*rm_imu_data.quat_fp32[1]-0.5f)*100.f;
+      RM_imu_date_.pitch = asinf(2*(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[2]-rm_imu_data.quat_fp32[1]*rm_imu_data.quat_fp32[3]))*100.f;
+      RM_imu_date_.roll  = atan2f(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[1]+rm_imu_data.quat_fp32[2]*rm_imu_data.quat_fp32[3],
+                              rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[0]+rm_imu_data.quat_fp32[3]*rm_imu_data.quat_fp32[3]-0.5f)*100.f;
 		}
     ind_=!ind_;//变换通道号，以便下次读取另一通道，交替读取。	
-    RM_imu_date_.yaw   = atan2f(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[3]+rm_imu_data.quat_fp32[1]*rm_imu_data.quat_fp32[2],
-	                          rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[0]+rm_imu_data.quat_fp32[1]*rm_imu_data.quat_fp32[1]-0.5f);
-		RM_imu_date_.pitch = asinf(2*(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[2]-rm_imu_data.quat_fp32[1]*rm_imu_data.quat_fp32[3]));
-		RM_imu_date_.roll  = atan2f(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[1]+rm_imu_data.quat_fp32[2]*rm_imu_data.quat_fp32[3],
-	                          rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[0]+rm_imu_data.quat_fp32[3]*rm_imu_data.quat_fp32[3]-0.5f);
    #endif
 
   
@@ -290,17 +379,47 @@ return_type ImuHardwareInterface::read()
     T_imu_date_.yaw = 2;
     T_imu_date_.roll = 3;
   #endif
-
-    RCLCPP_INFO(
-    rclcpp::get_logger("ImuHardwareInterface"), "Get pitch %.5f,yaw %.5f,roll %.5f",RM_imu_date_.pitch,RM_imu_date_.yaw,RM_imu_date_.roll);
+    // RCLCPP_INFO(
+    // rclcpp::get_logger("ImuHardwareInterface"), "Get pitch %.5f,yaw %.5f,roll %.5f",RM_imu_date_.pitch,RM_imu_date_.yaw,RM_imu_date_.roll);
 
   return return_type::OK;
 }
 
 return_type ImuHardwareInterface::write()
 {
-  // for (std::size_t i = 0; i < hw_commands_positions_.size(); i++)
+  speedControl_LK_L_ = LK_commands_positions_[0];
+  send_9025_[0].ID=0x141;
+	send_9025_[0].SendType=0;
+	send_9025_[0].RemoteFlag=0;
+	send_9025_[0].ExternFlag=0;
+	send_9025_[0].DataLen=8;
+  send_9025_[0].Data[0] = 0xA2;
+  send_9025_[0].Data[1] = 0x00;
+  send_9025_[0].Data[2] = 0x00;
+  send_9025_[0].Data[3] = 0x00;
+
+  send_9025_[0].Data[4] = *(uint8_t *)(&speedControl_LK_L_);
+  send_9025_[0].Data[5] = *((uint8_t *)(&speedControl_LK_L_)+1);
+  send_9025_[0].Data[6] = *((uint8_t *)(&speedControl_LK_L_)+2);
+  send_9025_[0].Data[7] = *((uint8_t *)(&speedControl_LK_L_)+3);
+
+  if(VCI_Transmit(VCI_USBCAN2, 0, 0, send_9025_, 1) == 1)
+  {
+    printf("CAN1 TX ID:0x%08X",send_9025_[0].ID);
+    if(send_9025_[0].ExternFlag==0) printf(" Standard ");
+    if(send_9025_[0].ExternFlag==1) printf(" Extend   ");
+    if(send_9025_[0].RemoteFlag==0) printf(" Data   ");
+    if(send_9025_[0].RemoteFlag==1) printf(" Remote ");
+    printf("DLC:0x%02X",send_9025_[0].DataLen);
+    printf(" data:0x");
+    printf("\n");
+  }
+  // for (std::size_t i = 0; i < LK_commands_positions_.size(); i++)
   // {
+  //  RCLCPP_INFO(
+  //     rclcpp::get_logger("CanHardwareInterface"),
+  //     "Got the commands pos: %.5f",
+  //     LK_commands_positions_[i]);
   // }
   return return_type::OK;
 }

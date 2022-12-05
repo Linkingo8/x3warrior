@@ -17,7 +17,7 @@ namespace warrior_controller
                     std::reference_wrapper<const hardware_interface::LoanedStateInterface> accelration,
                     std::reference_wrapper<hardware_interface::LoanedCommandInterface> position_ref,
                     std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity_ref,
-                    std::reference_wrapper<hardware_interface::LoanedCommandInterface> accelration_ref   
+                    std::reference_wrapper<hardware_interface::LoanedCommandInterface> accelration_ref
                 );
 
             void set_position(double value){ position_ref_.get().set_value(value); };

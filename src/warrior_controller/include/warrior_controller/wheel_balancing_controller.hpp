@@ -1,4 +1,4 @@
-
+ 
 #ifndef __WARRIOR_CONTROLLER__WHEEL_BALANCING_CONTROLLER_H__
 #define __WARRIOR_CONTROLLER__WHEEL_BALANCING_CONTROLLER_H__
 
@@ -54,10 +54,15 @@ namespace warrior_controller
 
 
         private:
-
+            /*MF9025*/
+            std::shared_ptr<LK9025Handle> LK_L_handles_;
+            std::shared_ptr<LK9025Handle> LK_R_handles_;
+            std::shared_ptr<LK9025Handle> get_LK_state(const std::string & joint_name);
+            /*imu*/
             std::shared_ptr<ImuHandle> imu_handles_;
             std::shared_ptr<ImuHandle> get_angle(const std::string & joint_name);
             std::vector<std::string> imu_joint_name_;
+            std::vector<std::string> wheel_joint_name_;
 
     };
 }

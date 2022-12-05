@@ -14,3 +14,5 @@ test_controller:
 wheel_balance_controller:
     ros__parameters:
       joint1_name: imu
+      joint2_name: left_9025
+      joint3_name: right_9025

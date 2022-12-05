@@ -50,13 +50,46 @@
     <ros2_control name="imu_hardware" type="system">
       <hardware>
         <plugin>warrior_hardware/ImuHardwareInterface</plugin>
-        <param name="imu_id">1025</param>
       </hardware>
       <sensor name="imu">
         <state_interface name="pitch"/>
         <state_interface name="yaw"/>
         <state_interface name="roll"/>
       </sensor>
+      <joint name="left_9025">
+        <command_interface name="position">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <command_interface name="velocity">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <command_interface name="moment">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="acceleration"/>
+      </joint>
+      <joint name="right_9025">
+        <command_interface name="position">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <command_interface name="velocity">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <command_interface name="moment">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="acceleration"/>
+      </joint>
     </ros2_control>
 
   </xacro:macro>
