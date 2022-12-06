@@ -16,7 +16,7 @@ namespace warrior_hardware
             ~go1_config();
             int open(const std::string & port_name);
             int close();
-            int read_frames(std::vector<SerialHdlcFrame>& frames);
+            int read_frames(uint8_t* data, size_t size);
             int write_frame(const uint8_t* data, size_t size);
         private:
             int go1_port_;

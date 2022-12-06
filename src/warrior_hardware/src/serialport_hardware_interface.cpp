@@ -166,6 +166,7 @@ return_type SerialPorttHardwareInterface::stop()
 
 return_type SerialPorttHardwareInterface::read()
 {
+  uint8_t buff[17] = {0};
   // RCLCPP_INFO(
   // rclcpp::get_logger("SerialPorttHardwareInterface"), "reading.....");
   return return_type::OK;
@@ -176,7 +177,8 @@ return_type SerialPorttHardwareInterface::write()
   // RCLCPP_INFO(
   // rclcpp::get_logger("SerialPorttHardwareInterface"), "Go1_commands_positions_:.....%.5f",Go1_commands_positions_[0]);
     uint8_t buff[17] = {0};
-
+    uint8_t read_buff[16] = {0};
+    uint32_t count_number = 0;
     buff[0] = 0xFE;
     buff[1] = 0xEE;
     //包头
@@ -209,6 +211,11 @@ return_type SerialPorttHardwareInterface::write()
     buff[15] = 0x65;
     buff[16] = 0x1f;
    Go1_port_config_->write_frame(buff,17);
+   Go1_port_config_->read_frames(read_buff,16);
+   for(int j = 0; j < 10000000; j++)
+   {
+    count_number++;
+   }
    for(int i = 0; i < 17; i++)
    {
     RCLCPP_INFO(

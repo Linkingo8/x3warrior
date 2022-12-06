@@ -59,3 +59,9 @@ int go1_config::write_frame(const uint8_t* data, size_t size)
     ::write(go1_port_,data,size);
     return 1;
 }
+
+int go1_config::read_frames(uint8_t* data, size_t size)
+{
+    ::read(go1_port_,data,size);
+    return 1;
+}
