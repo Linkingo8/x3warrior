@@ -88,6 +88,7 @@ std::vector<hardware_interface::StateInterface> SerialPorttHardwareInterface::ex
     state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &Go1_positions_[i]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &Go1_velocities_[i]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &Go1_accelerations_[i]));
+    Go1_positions_[i] = 1;
   }
 
   return state_interfaces;
@@ -158,11 +159,15 @@ return_type SerialPorttHardwareInterface::stop()
 
 return_type SerialPorttHardwareInterface::read()
 {
+  // RCLCPP_INFO(
+  // rclcpp::get_logger("SerialPorttHardwareInterface"), "reading.....");
   return return_type::OK;
 }
 
 return_type SerialPorttHardwareInterface::write()
 {
+  // RCLCPP_INFO(
+  // rclcpp::get_logger("SerialPorttHardwareInterface"), "Go1_commands_positions_:.....%f",Go1_commands_positions_[0]);
   return return_type::OK;
 }
 

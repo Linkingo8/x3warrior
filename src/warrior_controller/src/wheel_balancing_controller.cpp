@@ -81,7 +81,14 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
 
 controller_interface::return_type WheelBalancingController::update()
 {
-
+    /*Go1 Test*/
+    // RCLCPP_ERROR(get_node()->get_logger(), 
+    // "imu_joint position %f velocity %f acceleration %f"
+    // ,Go1_LF_handles_->get_position()
+    // ,Go1_LF_handles_->get_velocity()
+    // ,Go1_LF_handles_->get_acceleration());
+    // Go1_LF_handles_->set_position(10);
+    // Go1_LF_handles_->set_velocity(10);
     /*LK commond Test*/
     // LK_L_handles_->set_position(10);
     // LK_R_handles_->set_position(10);
