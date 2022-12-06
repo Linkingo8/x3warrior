@@ -38,7 +38,7 @@ return_type SerialPorttHardwareInterface::configure(
     if (joint.command_interfaces.size() != 3)
     {
       RCLCPP_FATAL(
-        rclcpp::get_logger("TestHardwareInterface"),
+        rclcpp::get_logger("SerialPorttHardwareInterface"),
         "Joint '%s' has %d command interfaces. 3 expected.", joint.name.c_str());
       return return_type::ERROR;
     }
@@ -48,7 +48,7 @@ return_type SerialPorttHardwareInterface::configure(
           joint.command_interfaces[0].name == "moment"))
     {
       RCLCPP_FATAL(
-        rclcpp::get_logger("TestHardwareInterface"),
+        rclcpp::get_logger("SerialPorttHardwareInterface"),
         "Joint '%s' has %s command interface. Expected %s, %s, or %s.", joint.name.c_str(),
         joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION,
         hardware_interface::HW_IF_VELOCITY, "moment");
@@ -58,7 +58,7 @@ return_type SerialPorttHardwareInterface::configure(
     if (joint.state_interfaces.size() != 3)
     {
       RCLCPP_FATAL(
-        rclcpp::get_logger("TestHardwareInterface"),
+        rclcpp::get_logger("SerialPorttHardwareInterface"),
         "Joint '%s'has %d state interfaces. 3 expected.", joint.name.c_str());
       return return_type::ERROR;
     }
@@ -110,7 +110,7 @@ SerialPorttHardwareInterface::export_command_interfaces()
 return_type SerialPorttHardwareInterface::start()
 {
   RCLCPP_INFO(
-    rclcpp::get_logger("TestHardwareInterface"), "Starting... please wait...");
+    rclcpp::get_logger("SerialPorttHardwareInterface"), "Starting... please wait...");
 
   // Set some default values
   for (std::size_t i = 0; i < info_.joints.size(); i++)
@@ -154,12 +154,12 @@ return_type SerialPorttHardwareInterface::start()
 return_type SerialPorttHardwareInterface::stop()
 {
   RCLCPP_INFO(
-    rclcpp::get_logger("TestHardwareInterface"), "Stopping... please wait...");
+    rclcpp::get_logger("SerialPorttHardwareInterface"), "Stopping... please wait...");
 
   status_ = hardware_interface::status::STOPPED;
 
   RCLCPP_INFO(
-    rclcpp::get_logger("TestHardwareInterface"), "System successfully stopped!");
+    rclcpp::get_logger("SerialPorttHardwareInterface"), "System successfully stopped!");
 
   return return_type::OK;
 }
