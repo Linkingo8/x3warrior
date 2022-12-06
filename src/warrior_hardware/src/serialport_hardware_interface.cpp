@@ -201,7 +201,7 @@ return_type SerialPorttHardwareInterface::write()
     buff[11] = 0x00;
     buff[12] = 0x00;
     //刚度系数等于0
-
+ 
     buff[13] = 0x40;
     buff[14] = 0x00;
     
@@ -209,8 +209,14 @@ return_type SerialPorttHardwareInterface::write()
     buff[15] = 0x65;
     buff[16] = 0x1f;
    Go1_port_config_->write_frame(buff,17);
+   for(int i = 0; i < 17; i++)
+   {
     RCLCPP_INFO(
-   rclcpp::get_logger("SerialPorttHardwareInterface"), "writing...");
+   rclcpp::get_logger("SerialPorttHardwareInterface"), "writing...buff[%d],%x",i,buff[i]);
+
+   }
+  //   RCLCPP_INFO(
+  //  rclcpp::get_logger("SerialPorttHardwareInterface"), "writing...");
   return return_type::OK;
 }
 

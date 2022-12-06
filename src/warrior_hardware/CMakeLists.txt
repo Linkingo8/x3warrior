@@ -28,8 +28,8 @@ add_library(
   src/go1_config.cpp
 )
 #link extern lib
-target_link_libraries (${PROJECT_NAME}  libcontrolcan_x86.so)
-#target_link_libraries (${PROJECT_NAME}  libcontrolcan_aarch64.so)
+#target_link_libraries (${PROJECT_NAME}  libcontrolcan_x86.so)
+target_link_libraries (${PROJECT_NAME}  libcontrolcan_aarch64.so)
 target_include_directories(
   ${PROJECT_NAME}
   PRIVATE
