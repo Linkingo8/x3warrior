@@ -25,6 +25,7 @@ add_library(
   src/can_hardware_interface.cpp
   src/can_driver.cpp
   src/serialport_hardware_interface.cpp
+  src/go1_config.cpp
 )
 #link extern lib
 target_link_libraries (${PROJECT_NAME}  libcontrolcan_x86.so)

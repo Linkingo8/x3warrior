@@ -140,6 +140,13 @@ return_type SerialPorttHardwareInterface::start()
       Go1_commands_moments_[i] = 0;
     }
   }
+  Go1_port_config_ = std::make_shared<go1_config>();
+  if(Go1_port_config_->open("/dev/ttyUSB0") !=  0)
+  {
+    RCLCPP_INFO(rclcpp::get_logger("SerialPorttHardwareInterface"), "Go1Port hardware failed been open!");
+        return hardware_interface::return_type::ERROR;    
+  }
+  
   status_ = hardware_interface::status::STARTED;
   return return_type::OK;
 }
@@ -167,7 +174,43 @@ return_type SerialPorttHardwareInterface::read()
 return_type SerialPorttHardwareInterface::write()
 {
   // RCLCPP_INFO(
-  // rclcpp::get_logger("SerialPorttHardwareInterface"), "Go1_commands_positions_:.....%f",Go1_commands_positions_[0]);
+  // rclcpp::get_logger("SerialPorttHardwareInterface"), "Go1_commands_positions_:.....%.5f",Go1_commands_positions_[0]);
+    uint8_t buff[17] = {0};
+
+    buff[0] = 0xFE;
+    buff[1] = 0xEE;
+    //包头
+
+    buff[2] = 0x10;//0000 0010
+    //ID 模式 设置
+
+    buff[3] = 0x00;
+    buff[4] = 0x00;
+    //前馈力矩等于0
+
+    buff[5] = 0xFF;
+    buff[6] = 0x00;
+    //速度值为36
+
+    buff[7] = 0x00;
+    buff[8] = 0x00;
+    buff[9] = 0x00;
+    buff[10] = 0x00;
+    //与位置无关，全部赋值为0
+
+    buff[11] = 0x00;
+    buff[12] = 0x00;
+    //刚度系数等于0
+
+    buff[13] = 0x40;
+    buff[14] = 0x00;
+    
+    //CRC校验
+    buff[15] = 0x65;
+    buff[16] = 0x1f;
+   Go1_port_config_->write_frame(buff,17);
+    RCLCPP_INFO(
+   rclcpp::get_logger("SerialPorttHardwareInterface"), "writing...");
   return return_type::OK;
 }
 

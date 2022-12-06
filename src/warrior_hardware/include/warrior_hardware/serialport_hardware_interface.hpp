@@ -8,6 +8,7 @@
 
 #include "rclcpp/macros.hpp"
 
+#include "warrior_hardware/go1_config.hpp"
 #include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -55,6 +56,7 @@ private:
   std::vector<double> Go1_positions_;
   std::vector<double> Go1_velocities_;
   std::vector<double> Go1_accelerations_;
+  std::shared_ptr<go1_config> Go1_port_config_;
 };
 
 }  // namespace warrior_hardware
