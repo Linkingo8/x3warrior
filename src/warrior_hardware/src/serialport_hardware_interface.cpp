@@ -111,7 +111,6 @@ return_type SerialPorttHardwareInterface::start()
 {
   RCLCPP_INFO(
     rclcpp::get_logger("SerialPorttHardwareInterface"), "Starting... please wait...");
-
   // Set some default values
   for (std::size_t i = 0; i < info_.joints.size(); i++)
   {
@@ -190,7 +189,7 @@ return_type SerialPorttHardwareInterface::write()
     buff[4] = 0x00;
     //前馈力矩等于0
 
-    buff[5] = 0xFF;
+    buff[5] = 0x10;//
     buff[6] = 0x00;
     //速度值为36
 
@@ -206,10 +205,11 @@ return_type SerialPorttHardwareInterface::write()
  
     buff[13] = 0x40;
     buff[14] = 0x00;
-    
-    //CRC校验
-    buff[15] = 0x65;
-    buff[16] = 0x1f;
+   
+   Go1_crc_check_->Append_CRC16_Check_Sum(buff,17);
+   //CRC校验
+  //  buff[15] = 0x65;
+  //  buff[16] = 0x1f;
    Go1_port_config_->write_frame(buff,17);
    Go1_port_config_->read_frames(read_buff,16);
    for(int j = 0; j < 10000000; j++)

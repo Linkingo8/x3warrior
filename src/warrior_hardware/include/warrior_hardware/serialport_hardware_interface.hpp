@@ -15,6 +15,7 @@
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
+#include "warrior_hardware/crc.hpp"
 #include "warrior_hardware/visibility_control.h"
 
 using hardware_interface::return_type;
@@ -57,6 +58,7 @@ private:
   std::vector<double> Go1_velocities_;
   std::vector<double> Go1_accelerations_;
   std::shared_ptr<go1_config> Go1_port_config_;
+  std::shared_ptr<crc> Go1_crc_check_;
 };
 
 }  // namespace warrior_hardware

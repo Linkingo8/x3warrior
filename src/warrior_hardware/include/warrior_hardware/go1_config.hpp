@@ -20,6 +20,7 @@ namespace warrior_hardware
             int write_frame(const uint8_t* data, size_t size);
         private:
             int go1_port_;
+            
     };
 }
 #endif
