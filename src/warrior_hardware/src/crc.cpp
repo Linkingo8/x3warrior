@@ -1,12 +1,9 @@
 #include "warrior_hardware/crc.hpp"
 using namespace warrior_hardware;
-crc::crc()
+crc::crc(uint16_t CRC16_CCITT_INIT) : CRC16_CCITT_INIT_(CRC16_CCITT_INIT)
+{}
+uint16_t crc::CRC16_CCITT(uint8_t* bytes,int dwLength,uint16_t wCRC)
 {
-
-}
-uint16_t crc::CRC16_CCITT(uint8_t* bytes,int dwLength)
-{
-        uint16_t wCRC = 0X0000;
         int polynomial = 0x8408;// poly value reversed 0x1021;
         int i, j;
         for (i = 0; i < dwLength; i++) {
@@ -31,7 +28,7 @@ void crc::Append_CRC16_Check_Sum(uint8_t * pchMessage,uint32_t dwLength)
 				return;
 		}
 
-		wCRC = CRC16_CCITT ( (uint8_t *)pchMessage, dwLength-2);
+		wCRC = CRC16_CCITT ( (uint8_t *)pchMessage, dwLength-2,CRC16_CCITT_INIT_);
 
 		pchMessage[dwLength-2] = (uint8_t)(wCRC & 0x00ff);
 		pchMessage[dwLength-1] = (uint8_t)((wCRC >> 8)& 0x00ff);    

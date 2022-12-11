@@ -25,6 +25,9 @@ controller_interface::InterfaceConfiguration WheelBalancingController::command_i
         command_interfaces_config.names.push_back(joint + "/" + hardware_interface::HW_IF_POSITION);
         command_interfaces_config.names.push_back(joint + "/" + hardware_interface::HW_IF_VELOCITY);
         command_interfaces_config.names.push_back(joint + "/" + "moment");
+        command_interfaces_config.names.push_back(joint + "/" + "damp");
+        command_interfaces_config.names.push_back(joint + "/" + "zero_moment");
+        command_interfaces_config.names.push_back(joint + "/" + "moment_and_position");
     }
     return command_interfaces_config;
 }
@@ -145,25 +148,25 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
     wheel_joint_name_.push_back(joint3_name_);
 
     if (joint_Go_LF_name_.empty()) {
-        RCLCPP_ERROR(get_node()->get_logger(), "'joint3_name' parameter was empty");
+        RCLCPP_ERROR(get_node()->get_logger(), "'joint4_name' parameter was empty");
         return CallbackReturn::ERROR;
     }
     leg_joint_name_.push_back(joint_Go_LF_name_);
 
     if (joint_Go_LB_name_.empty()) {
-        RCLCPP_ERROR(get_node()->get_logger(), "'joint3_name' parameter was empty");
+        RCLCPP_ERROR(get_node()->get_logger(), "'joint5_name' parameter was empty");
         return CallbackReturn::ERROR;
     }
     leg_joint_name_.push_back(joint_Go_LB_name_);
 
         if (joint_Go_RF_name_.empty()) {
-        RCLCPP_ERROR(get_node()->get_logger(), "'joint3_name' parameter was empty");
+        RCLCPP_ERROR(get_node()->get_logger(), "'joint6_name' parameter was empty");
         return CallbackReturn::ERROR;
     }
     leg_joint_name_.push_back(joint_Go_RF_name_);
 
         if (joint_Go_RB_name_.empty()) {
-        RCLCPP_ERROR(get_node()->get_logger(), "'joint3_name' parameter was empty");
+        RCLCPP_ERROR(get_node()->get_logger(), "'joint7_name' parameter was empty");
         return CallbackReturn::ERROR;
     }
     leg_joint_name_.push_back(joint_Go_RB_name_);
@@ -380,13 +383,41 @@ std::shared_ptr<Go1Handle> WheelBalancingController::get_Go1_handle(const std::s
         return nullptr;
     }
 
-    // Lookup the accelration command interface
+    // Lookup the motion command interface
     const auto moment_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
     {
         return interface.get_name() == joint_name && interface.get_interface_name() == "moment";
     });
     if (moment_command == command_interfaces_.end()) {
-        RCLCPP_ERROR(get_node()->get_logger(), "%s accelration command interface not found", joint_name.c_str());
+        RCLCPP_ERROR(get_node()->get_logger(), "%s motion command interface not found", joint_name.c_str());
+        return nullptr;
+    }
+
+    // Lookup the damp command interface
+    const auto damp_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
+    {
+        return interface.get_name() == joint_name && interface.get_interface_name() == "damp";
+    });
+    if (damp_command == command_interfaces_.end()) {
+        RCLCPP_ERROR(get_node()->get_logger(), "%s damp command interface not found", joint_name.c_str());
+        return nullptr;
+    }
+    // Lookup the zero motion command interface
+    const auto zero_moment_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
+    {
+        return interface.get_name() == joint_name && interface.get_interface_name() == "zero_moment";
+    });
+    if (zero_moment_command == command_interfaces_.end()) {
+        RCLCPP_ERROR(get_node()->get_logger(), "%s zero motion command interface not found", joint_name.c_str());
+        return nullptr;
+    }
+    // Lookup the motion command interface
+    const auto moment_and_position_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
+    {
+        return interface.get_name() == joint_name && interface.get_interface_name() == "moment_and_position";
+    });
+    if (moment_and_position_command == command_interfaces_.end()) {
+        RCLCPP_ERROR(get_node()->get_logger(), "%s position and motion command interface not found", joint_name.c_str());
         return nullptr;
     }
 
@@ -396,7 +427,10 @@ std::shared_ptr<Go1Handle> WheelBalancingController::get_Go1_handle(const std::s
                                         std::ref(*acceleration_state),
                                         std::ref(*position_command),
                                         std::ref(*velocity_command),
-                                        std::ref(*moment_command));
+                                        std::ref(*moment_command),
+                                        std::ref(*damp_command),
+                                        std::ref(*zero_moment_command),
+                                        std::ref(*moment_and_position_command));
 }
 
 PLUGINLIB_EXPORT_CLASS(

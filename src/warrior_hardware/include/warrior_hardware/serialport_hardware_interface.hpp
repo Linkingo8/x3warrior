@@ -8,7 +8,7 @@
 
 #include "rclcpp/macros.hpp"
 
-#include "warrior_hardware/go1_config.hpp"
+#include "warrior_hardware/bsp_go1.hpp"
 #include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -25,40 +25,43 @@ namespace warrior_hardware
 class SerialPorttHardwareInterface
 : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
-public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(SerialPorttHardwareInterface);
+  public:
+    RCLCPP_SHARED_PTR_DEFINITIONS(SerialPorttHardwareInterface);
 
-  WARRIOR_HARDWARE_PUBLIC
-  return_type configure(const hardware_interface::HardwareInfo & info) override;
+    WARRIOR_HARDWARE_PUBLIC
+    return_type configure(const hardware_interface::HardwareInfo & info) override;
 
-  WARRIOR_HARDWARE_PUBLIC
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
+    WARRIOR_HARDWARE_PUBLIC
+    std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
-  WARRIOR_HARDWARE_PUBLIC
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
+    WARRIOR_HARDWARE_PUBLIC
+    std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
-  WARRIOR_HARDWARE_PUBLIC
-  return_type start() override;
+    WARRIOR_HARDWARE_PUBLIC
+    return_type start() override;
 
-  WARRIOR_HARDWARE_PUBLIC
-  return_type stop() override;
+    WARRIOR_HARDWARE_PUBLIC
+    return_type stop() override;
 
-  WARRIOR_HARDWARE_PUBLIC
-  return_type read() override;
+    WARRIOR_HARDWARE_PUBLIC
+    return_type read() override;
 
-  WARRIOR_HARDWARE_PUBLIC
-  return_type write() override;
-
-private:
-
-  std::vector<double> Go1_commands_positions_;
-  std::vector<double> Go1_commands_velocities_;
-  std::vector<double> Go1_commands_moments_;
-  std::vector<double> Go1_positions_;
-  std::vector<double> Go1_velocities_;
-  std::vector<double> Go1_accelerations_;
-  std::shared_ptr<go1_config> Go1_port_config_;
-  std::shared_ptr<crc> Go1_crc_check_;
+    WARRIOR_HARDWARE_PUBLIC
+    return_type write() override;
+    
+  private:
+    std::vector<double> Go1_commands_positions_;
+    std::vector<double> Go1_commands_velocities_;
+    std::vector<double> Go1_commands_moments_;
+    std::vector<double> Go1_commands_damp_;
+    std::vector<double> Go1_commands_zero_moments_;
+    std::vector<double> Go1_commands_moment_and_position_;
+    
+    std::vector<double> Go1_positions_;
+    std::vector<double> Go1_velocities_;
+    std::vector<double> Go1_accelerations_;
+    std::shared_ptr<Go1Config> Go1_port_config_;
+    std::shared_ptr<Go1DataProcess> Go1_data_process_;
 };
 
 }  // namespace warrior_hardware

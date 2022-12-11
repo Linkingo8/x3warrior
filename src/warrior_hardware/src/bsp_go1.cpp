@@ -1,4 +1,4 @@
-#include "warrior_hardware/go1_config.hpp"
+#include "warrior_hardware/bsp_go1.hpp"
 #include <stdio.h>
 #include <errno.h>
 #include <fcntl.h> /* File control definitions */
@@ -9,12 +9,12 @@
 
 using namespace warrior_hardware;
 
-go1_config::go1_config()
+Go1Config::Go1Config()
     : go1_port_(-1)
 {
 }
 
-int go1_config::open(const std::string & port_name)
+int Go1Config::open(const std::string & port_name)
 {
     go1_port_ = ::open(port_name.c_str(), O_RDWR);
 
@@ -54,14 +54,70 @@ int go1_config::open(const std::string & port_name)
     return 0;
 }
 
-int go1_config::write_frame(const uint8_t* data, size_t size)
+int Go1Config::write_frame(const uint8_t* data, size_t size)
 {
     ::write(go1_port_,data,size);
     return 1;
 }
 
-int go1_config::read_frames(uint8_t* data, size_t size)
+int Go1Config::read_frames(uint8_t* data, size_t size)
 {
     ::read(go1_port_,data,size);
     return 1;
+}
+Go1DataProcess::Go1DataProcess(uint16_t CRC16_CCITT_INIT) : crc(CRC16_CCITT_INIT)
+{ 
+}
+/**
+* @brief Motor state control states 
+* @param ControlData_t go1_control_data
+* @return 0 sucess 1 fail
+*/
+void Go1DataProcess::Go1_head_set(void)
+{
+    for(int i = 0; i < GO1_NUM; i++)
+    {
+        go1_control_data_[i].head[0] = 0xFE;
+        go1_control_data_[i].head[1] = 0xEE;
+    }
+}
+void Go1DataProcess::Go1_head_print(void)
+{
+    /*head check*/
+    for(int i = 0; i < GO1_NUM; i++)
+    {
+        RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go[%d] Go1 head1:%x  head2:%x",i ,go1_control_data_[i].head[0],go1_control_data_[i].head[1]);
+    }
+}
+
+void Go1DataProcess::Go1_crc_append(void)
+{
+    uint8_t messageSendBuffer[GO1_NUM][17]{0};
+    
+    for(int i = 0; i < GO1_NUM; i++)
+    {
+        //copy
+        memcpy(messageSendBuffer[i],&go1_control_data_[i],17);
+        //calc and assert
+        Append_CRC16_Check_Sum(messageSendBuffer[i],17);
+        // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go[%d]",i);
+        // for(int j = 0; j < 17; j++)
+        // {
+        //     RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go[%d] buffer[%d]: %x",i,j,messageSendBuffer[i][j]);
+        // }
+        //anti-copy
+        memcpy(&go1_control_data_[i],messageSendBuffer[i],17); 
+        //check   
+        // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go[%d] Go1 head1:%x  head2:%x",i ,go1_control_data_[i].head[15],go1_control_data_[i].head[16]);    
+    }
+    //计算
+    //插入
+}
+
+void Go1DataProcess::Go1_speed_set(void)
+{
+}
+void convertLittleEndian(int16_t &buffer)
+{
+    
 }
