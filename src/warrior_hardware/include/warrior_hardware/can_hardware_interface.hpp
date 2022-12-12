@@ -95,7 +95,7 @@ private:
   /*MF_9025*/
   std::vector<double> LK_commands_positions_;/*0 left 1 right*/
   std::vector<double> LK_commands_velocities_;
-  std::vector<double> LK_commands_moment_;
+  std::vector<double> LK_commands_torque_;
   std::vector<double> LK_positions_;
   std::vector<double> LK_velocities_;
   std::vector<double> LK_accelerations_;

@@ -34,12 +34,12 @@ namespace warrior_controller
                     std::reference_wrapper<const hardware_interface::LoanedStateInterface> acceleration,
                     std::reference_wrapper<hardware_interface::LoanedCommandInterface> position_ref,
                     std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity_ref,
-                    std::reference_wrapper<hardware_interface::LoanedCommandInterface> moment_ref
+                    std::reference_wrapper<hardware_interface::LoanedCommandInterface> torque_ref
             );
             
             void set_position(double value){ position_ref_.get().set_value(value); };
             void set_velocity(double value){ velocity_ref_.get().set_value(value); };
-            void set_moment(double value){ moment_ref_.get().set_value(value); };
+            void set_torque(double value){ torque_ref_.get().set_value(value); };
 
             double get_position(){ return position_.get().get_value(); };
             double get_velocity(){ return velocity_.get().get_value(); };
@@ -51,7 +51,7 @@ namespace warrior_controller
                 std::reference_wrapper<const hardware_interface::LoanedStateInterface> acceleration_;
                 std::reference_wrapper<hardware_interface::LoanedCommandInterface> position_ref_;
                 std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity_ref_;
-                std::reference_wrapper<hardware_interface::LoanedCommandInterface> moment_ref_;
+                std::reference_wrapper<hardware_interface::LoanedCommandInterface> torque_ref_;
     };
     class Go1Handle
     {
@@ -97,18 +97,18 @@ namespace warrior_controller
                     std::reference_wrapper<const hardware_interface::LoanedStateInterface> acceleration,
                     std::reference_wrapper<hardware_interface::LoanedCommandInterface> position_ref,
                     std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity_ref,
-                    std::reference_wrapper<hardware_interface::LoanedCommandInterface> moment_ref,
+                    std::reference_wrapper<hardware_interface::LoanedCommandInterface> torque_ref,
                     std::reference_wrapper<hardware_interface::LoanedCommandInterface> damp_ref,
-                    std::reference_wrapper<hardware_interface::LoanedCommandInterface> zero_moment_ref,
-                    std::reference_wrapper<hardware_interface::LoanedCommandInterface> moment_and_position_ref
+                    std::reference_wrapper<hardware_interface::LoanedCommandInterface> zero_torque_ref,
+                    std::reference_wrapper<hardware_interface::LoanedCommandInterface> torque_and_position_ref
             );
             
             void set_position(double value){ position_ref_.get().set_value(value); };
             void set_velocity(double value){ velocity_ref_.get().set_value(value); };
-            void set_moment(double value){ moment_ref_.get().set_value(value); };
+            void set_torque(double value){ torque_ref_.get().set_value(value); };
             void set_damp(double value){ damp_ref_.get().set_value(value); };
-            void set_zero_moment(double value){ zero_moment_ref_.get().set_value(value); };
-            void set_position_and_motor(double value){ moment_and_position_ref_.get().set_value(value); };
+            void set_zero_torque(double value){ zero_torque_ref_.get().set_value(value); };
+            void set_position_and_motor(double value){ torque_and_position_ref_.get().set_value(value); };
 
             double get_position(){ return position_.get().get_value(); };
             double get_velocity(){ return velocity_.get().get_value(); };
@@ -120,10 +120,10 @@ namespace warrior_controller
             std::reference_wrapper<const hardware_interface::LoanedStateInterface> acceleration_;
             std::reference_wrapper<hardware_interface::LoanedCommandInterface> position_ref_;
             std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity_ref_;
-            std::reference_wrapper<hardware_interface::LoanedCommandInterface> moment_ref_;
+            std::reference_wrapper<hardware_interface::LoanedCommandInterface> torque_ref_;
             std::reference_wrapper<hardware_interface::LoanedCommandInterface> damp_ref_;
-            std::reference_wrapper<hardware_interface::LoanedCommandInterface> zero_moment_ref_;
-            std::reference_wrapper<hardware_interface::LoanedCommandInterface> moment_and_position_ref_;
+            std::reference_wrapper<hardware_interface::LoanedCommandInterface> zero_torque_ref_;
+            std::reference_wrapper<hardware_interface::LoanedCommandInterface> torque_and_position_ref_;
     };
 }
 #endif // __WARRIOR_CONTROLLER__TEST_HANDLE_H__

@@ -18,16 +18,16 @@ controller_interface::InterfaceConfiguration WheelBalancingController::command_i
     {
         command_interfaces_config.names.push_back(joint + "/" + hardware_interface::HW_IF_POSITION);
         command_interfaces_config.names.push_back(joint + "/" + hardware_interface::HW_IF_VELOCITY);
-        command_interfaces_config.names.push_back(joint + "/" + "moment");
+        command_interfaces_config.names.push_back(joint + "/" + "torque");
     }
     for(std::string joint : leg_joint_name_)
     {
         command_interfaces_config.names.push_back(joint + "/" + hardware_interface::HW_IF_POSITION);
         command_interfaces_config.names.push_back(joint + "/" + hardware_interface::HW_IF_VELOCITY);
-        command_interfaces_config.names.push_back(joint + "/" + "moment");
+        command_interfaces_config.names.push_back(joint + "/" + "torque");
         command_interfaces_config.names.push_back(joint + "/" + "damp");
-        command_interfaces_config.names.push_back(joint + "/" + "zero_moment");
-        command_interfaces_config.names.push_back(joint + "/" + "moment_and_position");
+        command_interfaces_config.names.push_back(joint + "/" + "zero_torque");
+        command_interfaces_config.names.push_back(joint + "/" + "torque_and_position");
     }
     return command_interfaces_config;
 }
@@ -91,10 +91,10 @@ controller_interface::return_type WheelBalancingController::update()
     // ,Go1_LF_handles_->get_velocity()
     // ,Go1_LF_handles_->get_acceleration());
     // Go1_LF_handles_->set_position(10);
-    Go1_LF_handles_->set_velocity(5.2686);
-    Go1_LB_handles_->set_velocity(6.2686);
-    Go1_RF_handles_->set_velocity(3.2686);
-    Go1_RB_handles_->set_velocity(2.2686);
+    Go1_LF_handles_->set_position(3.14*6.33);
+    Go1_LB_handles_->set_position(3.14*6.33);
+    Go1_RF_handles_->set_position(3.14*6.33);
+    Go1_RB_handles_->set_position(3.14*6.33);
     /*LK commond Test*/
     // LK_L_handles_->set_position(10);
     // LK_R_handles_->set_position(10);
@@ -316,11 +316,11 @@ std::shared_ptr<LK9025Handle> WheelBalancingController::get_LK_handle(const std:
     }
 
     // Lookup the accelration command interface
-    const auto moment_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
+    const auto torque_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
     {
-        return interface.get_name() == joint_name && interface.get_interface_name() == "moment";
+        return interface.get_name() == joint_name && interface.get_interface_name() == "torque";
     });
-    if (moment_command == command_interfaces_.end()) {
+    if (torque_command == command_interfaces_.end()) {
         RCLCPP_ERROR(get_node()->get_logger(), "%s accelration command interface not found", joint_name.c_str());
         return nullptr;
     }
@@ -331,7 +331,7 @@ std::shared_ptr<LK9025Handle> WheelBalancingController::get_LK_handle(const std:
                                         std::ref(*acceleration_state),
                                         std::ref(*position_command),
                                         std::ref(*velocity_command),
-                                        std::ref(*moment_command));
+                                        std::ref(*torque_command));
 }
 
 std::shared_ptr<Go1Handle> WheelBalancingController::get_Go1_handle(const std::string & joint_name)
@@ -387,11 +387,11 @@ std::shared_ptr<Go1Handle> WheelBalancingController::get_Go1_handle(const std::s
     }
 
     // Lookup the motion command interface
-    const auto moment_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
+    const auto torque_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
     {
-        return interface.get_name() == joint_name && interface.get_interface_name() == "moment";
+        return interface.get_name() == joint_name && interface.get_interface_name() == "torque";
     });
-    if (moment_command == command_interfaces_.end()) {
+    if (torque_command == command_interfaces_.end()) {
         RCLCPP_ERROR(get_node()->get_logger(), "%s motion command interface not found", joint_name.c_str());
         return nullptr;
     }
@@ -406,20 +406,20 @@ std::shared_ptr<Go1Handle> WheelBalancingController::get_Go1_handle(const std::s
         return nullptr;
     }
     // Lookup the zero motion command interface
-    const auto zero_moment_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
+    const auto zero_torque_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
     {
-        return interface.get_name() == joint_name && interface.get_interface_name() == "zero_moment";
+        return interface.get_name() == joint_name && interface.get_interface_name() == "zero_torque";
     });
-    if (zero_moment_command == command_interfaces_.end()) {
+    if (zero_torque_command == command_interfaces_.end()) {
         RCLCPP_ERROR(get_node()->get_logger(), "%s zero motion command interface not found", joint_name.c_str());
         return nullptr;
     }
     // Lookup the motion command interface
-    const auto moment_and_position_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
+    const auto torque_and_position_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&joint_name](const hardware_interface::LoanedCommandInterface & interface)
     {
-        return interface.get_name() == joint_name && interface.get_interface_name() == "moment_and_position";
+        return interface.get_name() == joint_name && interface.get_interface_name() == "torque_and_position";
     });
-    if (moment_and_position_command == command_interfaces_.end()) {
+    if (torque_and_position_command == command_interfaces_.end()) {
         RCLCPP_ERROR(get_node()->get_logger(), "%s position and motion command interface not found", joint_name.c_str());
         return nullptr;
     }
@@ -430,10 +430,10 @@ std::shared_ptr<Go1Handle> WheelBalancingController::get_Go1_handle(const std::s
                                         std::ref(*acceleration_state),
                                         std::ref(*position_command),
                                         std::ref(*velocity_command),
-                                        std::ref(*moment_command),
+                                        std::ref(*torque_command),
                                         std::ref(*damp_command),
-                                        std::ref(*zero_moment_command),
-                                        std::ref(*moment_and_position_command));
+                                        std::ref(*zero_torque_command),
+                                        std::ref(*torque_and_position_command));
 }
 
 PLUGINLIB_EXPORT_CLASS(

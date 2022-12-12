@@ -68,7 +68,9 @@ namespace warrior_hardware
             Go1DataProcess(uint16_t CRC16_CCITT_INIT);/*crc param init*/
             void Go1_head_set(void);
             void Go1_id_set(void);
-            void Go1_speed_set(uint8_t position,double k_sped,double spd_set);
+            void Go1_speed_set(uint8_t index,double k_sped,double spd_set);
+            void Go1_torque_set(uint8_t index,double tor_set);
+            void Go1_position_set(uint8_t index,double k_pos,double pos_set);
             void Go1_crc_append(void);
             uint8_t* Go1_buff_get(uint8_t index);
             //debug

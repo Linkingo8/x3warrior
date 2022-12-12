@@ -65,7 +65,7 @@
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
-        <command_interface name="moment">
+        <command_interface name="torque">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
@@ -82,7 +82,7 @@
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
-        <command_interface name="moment">
+        <command_interface name="torque">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
@@ -105,7 +105,7 @@
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
-        <command_interface name="moment">
+        <command_interface name="torque">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
@@ -113,11 +113,11 @@
         <param name="min">-1</param>
         <param name="max">1</param>
         </command_interface>
-        <command_interface name="zero_moment">
+        <command_interface name="zero_torque">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
-        <command_interface name="moment_and_position">
+        <command_interface name="torque_and_position">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
@@ -135,7 +135,7 @@
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
-        <command_interface name="moment">
+        <command_interface name="torque">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
@@ -143,11 +143,11 @@
         <param name="min">-1</param>
         <param name="max">1</param>
         </command_interface>
-        <command_interface name="zero_moment">
+        <command_interface name="zero_torque">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
-        <command_interface name="moment_and_position">
+        <command_interface name="torque_and_position">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
@@ -165,7 +165,7 @@
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
-        <command_interface name="moment">
+        <command_interface name="torque">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
@@ -173,11 +173,11 @@
         <param name="min">-1</param>
         <param name="max">1</param>
         </command_interface>
-        <command_interface name="zero_moment">
+        <command_interface name="zero_torque">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
-        <command_interface name="moment_and_position">
+        <command_interface name="torque_and_position">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
@@ -195,7 +195,7 @@
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
-        <command_interface name="moment">
+        <command_interface name="torque">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
@@ -203,11 +203,11 @@
         <param name="min">-1</param>
         <param name="max">1</param>
         </command_interface>
-        <command_interface name="zero_moment">
+        <command_interface name="zero_torque">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>
-        <command_interface name="moment_and_position">
+        <command_interface name="torque_and_position">
           <param name="min">-1</param>
           <param name="max">1</param>
         </command_interface>

@@ -52,10 +52,10 @@ class SerialPorttHardwareInterface
   private:
     std::vector<double> Go1_commands_positions_;
     std::vector<double> Go1_commands_velocities_;
-    std::vector<double> Go1_commands_moments_;
+    std::vector<double> Go1_commands_torques_;
     std::vector<double> Go1_commands_damp_;
-    std::vector<double> Go1_commands_zero_moments_;
-    std::vector<double> Go1_commands_moment_and_position_;
+    std::vector<double> Go1_commands_zero_torques_;
+    std::vector<double> Go1_commands_torque_and_position_;
     
     std::vector<double> Go1_positions_;
     std::vector<double> Go1_velocities_;

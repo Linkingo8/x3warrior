@@ -23,7 +23,7 @@ return_type ImuHardwareInterface::configure(const hardware_interface::HardwareIn
     /*init interface varible*/
     LK_commands_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     LK_commands_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-    LK_commands_moment_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    LK_commands_torque_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     LK_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     LK_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     LK_accelerations_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
@@ -61,13 +61,13 @@ return_type ImuHardwareInterface::configure(const hardware_interface::HardwareIn
 
     if (!(joint.command_interfaces[0].name == hardware_interface::HW_IF_POSITION ||
           joint.command_interfaces[0].name == hardware_interface::HW_IF_VELOCITY ||
-          joint.command_interfaces[0].name == "moment"))
+          joint.command_interfaces[0].name == "torque"))
     {
       RCLCPP_FATAL(
         rclcpp::get_logger("CanHardwareInterface"),
         "Joint '%s' has %s command interface. Expected %s, %s, or %s.", joint.name.c_str(),
         joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION,
-        hardware_interface::HW_IF_VELOCITY, "moment");
+        hardware_interface::HW_IF_VELOCITY, "torque");
       return return_type::ERROR;
     }
 
@@ -136,7 +136,7 @@ ImuHardwareInterface::export_command_interfaces()
   {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &LK_commands_positions_[i]));
     command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &LK_commands_velocities_[i]));
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "moment",&LK_commands_moment_[i]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "torque",&LK_commands_torque_[i]));
   }
   return command_interfaces;
 }
@@ -189,9 +189,9 @@ return_type ImuHardwareInterface::start()
     {
       LK_commands_velocities_[i] = 0;
     }
-    if (std::isnan(LK_commands_moment_[i]))
+    if (std::isnan(LK_commands_torque_[i]))
     {
-      LK_commands_moment_[i] = 0;
+      LK_commands_torque_[i] = 0;
     }
     if (std::isnan(LK_positions_[i]))
     {

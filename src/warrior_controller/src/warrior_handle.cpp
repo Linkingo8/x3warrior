@@ -16,14 +16,14 @@ LK9025Handle::LK9025Handle(
     std::reference_wrapper<const hardware_interface::LoanedStateInterface> acceleration,
     std::reference_wrapper<hardware_interface::LoanedCommandInterface> position_ref,
     std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity_ref,
-    std::reference_wrapper<hardware_interface::LoanedCommandInterface> moment_ref
+    std::reference_wrapper<hardware_interface::LoanedCommandInterface> torque_ref
     )
     : position_(position)
     , velocity_(velocity)
     , acceleration_(acceleration)
     , position_ref_(position_ref)
     , velocity_ref_(velocity_ref)
-    , moment_ref_(moment_ref)
+    , torque_ref_(torque_ref)
 {
     
 }
@@ -34,20 +34,20 @@ Go1Handle::Go1Handle(
     std::reference_wrapper<const hardware_interface::LoanedStateInterface> acceleration,
     std::reference_wrapper<hardware_interface::LoanedCommandInterface> position_ref,
     std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity_ref,
-    std::reference_wrapper<hardware_interface::LoanedCommandInterface> moment_ref,
+    std::reference_wrapper<hardware_interface::LoanedCommandInterface> torque_ref,
     std::reference_wrapper<hardware_interface::LoanedCommandInterface> damp_ref,
-    std::reference_wrapper<hardware_interface::LoanedCommandInterface> zero_moment_ref,
-    std::reference_wrapper<hardware_interface::LoanedCommandInterface> moment_and_position_ref
+    std::reference_wrapper<hardware_interface::LoanedCommandInterface> zero_torque_ref,
+    std::reference_wrapper<hardware_interface::LoanedCommandInterface> torque_and_position_ref
     )
     : position_(position)
     , velocity_(velocity)
     , acceleration_(acceleration)
     , position_ref_(position_ref)
     , velocity_ref_(velocity_ref)
-    , moment_ref_(moment_ref)
+    , torque_ref_(torque_ref)
     , damp_ref_(damp_ref)
-    , zero_moment_ref_(zero_moment_ref)
-    , moment_and_position_ref_(moment_and_position_ref)
+    , zero_torque_ref_(zero_torque_ref)
+    , torque_and_position_ref_(torque_and_position_ref)
 {
     
 }

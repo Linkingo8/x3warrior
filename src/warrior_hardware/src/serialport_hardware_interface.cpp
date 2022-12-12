@@ -30,10 +30,10 @@ return_type SerialPorttHardwareInterface::configure(
   Go1_accelerations_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   Go1_commands_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   Go1_commands_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  Go1_commands_moments_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  Go1_commands_torques_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   Go1_commands_damp_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  Go1_commands_zero_moments_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  Go1_commands_moment_and_position_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  Go1_commands_zero_torques_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  Go1_commands_torque_and_position_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
@@ -48,16 +48,16 @@ return_type SerialPorttHardwareInterface::configure(
 
     if (!(joint.command_interfaces[0].name == hardware_interface::HW_IF_POSITION ||
           joint.command_interfaces[0].name == hardware_interface::HW_IF_VELOCITY ||
-          joint.command_interfaces[0].name == "moment"||
+          joint.command_interfaces[0].name == "torque"||
           joint.command_interfaces[0].name == "damp"||
-          joint.command_interfaces[0].name == "zero_moment"||
-          joint.command_interfaces[0].name == "moment_and_position"))
+          joint.command_interfaces[0].name == "zero_torque"||
+          joint.command_interfaces[0].name == "torque_and_position"))
     {
       RCLCPP_FATAL(
         rclcpp::get_logger("SerialPorttHardwareInterface"),
         "Joint '%s' has %s command interface. Expected %s, %s, %s,%s,%sor %s.", joint.name.c_str(),
         joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION,
-        hardware_interface::HW_IF_VELOCITY, "moment","damp","zero_moment","moment_and_position");
+        hardware_interface::HW_IF_VELOCITY, "torque","damp","zero_torque","torque_and_position");
         return return_type::ERROR;
     }
 
@@ -107,10 +107,10 @@ SerialPorttHardwareInterface::export_command_interfaces()
   {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &Go1_commands_positions_[i]));
     command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &Go1_commands_velocities_[i]));
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "moment",&Go1_commands_moments_[i]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "torque",&Go1_commands_torques_[i]));
     command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "damp",&Go1_commands_damp_[i]));
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "zero_moment",&Go1_commands_zero_moments_[i]));
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "moment_and_position",&Go1_commands_moment_and_position_[i]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "zero_torque",&Go1_commands_zero_torques_[i]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "torque_and_position",&Go1_commands_torque_and_position_[i]));
   }
   return command_interfaces;
 }
@@ -142,21 +142,21 @@ return_type SerialPorttHardwareInterface::start()
     {
       Go1_commands_velocities_[i] = 0;
     }
-    if (std::isnan(Go1_commands_moments_[i]))
+    if (std::isnan(Go1_commands_torques_[i]))
     {
-      Go1_commands_moments_[i] = 0;
+      Go1_commands_torques_[i] = 0;
     }
     if (std::isnan(Go1_commands_damp_[i]))
     {
       Go1_commands_damp_[i] = 0;
     }
-    if (std::isnan(Go1_commands_zero_moments_[i]))
+    if (std::isnan(Go1_commands_zero_torques_[i]))
     {
-      Go1_commands_zero_moments_[i] = 0;
+      Go1_commands_zero_torques_[i] = 0;
     }
-    if (std::isnan(Go1_commands_moment_and_position_[i]))
+    if (std::isnan(Go1_commands_torque_and_position_[i]))
     {
-      Go1_commands_moment_and_position_[i] = 0;
+      Go1_commands_torque_and_position_[i] = 0;
     }
   }
   //go1 hardware interface
@@ -201,57 +201,17 @@ return_type SerialPorttHardwareInterface::write()
     Go1_data_process_->Go1_id_set();
     for (uint8_t i = 0; i < GO1_NUM; i++)
     {
-      Go1_data_process_->Go1_speed_set(i,0.05f,Go1_commands_velocities_[i]);
+      // Go1_data_process_->Go1_speed_set(i,0.05f,Go1_commands_velocities_[i]);
+      // Go1_data_process_->Go1_torque_set(i,Go1_commands_torques_[i]);
+      Go1_data_process_->Go1_position_set(i,0.05f,Go1_commands_positions_[i]);
     }
     Go1_data_process_->Go1_crc_append();
-    Go1_data_process_->Go1_buff_print();
-    
-    uint8_t buff[17] = {0};
-    uint8_t read_buff[16] = {0};
-    
-    buff[0] = 0xFE;
-    buff[1] = 0xEE;
-    //包头
-    buff[2] = 0x10;//0000 0010
-    //ID 模式 设置
-    buff[3] = 0x00;
-    buff[4] = 0x00;
-    //前馈力矩等于0
-    buff[5] = 0xFF;//
-    buff[6] = 0x00;
-    //速度值为36
-    buff[7] = 0x00;
-    buff[8] = 0x00;
-    buff[9] = 0x00;
-    buff[10] = 0x00;
-    //与位置无关，全部赋值为0
-
-    buff[11] = 0x00;
-    buff[12] = 0x00;
-    //刚度系数等于0
-    buff[13] = 0x40;
-    buff[14] = 0x00;
-   
-   Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(0),17);
-  //  for(int i = 0; i < 17; i++)
-  //  {
-  //   RCLCPP_INFO(
-  //  rclcpp::get_logger("SerialPorttHardwareInterface"), "writing...buff[%d],%x",i,buff[i]);
-
-  //  }
-
-   for(int i = 0; i < 4; i++)
-   {
-    RCLCPP_INFO(
-   rclcpp::get_logger("SerialPorttHardwareInterface"), "writing...velocity[%d],%.5f",i,Go1_commands_velocities_[i]);
-   }
-
-  //   RCLCPP_INFO(
-  //  rclcpp::get_logger("SerialPorttHardwareInterface"), "writing...");
-  return return_type::OK;
+    Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(0),17);
+    return return_type::OK;
+ }
+  
 }
-
-}  // namespace warrior_hardware
+  // namespace warrior_hardware
 
 #include "pluginlib/class_list_macros.hpp"
 
