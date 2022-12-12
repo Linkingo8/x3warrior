@@ -5,6 +5,9 @@
 #include <vector>
 #include "warrior_hardware/crc.hpp"
 #define GO1_NUM 4
+#ifndef PI 
+    #define PI 3.14159265
+#endif
 namespace warrior_hardware
 {
     class Go1Config
@@ -50,21 +53,27 @@ namespace warrior_hardware
         */
         typedef struct
         {
-            uint8_t head[2];    // head                 2Byte
-            RIS_Mode_t mode;    // motor control mode   1Byte
-            RIS_Comd_t comd;    // motor expected date  12Byte
-            uint16_t   CRC16;   // CRC                  2Byte
+            union{  
+                uint8_t tx_buff[17];
+                struct{
+                    uint8_t head[2];    // head                 2Byte
+                    RIS_Mode_t mode;    // motor control mode   1Byte
+                    RIS_Comd_t comd;    // motor expected date  12Byte
+                    uint16_t   CRC16;   // CRC                  2Byte
+                }data;
+            }tx;
         } ControlData_t;    // host control commands     17Byte
 
         public:
             Go1DataProcess(uint16_t CRC16_CCITT_INIT);/*crc param init*/
-            void convertLittleEndian(int16_t &buffer);
-            void convertLittleEndian(int32_t &buffer);
-            void convertLittleEndian(uint16_t &buffer);
             void Go1_head_set(void);
-            void Go1_speed_set(void);
-            void Go1_head_print(void);
+            void Go1_id_set(void);
+            void Go1_speed_set(uint8_t position,double k_sped,double spd_set);
             void Go1_crc_append(void);
+            uint8_t* Go1_buff_get(uint8_t index);
+            //debug
+            void Go1_head_print(void);
+            void Go1_buff_print(void);
         private:
             ControlData_t go1_control_data_[4];
             

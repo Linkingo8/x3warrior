@@ -198,7 +198,15 @@ return_type SerialPorttHardwareInterface::write()
   /*Iterate through the commond interface to decide the control mode*/
     /*head*/
     Go1_data_process_->Go1_head_set();
+    Go1_data_process_->Go1_id_set();
+    for (uint8_t i = 0; i < GO1_NUM; i++)
+    {
+      /* code */
+      Go1_data_process_->Go1_speed_set(i,0.05f,6.2686f);
+    }
     Go1_data_process_->Go1_crc_append();
+    Go1_data_process_->Go1_buff_print();
+    
     uint8_t buff[17] = {0};
     uint8_t read_buff[16] = {0};
     
@@ -222,11 +230,10 @@ return_type SerialPorttHardwareInterface::write()
     buff[11] = 0x00;
     buff[12] = 0x00;
     //刚度系数等于0
- 
     buff[13] = 0x40;
     buff[14] = 0x00;
    
-   Go1_port_config_->write_frame(buff,17);
+   Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(0),17);
   //  for(int i = 0; i < 17; i++)
   //  {
   //   RCLCPP_INFO(
