@@ -91,7 +91,10 @@ controller_interface::return_type WheelBalancingController::update()
     // ,Go1_LF_handles_->get_velocity()
     // ,Go1_LF_handles_->get_acceleration());
     // Go1_LF_handles_->set_position(10);
-    // Go1_LF_handles_->set_velocity(10);
+    Go1_LF_handles_->set_velocity(5.2686);
+    Go1_LB_handles_->set_velocity(6.2686);
+    Go1_RF_handles_->set_velocity(3.2686);
+    Go1_RB_handles_->set_velocity(2.2686);
     /*LK commond Test*/
     // LK_L_handles_->set_position(10);
     // LK_R_handles_->set_position(10);
@@ -182,7 +185,7 @@ CallbackReturn WheelBalancingController::on_activate(const rclcpp_lifecycle::Sta
     LK_R_handles_ =  get_LK_handle(wheel_joint_name_.at(1));
 
     Go1_LF_handles_ =  get_Go1_handle(leg_joint_name_.at(0));
-    Go1_LR_handles_ =  get_Go1_handle(leg_joint_name_.at(1));
+    Go1_LB_handles_ =  get_Go1_handle(leg_joint_name_.at(1));
     Go1_RF_handles_ =  get_Go1_handle(leg_joint_name_.at(2));
     Go1_RB_handles_ =  get_Go1_handle(leg_joint_name_.at(3));
 
@@ -195,7 +198,7 @@ CallbackReturn WheelBalancingController::on_activate(const rclcpp_lifecycle::Sta
     if (!LK_R_handles_) {
         return CallbackReturn::ERROR;
     }
-    if (!Go1_LF_handles_ || !Go1_LR_handles_ || !Go1_RF_handles_ || !Go1_RB_handles_) {
+    if (!Go1_LF_handles_ || !Go1_LB_handles_ || !Go1_RF_handles_ || !Go1_RB_handles_) {
         return CallbackReturn::ERROR;
     }
     return CallbackReturn::SUCCESS;

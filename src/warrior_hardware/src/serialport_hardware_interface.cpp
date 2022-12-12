@@ -201,8 +201,7 @@ return_type SerialPorttHardwareInterface::write()
     Go1_data_process_->Go1_id_set();
     for (uint8_t i = 0; i < GO1_NUM; i++)
     {
-      /* code */
-      Go1_data_process_->Go1_speed_set(i,0.05f,6.2686f);
+      Go1_data_process_->Go1_speed_set(i,0.05f,Go1_commands_velocities_[i]);
     }
     Go1_data_process_->Go1_crc_append();
     Go1_data_process_->Go1_buff_print();
@@ -240,6 +239,13 @@ return_type SerialPorttHardwareInterface::write()
   //  rclcpp::get_logger("SerialPorttHardwareInterface"), "writing...buff[%d],%x",i,buff[i]);
 
   //  }
+
+   for(int i = 0; i < 4; i++)
+   {
+    RCLCPP_INFO(
+   rclcpp::get_logger("SerialPorttHardwareInterface"), "writing...velocity[%d],%.5f",i,Go1_commands_velocities_[i]);
+   }
+
   //   RCLCPP_INFO(
   //  rclcpp::get_logger("SerialPorttHardwareInterface"), "writing...");
   return return_type::OK;

@@ -53,7 +53,7 @@ namespace warrior_controller
         private:
             /*GO1*/
             std::shared_ptr<Go1Handle> Go1_LF_handles_;
-            std::shared_ptr<Go1Handle> Go1_LR_handles_;
+            std::shared_ptr<Go1Handle> Go1_LB_handles_;
             std::shared_ptr<Go1Handle> Go1_RF_handles_;
             std::shared_ptr<Go1Handle> Go1_RB_handles_;
             std::shared_ptr<Go1Handle> get_Go1_handle(const std::string & joint_name);

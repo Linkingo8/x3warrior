@@ -114,12 +114,10 @@ void Go1DataProcess::Go1_speed_set(uint8_t position,double k_sped,double spd_set
     n_left = (go1_control_data_[position].tx.data.comd.k_spd  >> 8) & 0xff; //取高8位 n_right =  2 ^7 -1 = 127
     go1_control_data_[position].tx.tx_buff[13] =  n_right;
     go1_control_data_[position].tx.tx_buff[14] =  n_left;
-
-
     //RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go[%d] Go1 spd_set:%d",position ,go1_control_data_[position].tx.data.comd.spd_set);    
     // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go[%d] Go1 speed buff check:tx_buff[5]: %x tx_buff[6]: %x",position ,go1_control_data_[position].tx.tx_buff[5],go1_control_data_[position].tx.tx_buff[6]);    
-    RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_control_data_[position].tx.tx_buff[13] %x",go1_control_data_[position].tx.tx_buff[13]);    
-    RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_control_data_[position].tx.tx_buff[14] %x",go1_control_data_[position].tx.tx_buff[14]);        
+    // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_control_data_[position].tx.tx_buff[13] %x",go1_control_data_[position].tx.tx_buff[13]);    
+    // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_control_data_[position].tx.tx_buff[14] %x",go1_control_data_[position].tx.tx_buff[14]);        
 }
 
 void Go1DataProcess::Go1_crc_append(void)
@@ -131,9 +129,11 @@ void Go1DataProcess::Go1_crc_append(void)
         // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go[%d] Go1 messageSendBuffer crc[0] %x crc[1] :%x",i ,go1_control_data_[i].tx.tx_buff[15],go1_control_data_[i].tx.tx_buff[16]);       
     }
 }
+
 uint8_t* Go1DataProcess::Go1_buff_get(uint8_t index){
     return go1_control_data_[index].tx.tx_buff;
 }
+
 void Go1DataProcess::Go1_head_print(void)
 {
     /*head check*/
@@ -148,6 +148,7 @@ void Go1DataProcess::Go1_buff_print(void)
     /*head check*/
     for(int i = 0; i < 4; i++)
     {
+        RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go[%d]",i);
         for (size_t j = 0; j < 17; j++)
         {
          RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "buff[%d]:%x",j,go1_control_data_[i].tx.tx_buff[j]);
