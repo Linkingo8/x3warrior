@@ -24,7 +24,7 @@ add_library(
   src/test_hardware_interface.cpp
   src/can_hardware_interface.cpp
   src/can_driver.cpp
-  src/serialport_hardware_interface.cpp
+  src/go1_hardware_interface.cpp
   src/bsp_go1.cpp
   src/crc.cpp
 )

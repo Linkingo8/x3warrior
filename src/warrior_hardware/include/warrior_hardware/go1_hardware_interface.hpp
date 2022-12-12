@@ -22,11 +22,11 @@ using hardware_interface::return_type;
 
 namespace warrior_hardware
 {
-class SerialPorttHardwareInterface
+class Go1HardwareInterface
 : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
   public:
-    RCLCPP_SHARED_PTR_DEFINITIONS(SerialPorttHardwareInterface);
+    RCLCPP_SHARED_PTR_DEFINITIONS(Go1HardwareInterface);
 
     WARRIOR_HARDWARE_PUBLIC
     return_type configure(const hardware_interface::HardwareInfo & info) override;

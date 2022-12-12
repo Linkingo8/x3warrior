@@ -93,7 +93,7 @@
     </ros2_control>
     <ros2_control name="serialport" type="system">
       <hardware>
-        <plugin>warrior_hardware/SerialPorttHardwareInterface</plugin>
+        <plugin>warrior_hardware/Go1HardwareInterface</plugin>
       </hardware>
 
       <joint name="Go1_LF">

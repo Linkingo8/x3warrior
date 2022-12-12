@@ -1,5 +1,5 @@
 
-#include "warrior_hardware/serialport_hardware_interface.hpp"
+#include "warrior_hardware/go1_hardware_interface.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -17,7 +17,7 @@
 
 namespace warrior_hardware
 {
-return_type SerialPorttHardwareInterface::configure(
+return_type Go1HardwareInterface::configure(
   const hardware_interface::HardwareInfo & info)
 {
   if (configure_default(info) != return_type::OK)
@@ -41,7 +41,7 @@ return_type SerialPorttHardwareInterface::configure(
     if (joint.command_interfaces.size() != 6)
     {
       RCLCPP_FATAL(
-        rclcpp::get_logger("SerialPorttHardwareInterface"),
+        rclcpp::get_logger("Go1HardwareInterface"),
         "Joint '%s' has %d command interfaces. 6 expected.", joint.name.c_str());
       return return_type::ERROR;
     }
@@ -54,7 +54,7 @@ return_type SerialPorttHardwareInterface::configure(
           joint.command_interfaces[0].name == "torque_and_position"))
     {
       RCLCPP_FATAL(
-        rclcpp::get_logger("SerialPorttHardwareInterface"),
+        rclcpp::get_logger("Go1HardwareInterface"),
         "Joint '%s' has %s command interface. Expected %s, %s, %s,%s,%sor %s.", joint.name.c_str(),
         joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION,
         hardware_interface::HW_IF_VELOCITY, "torque","damp","zero_torque","torque_and_position");
@@ -64,7 +64,7 @@ return_type SerialPorttHardwareInterface::configure(
     if (joint.state_interfaces.size() != 3)
     {
       RCLCPP_FATAL(
-        rclcpp::get_logger("SerialPorttHardwareInterface"),
+        rclcpp::get_logger("Go1HardwareInterface"),
         "Joint '%s'has %d state interfaces. 3 expected.", joint.name.c_str());
       return return_type::ERROR;
     }
@@ -86,7 +86,7 @@ return_type SerialPorttHardwareInterface::configure(
   return return_type::OK;
 }
 
-std::vector<hardware_interface::StateInterface> SerialPorttHardwareInterface::export_state_interfaces()
+std::vector<hardware_interface::StateInterface> Go1HardwareInterface::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (std::size_t i = 0; i < info_.joints.size(); i++)
@@ -100,7 +100,7 @@ std::vector<hardware_interface::StateInterface> SerialPorttHardwareInterface::ex
 }
 
 std::vector<hardware_interface::CommandInterface>
-SerialPorttHardwareInterface::export_command_interfaces()
+Go1HardwareInterface::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (std::size_t i = 0; i < info_.joints.size(); i++)
@@ -115,10 +115,10 @@ SerialPorttHardwareInterface::export_command_interfaces()
   return command_interfaces;
 }
 
-return_type SerialPorttHardwareInterface::start()
+return_type Go1HardwareInterface::start()
 {
   RCLCPP_INFO(
-    rclcpp::get_logger("SerialPorttHardwareInterface"), "Starting... please wait...");
+    rclcpp::get_logger("Go1HardwareInterface"), "Starting... please wait...");
   // Set some default values
   for (std::size_t i = 0; i < info_.joints.size(); i++)
   {
@@ -165,35 +165,35 @@ return_type SerialPorttHardwareInterface::start()
   Go1_data_process_ = std::make_shared<Go1DataProcess>(0x0000);
   if(Go1_port_config_->open("/dev/ttyUSB0") !=  0)
   {
-    RCLCPP_INFO(rclcpp::get_logger("SerialPorttHardwareInterface"), "Go1Port hardware failed been open!");
+    RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "Go1Port hardware failed been open!");
         return hardware_interface::return_type::ERROR;    
   }
   status_ = hardware_interface::status::STARTED;
   return return_type::OK;
 }
 
-return_type SerialPorttHardwareInterface::stop()
+return_type Go1HardwareInterface::stop()
 {
   RCLCPP_INFO(
-    rclcpp::get_logger("SerialPorttHardwareInterface"), "Stopping... please wait...");
+    rclcpp::get_logger("Go1HardwareInterface"), "Stopping... please wait...");
 
   status_ = hardware_interface::status::STOPPED;
 
   RCLCPP_INFO(
-    rclcpp::get_logger("SerialPorttHardwareInterface"), "System successfully stopped!");
+    rclcpp::get_logger("Go1HardwareInterface"), "System successfully stopped!");
 
   return return_type::OK;
 }
 
-return_type SerialPorttHardwareInterface::read()
+return_type Go1HardwareInterface::read()
 {
   uint8_t buff[17]{0};
   // RCLCPP_INFO(
-  // rclcpp::get_logger("SerialPorttHardwareInterface"), "reading.....");
+  // rclcpp::get_logger("Go1HardwareInterface"), "reading.....");
   return return_type::OK;
 }
 
-return_type SerialPorttHardwareInterface::write()
+return_type Go1HardwareInterface::write()
 {
   /*Iterate through the commond interface to decide the control mode*/
     /*head*/
@@ -216,5 +216,5 @@ return_type SerialPorttHardwareInterface::write()
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  warrior_hardware::SerialPorttHardwareInterface,
+  warrior_hardware::Go1HardwareInterface,
   hardware_interface::SystemInterface)
