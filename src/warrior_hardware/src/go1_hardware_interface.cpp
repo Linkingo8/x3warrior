@@ -205,6 +205,9 @@ return_type Go1HardwareInterface::write()
       // Go1_data_process_->Go1_torque_set(i,Go1_commands_torques_[i]);
       Go1_data_process_->Go1_position_set(i,0.05f,Go1_commands_positions_[i]);
     }
+    
+    Go1_data_process_->Go1_data_rec();
+
     Go1_data_process_->Go1_crc_append();
     Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(0),17);
     return return_type::OK;
