@@ -49,7 +49,7 @@
     </ros2_control>
     <ros2_control name="can_hardware" type="system">
       <hardware>
-        <plugin>warrior_hardware/ImuHardwareInterface</plugin>
+        <plugin>warrior_hardware/MF9025HardwareInterface</plugin>
       </hardware>
       <sensor name="imu">
         <state_interface name="pitch"/>

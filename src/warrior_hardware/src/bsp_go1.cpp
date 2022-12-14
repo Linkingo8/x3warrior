@@ -67,7 +67,6 @@ int Go1Config::read_frames(uint8_t* data, size_t size)
 }
 
 Go1DataProcess::Go1DataProcess(uint16_t CRC16_CCITT_INIT) : crc(CRC16_CCITT_INIT){}
-
 /**
 * @brief Motor state control states 
 * @param ControlData_t go1_control_data
@@ -177,7 +176,6 @@ void Go1DataProcess::Go1_data_rec(void)
             go1_feedback_data_[id_temp].fbk.force = bit12_temp[1];
             go1_feedback_data_[id_temp].fbk.none = 0;
             //crc //merge to big-endian
-            go1_feedback_data_[id_temp].CRC16 = 0;
             go1_feedback_data_[id_temp].CRC16 = buff_temp[15];
             go1_feedback_data_[id_temp].CRC16 = go1_feedback_data_[id_temp].CRC16 << 8;
             go1_feedback_data_[id_temp].CRC16 |= buff_temp[14];
@@ -186,7 +184,22 @@ void Go1DataProcess::Go1_data_rec(void)
     }
     else
     {
-
+        for (size_t i = 0; i < GO1_NUM; i++)
+        {
+            go1_feedback_data_[i].head[0] = 0;
+            go1_feedback_data_[i].head[1] = 0;
+            go1_feedback_data_[i].mode.id = 0;
+            go1_feedback_data_[i].mode.status = 0;
+            go1_feedback_data_[i].mode.none = 0;
+            go1_feedback_data_[i].fbk.force = 0;
+            go1_feedback_data_[i].fbk.MError = 0;
+            go1_feedback_data_[i].fbk.none = 0;
+            go1_feedback_data_[i].fbk.pos = 0;
+            go1_feedback_data_[i].fbk.speed = 0;
+            go1_feedback_data_[i].fbk.temp = 0;
+            go1_feedback_data_[i].fbk.torque = 0;
+            go1_feedback_data_[i].CRC16 = 0;
+        }
     }
 }
 

@@ -16,7 +16,7 @@
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "warrior_hardware/visibility_control.h"
 #include "warrior_hardware/can_driver.hpp"
-
+#include "warrior_hardware/bsp_LK_MF9025.hpp"
 
 #define ANGLE_NUM       3
 #define LK_COMMOND_NUM  3
@@ -29,11 +29,11 @@ using hardware_interface::return_type;
 namespace warrior_hardware
 {
 
-class ImuHardwareInterface
+class MF9025HardwareInterface
 : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
 public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(ImuHardwareInterface);
+  RCLCPP_SHARED_PTR_DEFINITIONS(MF9025HardwareInterface);
 
   WARRIOR_HARDWARE_PUBLIC
   return_type configure(const hardware_interface::HardwareInfo & info) override;
@@ -108,9 +108,13 @@ private:
   int count_;
   VCI_CAN_OBJ rec_[3000];//接收缓存，设为3000为佳。
   VCI_CAN_OBJ send_9025_[2];
+
   int32_t speedControl_LK_L_;
   int32_t speedControl_LK_R_;
   double  speedControl_LK_L_d;
+
+  std::shared_ptr<MF9025DataProcess> MF9025_data_process_;
+
 };
 
 }  // namespace warrior_hardware

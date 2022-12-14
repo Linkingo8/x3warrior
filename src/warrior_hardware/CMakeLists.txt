@@ -22,10 +22,11 @@ add_library(
   ${PROJECT_NAME}
   SHARED
   src/test_hardware_interface.cpp
-  src/can_hardware_interface.cpp
+  src/MF9025_hardware_interface.cpp
   src/can_driver.cpp
   src/go1_hardware_interface.cpp
   src/bsp_go1.cpp
+  src/bsp_LK_MF9025.cpp
   src/crc.cpp
 )
 #link extern lib

@@ -1,5 +1,5 @@
 
-#include "warrior_hardware/can_hardware_interface.hpp"
+#include "warrior_hardware/MF9025_hardware_interface.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -9,12 +9,11 @@
 #include <vector>
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
-#include "warrior_hardware/can_driver.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace warrior_hardware
 {
-return_type ImuHardwareInterface::configure(const hardware_interface::HardwareInfo & info_)
+return_type MF9025HardwareInterface::configure(const hardware_interface::HardwareInfo & info_)
 {
     if (configure_default(info_) != return_type::OK)
     {
@@ -27,6 +26,8 @@ return_type ImuHardwareInterface::configure(const hardware_interface::HardwareIn
     LK_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     LK_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     LK_accelerations_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    //LK date process
+    MF9025_data_process_ = std::make_shared<MF9025DataProcess>();
     /*hardware param*/
     // auto imu_ID_it_ = info_.hardware_parameters.find("imu_id");
     // imu_ID_ = atoi(imu_ID_it_->second.c_str());
@@ -98,7 +99,7 @@ return_type ImuHardwareInterface::configure(const hardware_interface::HardwareIn
 }
 
 std::vector<hardware_interface::StateInterface>
-ImuHardwareInterface::export_state_interfaces()
+MF9025HardwareInterface::export_state_interfaces()
 {
     std::vector<hardware_interface::StateInterface> state_interfaces;
     const auto & sensor_name = info_.sensors[0].name;
@@ -129,7 +130,7 @@ ImuHardwareInterface::export_state_interfaces()
 }
 
 std::vector<hardware_interface::CommandInterface>
-ImuHardwareInterface::export_command_interfaces()
+MF9025HardwareInterface::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (std::size_t i = 0; i < info_.joints.size(); i++)
@@ -141,12 +142,12 @@ ImuHardwareInterface::export_command_interfaces()
   return command_interfaces;
 }
 
-return_type ImuHardwareInterface::start()
+return_type MF9025HardwareInterface::start()
 {
   RCLCPP_INFO(
-  rclcpp::get_logger("ImuHardwareInterface"), "Starting... please wait...");
+  rclcpp::get_logger("MF9025HardwareInterface"), "Starting... please wait...");
   #ifdef RM_IMU_USE
-  ImuHardwareInterface::ind_ = 0;
+  MF9025HardwareInterface::ind_ = 0;
   // Set some default values
   if (std::isnan(RM_imu_date_.pitch))
   {
@@ -208,17 +209,17 @@ return_type ImuHardwareInterface::start()
   }
 
   can_device_num_ = VCI_FindUsbDevice2(pInfo1_);
-  RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), ">>USBCAN DEVICE NUM:%d...",can_device_num_);
+  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>USBCAN DEVICE NUM:%d...",can_device_num_);
 
   if(VCI_OpenDevice(VCI_USBCAN2,0,0)!=1)//打开设备
   {
-    RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), "failed to open can port");   
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "failed to open can port");   
     return hardware_interface::return_type::ERROR;         
   }
   if(VCI_ReadBoardInfo(VCI_USBCAN2,0,&pInfo_)==1)//读取设备序列号、版本等信息。
   {
-    RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), ">>Get VCI_ReadBoardInfo success!\n");  
-    RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), ">>Serial_Num:%c\n", pInfo_.str_Serial_Num[0]); 
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Get VCI_ReadBoardInfo success!\n");  
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Serial_Num:%c\n", pInfo_.str_Serial_Num[0]); 
   }
   else
   {
@@ -237,37 +238,37 @@ return_type ImuHardwareInterface::start()
 
   if(VCI_InitCAN(VCI_USBCAN2,0,0,&config) != 1)
   {
-    RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), ">>Init CAN1 error\n\n"); 
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Init CAN1 error\n\n"); 
     VCI_CloseDevice(VCI_USBCAN2,0);
   }
 
   if(VCI_StartCAN(VCI_USBCAN2,0,0)!=1)
   {
-    RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), ">>Start CAN1 error\n\n"); 
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Start CAN1 error\n\n"); 
     VCI_CloseDevice(VCI_USBCAN2,0);
   }
 
   status_ = hardware_interface::status::STARTED;
 
   RCLCPP_INFO(
-    rclcpp::get_logger("ImuHardwareInterface"), "Sensor successfully started!");
+    rclcpp::get_logger("MF9025HardwareInterface"), "Sensor successfully started!");
   return return_type::OK;
 }
 
-return_type ImuHardwareInterface::stop()
+return_type MF9025HardwareInterface::stop()
 {
   RCLCPP_INFO(
-    rclcpp::get_logger("ImuHardwareInterface"), "Stopping... please wait...");
+    rclcpp::get_logger("MF9025HardwareInterface"), "Stopping... please wait...");
 
   status_ = hardware_interface::status::STOPPED;
 
   RCLCPP_INFO(
-    rclcpp::get_logger("ImuHardwareInterface"), "Imu successfully stopped!");
+    rclcpp::get_logger("MF9025HardwareInterface"), "Imu successfully stopped!");
 
   return return_type::OK;
 }
 
-return_type ImuHardwareInterface::read()
+return_type MF9025HardwareInterface::read()
 {
    #ifdef RM_IMU_USE
     if((reclen_=VCI_Receive(VCI_USBCAN2,0,ind_,rec_,3000,100))>0)//调用接收函数，如果有数据，进行数据处理显示。
@@ -380,47 +381,15 @@ return_type ImuHardwareInterface::read()
     T_imu_date_.roll = 3;
   #endif
     // RCLCPP_INFO(
-    // rclcpp::get_logger("ImuHardwareInterface"), "Get pitch %.5f,yaw %.5f,roll %.5f",RM_imu_date_.pitch,RM_imu_date_.yaw,RM_imu_date_.roll);
+    // rclcpp::get_logger("MF9025HardwareInterface"), "Get pitch %.5f,yaw %.5f,roll %.5f",RM_imu_date_.pitch,RM_imu_date_.yaw,RM_imu_date_.roll);
 
   return return_type::OK;
 }
 
-return_type ImuHardwareInterface::write()
+return_type MF9025HardwareInterface::write()
 {
-  speedControl_LK_L_ = LK_commands_positions_[0];
-  send_9025_[0].ID=0x141;
-	send_9025_[0].SendType=0;
-	send_9025_[0].RemoteFlag=0;
-	send_9025_[0].ExternFlag=0;
-	send_9025_[0].DataLen=8;
-  send_9025_[0].Data[0] = 0xA2;
-  send_9025_[0].Data[1] = 0x00;
-  send_9025_[0].Data[2] = 0x00;
-  send_9025_[0].Data[3] = 0x00;
-
-  send_9025_[0].Data[4] = *(uint8_t *)(&speedControl_LK_L_);
-  send_9025_[0].Data[5] = *((uint8_t *)(&speedControl_LK_L_)+1);
-  send_9025_[0].Data[6] = *((uint8_t *)(&speedControl_LK_L_)+2);
-  send_9025_[0].Data[7] = *((uint8_t *)(&speedControl_LK_L_)+3);
-
-  if(VCI_Transmit(VCI_USBCAN2, 0, 0, send_9025_, 1) == 1)
-  {
-    printf("CAN1 TX ID:0x%08X",send_9025_[0].ID);
-    if(send_9025_[0].ExternFlag==0) printf(" Standard ");
-    if(send_9025_[0].ExternFlag==1) printf(" Extend   ");
-    if(send_9025_[0].RemoteFlag==0) printf(" Data   ");
-    if(send_9025_[0].RemoteFlag==1) printf(" Remote ");
-    printf("DLC:0x%02X",send_9025_[0].DataLen);
-    printf(" data:0x");
-    printf("\n");
-  }
-  // for (std::size_t i = 0; i < LK_commands_positions_.size(); i++)
-  // {
-  //  RCLCPP_INFO(
-  //     rclcpp::get_logger("CanHardwareInterface"),
-  //     "Got the commands pos: %.5f",
-  //     LK_commands_positions_[i]);
-  // }
+  MF9025_data_process_->MF9025_speed_set(1,200000);
+  MF9025_data_process_->MF9025_commond_send(0x141);
   return return_type::OK;
 }
 }  // namespace warrior_hardware
@@ -428,5 +397,5 @@ return_type ImuHardwareInterface::write()
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  warrior_hardware::ImuHardwareInterface,
+  warrior_hardware::MF9025HardwareInterface,
   hardware_interface::SystemInterface)

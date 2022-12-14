@@ -34,6 +34,10 @@ return_type Go1HardwareInterface::configure(
   Go1_commands_damp_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   Go1_commands_zero_torques_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   Go1_commands_torque_and_position_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  //go1 hardware interface
+  Go1_port_config_ = std::make_shared<Go1Config>();
+  //go1 date process and crc check
+  Go1_data_process_ = std::make_shared<Go1DataProcess>(0x0000);
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
@@ -159,10 +163,7 @@ return_type Go1HardwareInterface::start()
       Go1_commands_torque_and_position_[i] = 0;
     }
   }
-  //go1 hardware interface
-  Go1_port_config_ = std::make_shared<Go1Config>();
-  //go1 date process and crc check
-  Go1_data_process_ = std::make_shared<Go1DataProcess>(0x0000);
+
   if(Go1_port_config_->open("/dev/ttyUSB0") !=  0)
   {
     RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "Go1Port hardware failed been open!");

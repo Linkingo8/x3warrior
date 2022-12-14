@@ -7,8 +7,8 @@
     </description>
   </class>
 
-  <class name="warrior_hardware/ImuHardwareInterface"
-         type="warrior_hardware::ImuHardwareInterface"
+  <class name="warrior_hardware/MF9025HardwareInterface"
+         type="warrior_hardware::MF9025HardwareInterface"
          base_class_type="hardware_interface::SystemInterface">
     <description>
         Imu Hardware interface for warrior
