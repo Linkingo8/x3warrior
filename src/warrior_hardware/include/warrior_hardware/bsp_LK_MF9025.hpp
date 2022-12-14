@@ -17,6 +17,16 @@
 #endif
 namespace warrior_hardware
 {
+    typedef struct LK_MF9025_rec
+    {
+        /* data */
+        uint8_t commond;
+        int8_t temperature;
+        int16_t iq;
+        int16_t speed;
+        uint16_t encoder;
+    }LK_MF9025_rec;
+    
     class MF9025DataProcess
     {
         public:
@@ -25,9 +35,11 @@ namespace warrior_hardware
             void MF9025_torque_set(uint8_t id_shift, double speed);
             void MF9025_position_set(uint8_t id_shift, double speed);
             void MF9025_commond_send(uint16_t id);
+            void MF9025_message_rec(uint8_t *Data);
         private:
         /*0: left 1: right*/
             VCI_CAN_OBJ send_9025_[2];
+            LK_MF9025_rec rec_9025_[2];
     };
 }
 #endif

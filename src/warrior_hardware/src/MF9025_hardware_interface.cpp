@@ -352,6 +352,16 @@ return_type MF9025HardwareInterface::read()
              memcpy(rm_imu_data.mag_int16, &rec_[q1].Data[0],6);
              break;
           }
+          case LEFT_ID:
+          {
+             MF9025_data_process_->MF9025_message_rec(rec_[q1].Data);
+             break;
+          }
+          case RIGHT_ID:
+          {
+             memcpy(rm_imu_data.mag_int16, &rec_[q1].Data[0],6);
+             break;
+          }
         }
         // if(rec_[q1].ExternFlag==0) RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware")," Standard ");//帧格式：标准帧
         // if(rec_[q1].ExternFlag==1) RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware")," Extend   ");//帧格式：扩展帧
@@ -388,7 +398,7 @@ return_type MF9025HardwareInterface::read()
 
 return_type MF9025HardwareInterface::write()
 {
-  MF9025_data_process_->MF9025_speed_set(1,200000);
+  MF9025_data_process_->MF9025_speed_set(1,2000);
   MF9025_data_process_->MF9025_commond_send(0x141);
   return return_type::OK;
 }

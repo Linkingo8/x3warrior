@@ -85,28 +85,28 @@ void MF9025DataProcess::MF9025_commond_send(uint16_t id)
     case LEFT_ID:
     if(VCI_Transmit(VCI_USBCAN2, 0, 0, send_9025_, 1) == 1)
     {
-        printf("CAN1 TX ID:0x%08X",send_9025_[0].ID);
-        if(send_9025_[0].ExternFlag==0) printf(" Standard ");
-        if(send_9025_[0].ExternFlag==1) printf(" Extend   ");
-        if(send_9025_[0].RemoteFlag==0) printf(" Data   ");
-        if(send_9025_[0].RemoteFlag==1) printf(" Remote ");
-        printf("DLC:0x%02X",send_9025_[0].DataLen);
-        printf(" data:0x");
-        printf("\n");
+        // printf("CAN1 TX ID:0x%08X",send_9025_[0].ID);
+        // if(send_9025_[0].ExternFlag==0) printf(" Standard ");
+        // if(send_9025_[0].ExternFlag==1) printf(" Extend   ");
+        // if(send_9025_[0].RemoteFlag==0) printf(" Data   ");
+        // if(send_9025_[0].RemoteFlag==1) printf(" Remote ");
+        // printf("DLC:0x%02X",send_9025_[0].DataLen);
+        // printf(" data:0x");
+        // printf("\n");
     }
         break;
     case RIGHT_ID:
  //right
     if(VCI_Transmit(VCI_USBCAN2, 0, 0, send_9025_ + 1, 1) == 1)
     {
-        printf("CAN1 TX ID:0x%08X",send_9025_[0].ID);
-        if(send_9025_[0].ExternFlag==0) printf(" Standard ");
-        if(send_9025_[0].ExternFlag==1) printf(" Extend   ");
-        if(send_9025_[0].RemoteFlag==0) printf(" Data   ");
-        if(send_9025_[0].RemoteFlag==1) printf(" Remote ");
-        printf("DLC:0x%02X",send_9025_[0].DataLen);
-        printf(" data:0x");
-        printf("\n");
+        // printf("CAN1 TX ID:0x%08X",send_9025_[0].ID);
+        // if(send_9025_[0].ExternFlag==0) printf(" Standard ");
+        // if(send_9025_[0].ExternFlag==1) printf(" Extend   ");
+        // if(send_9025_[0].RemoteFlag==0) printf(" Data   ");
+        // if(send_9025_[0].RemoteFlag==1) printf(" Remote ");
+        // printf("DLC:0x%02X",send_9025_[0].DataLen);
+        // printf(" data:0x");
+        // printf("\n");
     }
         break;    
     }
@@ -123,4 +123,22 @@ void MF9025DataProcess::MF9025_commond_send(uint16_t id)
     printf(" data:0x");
     printf("\n");
  }
+}
+
+void MF9025DataProcess::MF9025_message_rec(uint8_t *Data)
+{
+    rec_9025_[0].commond = (uint8_t)Data[0];
+
+    rec_9025_[0].temperature = (int8_t)Data[1];//DATA[1] = *(uint8_t *)(&temperature)
+    
+    rec_9025_[0].iq = (int16_t)Data[2];//DATA[2] = *(uint8_t *)(&iq) 
+    rec_9025_[0].iq = rec_9025_[0].iq | ((int16_t)Data[3] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
+
+    rec_9025_[0].speed = (int16_t)Data[4];//DATA[2] = *(uint8_t *)(&iq) 
+    rec_9025_[0].speed = rec_9025_[0].speed | ((int16_t)Data[5] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
+    RCLCPP_FATAL(rclcpp::get_logger("MF9025_position_set"),"id: %d", rec_9025_[0].speed);
+
+
+    rec_9025_[0].encoder = (uint16_t)Data[6];//DATA[2] = *(uint8_t *)(&iq) 
+    rec_9025_[0].encoder = rec_9025_[0].encoder | ((uint16_t)Data[7] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
 }
