@@ -37,6 +37,9 @@ namespace warrior_hardware
             void MF9025_position_set(uint8_t id_shift, double speed);
             void MF9025_commond_send(uint16_t id);
             void MF9025_message_rec(VCI_CAN_OBJ *rec_,int16_t q1);
+            double MF9025_velocitise_export(VCI_CAN_OBJ *rec_,int16_t q1);
+            double MF9025_position_export(VCI_CAN_OBJ *rec_,int16_t q1);
+            double MF9025_torque_export(VCI_CAN_OBJ *rec_,int16_t q1);
         private:
         /*0: left 1: right*/
             VCI_CAN_OBJ send_9025_[2];

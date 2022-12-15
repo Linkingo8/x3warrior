@@ -166,3 +166,51 @@ void MF9025DataProcess::MF9025_message_rec(VCI_CAN_OBJ *rec_,int16_t q1)
     }
 
 }
+
+double MF9025DataProcess::MF9025_velocitise_export(VCI_CAN_OBJ *rec_,int16_t q1)
+{
+    switch (rec_[q1].ID)
+    {
+    case LEFT_ID:
+        return rec_9025_[0].speed;
+        break;
+    case RIGHT_ID:
+        return rec_9025_[1].speed;
+        break;    
+    default:
+        return 0;
+        break;
+    }    
+}
+
+double MF9025DataProcess::MF9025_position_export(VCI_CAN_OBJ *rec_,int16_t q1)
+{
+    switch (rec_[q1].ID)
+    {
+    case LEFT_ID:
+        return rec_9025_[0].encoder;
+        break;
+    case RIGHT_ID:
+        return rec_9025_[1].encoder;
+        break;    
+    default:
+        return 0;
+        break;
+    }    
+}
+
+double MF9025DataProcess::MF9025_torque_export(VCI_CAN_OBJ *rec_,int16_t q1)
+{
+    switch (rec_[q1].ID)
+    {
+    case LEFT_ID:
+        return rec_9025_[0].iq;
+        break;
+    case RIGHT_ID:
+        return rec_9025_[1].iq;
+        break;    
+    default:
+        return 0;
+        break;
+    }    
+}

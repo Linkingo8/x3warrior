@@ -8,6 +8,7 @@
 //id must less than 3 instead leading to over memory problem///
 ///////////////////////////////////////////////////////////////
 #define GO1_NUM 4
+#define LF_GO1 0x00
 #ifndef PI 
     #define PI 3.14159265
 #endif
@@ -75,6 +76,12 @@ namespace warrior_hardware
             RIS_Fbk_t   fbk;    // 电机反馈数据 11Byte
             uint16_t  CRC16;    // CRC          2Byte
         } MotorData_t;      // 电机返回数据     16Byte
+        typedef struct
+        {
+            double velocity;
+            double position;    
+            double torque;
+        } MotorData_Export_t;      // 电机返回数据     16Byte
         /**
         * @brief 控制数据包格式
         * 
@@ -95,7 +102,10 @@ namespace warrior_hardware
         public:
             Go1DataProcess(uint16_t CRC16_CCITT_INIT);/*crc param init*/
             /* recieve */
-            void Go1_data_rec(void);
+            void Go1_data_rec(uint8_t id,uint8_t *buff_temp);
+            double Go1_velocities_export(uint8_t id_temp);
+            double Go1_positions_export(uint8_t id_temp);
+            double Go1_torques_export(uint8_t id_temp);
             /* send */
             void Go1_head_set(void);
             void Go1_id_set(void);
@@ -112,7 +122,7 @@ namespace warrior_hardware
         private:
             MotorData_t go1_feedback_data_[4];
             ControlData_t go1_control_data_[4];
-            
+            MotorData_Export_t go1_export_data_[4];
     };
 }
 #endif

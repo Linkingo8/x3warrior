@@ -25,7 +25,7 @@ return_type MF9025HardwareInterface::configure(const hardware_interface::Hardwar
     LK_commands_torque_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     LK_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     LK_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-    LK_accelerations_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    LK_torque_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     //LK date process
     MF9025_data_process_ = std::make_shared<MF9025DataProcess>();
     /*hardware param*/
@@ -124,7 +124,7 @@ MF9025HardwareInterface::export_state_interfaces()
   {
     state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &LK_positions_[i]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &LK_velocities_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, "torque", &LK_accelerations_[i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, "torque", &LK_torque_[i]));
   }
     return state_interfaces;
 }
@@ -202,9 +202,9 @@ return_type MF9025HardwareInterface::start()
     {
       LK_velocities_[i] = 0;
     }
-    if (std::isnan(LK_accelerations_[i]))
+    if (std::isnan(LK_torque_[i]))
     {
-      LK_accelerations_[i] = 0;
+      LK_torque_[i] = 0;
     }
   }
 
@@ -349,19 +349,27 @@ return_type MF9025HardwareInterface::read()
           }
           case IMU_MAG_ID:
           {
+
              memcpy(rm_imu_data.mag_int16, &rec_[q1].Data[0],6);
              break;
           }
           case LEFT_ID:
           {
-             MF9025_data_process_->MF9025_message_rec(rec_,q1);
-
-             break;
+            MF9025_data_process_->MF9025_message_rec(rec_,q1);
+            LK_velocities_[0] = MF9025_data_process_->MF9025_velocitise_export(rec_,q1);
+            LK_positions_[0] = MF9025_data_process_->MF9025_position_export(rec_,q1);
+            LK_torque_[0] = MF9025_data_process_->MF9025_torque_export(rec_,q1);
+            RCLCPP_INFO(
+              rclcpp::get_logger("MF9025HardwareInterface"), "LEFT_ID speed:%f",LK_velocities_[0]);
+            break;
           }
           case RIGHT_ID:
           {
-             MF9025_data_process_->MF9025_message_rec(rec_,q1);
-             break;
+            MF9025_data_process_->MF9025_message_rec(rec_,q1);
+            LK_velocities_[1] = MF9025_data_process_->MF9025_velocitise_export(rec_,q1);
+            LK_positions_[1] = MF9025_data_process_->MF9025_position_export(rec_,q1);
+            LK_torque_[1] = MF9025_data_process_->MF9025_torque_export(rec_,q1);
+            break;
           }
         }
         // if(rec_[q1].ExternFlag==0) RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware")," Standard ");//帧格式：标准帧
@@ -399,8 +407,10 @@ return_type MF9025HardwareInterface::read()
 
 return_type MF9025HardwareInterface::write()
 {
-  MF9025_data_process_->MF9025_speed_set(1,2000);
-  MF9025_data_process_->MF9025_commond_send(0x141);
+  LK_commands_velocities_[0] = 2000;
+  MF9025_data_process_->MF9025_speed_set(1,LK_commands_velocities_[0]);
+  // rclcpp::get_logger(("MF9025HardwareInterface"), "LEFT_ID speed set: %f",LK_commands_velocities_[0]);
+  MF9025_data_process_->MF9025_commond_send(LEFT_ID);
   return return_type::OK;
 }
 }  // namespace warrior_hardware

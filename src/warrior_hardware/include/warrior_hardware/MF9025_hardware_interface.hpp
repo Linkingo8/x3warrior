@@ -98,7 +98,7 @@ private:
   std::vector<double> LK_commands_torque_;
   std::vector<double> LK_positions_;
   std::vector<double> LK_velocities_;
-  std::vector<double> LK_accelerations_;
+  std::vector<double> LK_torque_;
   /*usb -can*/
   int can_device_num_;
   VCI_BOARD_INFO pInfo1_[50];
