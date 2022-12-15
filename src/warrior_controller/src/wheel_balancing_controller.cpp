@@ -46,7 +46,7 @@ controller_interface::InterfaceConfiguration WheelBalancingController::state_int
     {
         state_interfaces_config.names.push_back(joint + "/" + hardware_interface::HW_IF_POSITION);
         state_interfaces_config.names.push_back(joint + "/" + hardware_interface::HW_IF_VELOCITY);
-        state_interfaces_config.names.push_back(joint + "/" + hardware_interface::HW_IF_ACCELERATION);
+        state_interfaces_config.names.push_back(joint + "/" + "torque");
     }
     for(std::string joint : leg_joint_name_)
     {
@@ -288,7 +288,7 @@ std::shared_ptr<LK9025Handle> WheelBalancingController::get_LK_handle(const std:
     // Lookup the roll state interface
     const auto acceleration_state = std::find_if(state_interfaces_.cbegin(), state_interfaces_.cend(), [&joint_name](const hardware_interface::LoanedStateInterface & interface)
     {
-        return interface.get_name() == joint_name && interface.get_interface_name() == hardware_interface::HW_IF_ACCELERATION;
+        return interface.get_name() == joint_name && interface.get_interface_name() == "torque";
     });
     if (acceleration_state == state_interfaces_.cend()) {
         RCLCPP_ERROR(get_node()->get_logger(), "%s accelration state interface not found", joint_name.c_str());

@@ -82,13 +82,13 @@ return_type MF9025HardwareInterface::configure(const hardware_interface::Hardwar
 
     if (!(joint.state_interfaces[0].name == hardware_interface::HW_IF_POSITION ||
           joint.state_interfaces[0].name == hardware_interface::HW_IF_VELOCITY ||
-          joint.state_interfaces[0].name == hardware_interface::HW_IF_ACCELERATION))
+          joint.state_interfaces[0].name == "torque"))
     {
       RCLCPP_FATAL(
         rclcpp::get_logger("CanHardwareInterface"),
         "Joint '%s' has %s state interface. Expected %s, %s, or %s.", joint.name.c_str(),
         joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION,
-        hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_ACCELERATION);
+        hardware_interface::HW_IF_VELOCITY, "torque");
       return return_type::ERROR;
     }
   }
@@ -124,7 +124,7 @@ MF9025HardwareInterface::export_state_interfaces()
   {
     state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &LK_positions_[i]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &LK_velocities_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &LK_accelerations_[i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, "torque", &LK_accelerations_[i]));
   }
     return state_interfaces;
 }
@@ -355,7 +355,7 @@ return_type MF9025HardwareInterface::read()
           case LEFT_ID:
           {
              MF9025_data_process_->MF9025_message_rec(rec_,q1);
-             
+
              break;
           }
           case RIGHT_ID:
