@@ -354,12 +354,13 @@ return_type MF9025HardwareInterface::read()
           }
           case LEFT_ID:
           {
-             MF9025_data_process_->MF9025_message_rec(rec_[q1].Data);
+             MF9025_data_process_->MF9025_message_rec(rec_,q1);
+             
              break;
           }
           case RIGHT_ID:
           {
-             memcpy(rm_imu_data.mag_int16, &rec_[q1].Data[0],6);
+             MF9025_data_process_->MF9025_message_rec(rec_,q1);
              break;
           }
         }

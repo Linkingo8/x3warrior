@@ -20,74 +20,75 @@ namespace warrior_hardware
 return_type Go1HardwareInterface::configure(
   const hardware_interface::HardwareInfo & info)
 {
-  if (configure_default(info) != return_type::OK)
-  {
-    return return_type::ERROR;
-  }
 
-  Go1_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  Go1_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  Go1_accelerations_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  Go1_commands_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  Go1_commands_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  Go1_commands_torques_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  Go1_commands_damp_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  Go1_commands_zero_torques_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  Go1_commands_torque_and_position_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  //go1 hardware interface
-  Go1_port_config_ = std::make_shared<Go1Config>();
-  //go1 date process and crc check
-  Go1_data_process_ = std::make_shared<Go1DataProcess>(0x0000);
+    if (configure_default(info) != return_type::OK)
+    {
+      return return_type::ERROR;
+    }
+
+    Go1_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    Go1_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    Go1_accelerations_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    Go1_commands_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    Go1_commands_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    Go1_commands_torques_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    Go1_commands_damp_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    Go1_commands_zero_torques_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    Go1_commands_torque_and_position_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    //go1 hardware interface
+    Go1_port_config_ = std::make_shared<Go1Config>();
+    //go1 date process and crc check
+    Go1_data_process_ = std::make_shared<Go1DataProcess>(0x0000);
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
-  {
-    // 3 state interfaces and 3 command interfaces on each joint
-    if (joint.command_interfaces.size() != 6)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("Go1HardwareInterface"),
-        "Joint '%s' has %d command interfaces. 6 expected.", joint.name.c_str());
-      return return_type::ERROR;
-    }
-
-    if (!(joint.command_interfaces[0].name == hardware_interface::HW_IF_POSITION ||
-          joint.command_interfaces[0].name == hardware_interface::HW_IF_VELOCITY ||
-          joint.command_interfaces[0].name == "torque"||
-          joint.command_interfaces[0].name == "damp"||
-          joint.command_interfaces[0].name == "zero_torque"||
-          joint.command_interfaces[0].name == "torque_and_position"))
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("Go1HardwareInterface"),
-        "Joint '%s' has %s command interface. Expected %s, %s, %s,%s,%sor %s.", joint.name.c_str(),
-        joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION,
-        hardware_interface::HW_IF_VELOCITY, "torque","damp","zero_torque","torque_and_position");
+{
+      // 3 state interfaces and 3 command interfaces on each joint
+      if (joint.command_interfaces.size() != 6)
+      {
+        RCLCPP_FATAL(
+          rclcpp::get_logger("Go1HardwareInterface"),
+          "Joint '%s' has %d command interfaces. 6 expected.", joint.name.c_str());
         return return_type::ERROR;
+      }
+
+      if (!(joint.command_interfaces[0].name == hardware_interface::HW_IF_POSITION ||
+            joint.command_interfaces[0].name == hardware_interface::HW_IF_VELOCITY ||
+            joint.command_interfaces[0].name == "torque"||
+            joint.command_interfaces[0].name == "damp"||
+            joint.command_interfaces[0].name == "zero_torque"||
+            joint.command_interfaces[0].name == "torque_and_position"))
+      {
+        RCLCPP_FATAL(
+          rclcpp::get_logger("Go1HardwareInterface"),
+          "Joint '%s' has %s command interface. Expected %s, %s, %s,%s,%sor %s.", joint.name.c_str(),
+          joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION,
+          hardware_interface::HW_IF_VELOCITY, "torque","damp","zero_torque","torque_and_position");
+          return return_type::ERROR;
+      }
+
+      if (joint.state_interfaces.size() != 3)
+      {
+        RCLCPP_FATAL(
+          rclcpp::get_logger("Go1HardwareInterface"),
+          "Joint '%s'has %d state interfaces. 3 expected.", joint.name.c_str());
+        return return_type::ERROR;
+      }
+
+      if (!(joint.state_interfaces[0].name == hardware_interface::HW_IF_POSITION ||
+            joint.state_interfaces[0].name == hardware_interface::HW_IF_VELOCITY ||
+            joint.state_interfaces[0].name == hardware_interface::HW_IF_ACCELERATION))
+      {
+        RCLCPP_FATAL(
+          rclcpp::get_logger("TestHardwareInterface"),
+          "Joint '%s' has %s state interface. Expected %s, %s, or %s.", joint.name.c_str(),
+          joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION,
+          hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_ACCELERATION);
+        return return_type::ERROR;
+      }
     }
 
-    if (joint.state_interfaces.size() != 3)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("Go1HardwareInterface"),
-        "Joint '%s'has %d state interfaces. 3 expected.", joint.name.c_str());
-      return return_type::ERROR;
-    }
-
-    if (!(joint.state_interfaces[0].name == hardware_interface::HW_IF_POSITION ||
-          joint.state_interfaces[0].name == hardware_interface::HW_IF_VELOCITY ||
-          joint.state_interfaces[0].name == hardware_interface::HW_IF_ACCELERATION))
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("TestHardwareInterface"),
-        "Joint '%s' has %s state interface. Expected %s, %s, or %s.", joint.name.c_str(),
-        joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION,
-        hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_ACCELERATION);
-      return return_type::ERROR;
-    }
-  }
-
-  status_ = hardware_interface::status::CONFIGURED;
-  return return_type::OK;
+    status_ = hardware_interface::status::CONFIGURED;
+    return return_type::OK;
 }
 
 std::vector<hardware_interface::StateInterface> Go1HardwareInterface::export_state_interfaces()

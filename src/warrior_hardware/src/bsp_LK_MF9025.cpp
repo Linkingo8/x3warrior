@@ -125,20 +125,44 @@ void MF9025DataProcess::MF9025_commond_send(uint16_t id)
  }
 }
 
-void MF9025DataProcess::MF9025_message_rec(uint8_t *Data)
+void MF9025DataProcess::MF9025_message_rec(VCI_CAN_OBJ *rec_,int16_t q1) 
 {
-    rec_9025_[0].commond = (uint8_t)Data[0];
+    switch (rec_[q1].ID)
+    {
+    case LEFT_ID:
+        rec_9025_[0].commond = (uint8_t)rec_[q1].Data[0];
 
-    rec_9025_[0].temperature = (int8_t)Data[1];//DATA[1] = *(uint8_t *)(&temperature)
-    
-    rec_9025_[0].iq = (int16_t)Data[2];//DATA[2] = *(uint8_t *)(&iq) 
-    rec_9025_[0].iq = rec_9025_[0].iq | ((int16_t)Data[3] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
+        rec_9025_[0].temperature = (int8_t)rec_[q1].Data[1];//DATA[1] = *(uint8_t *)(&temperature)
+        
+        rec_9025_[0].iq = (int16_t)rec_[q1].Data[2];//DATA[2] = *(uint8_t *)(&iq) 
+        rec_9025_[0].iq = rec_9025_[0].iq | ((int16_t)rec_[q1].Data[3] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
 
-    rec_9025_[0].speed = (int16_t)Data[4];//DATA[2] = *(uint8_t *)(&iq) 
-    rec_9025_[0].speed = rec_9025_[0].speed | ((int16_t)Data[5] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
-    RCLCPP_FATAL(rclcpp::get_logger("MF9025_position_set"),"id: %d", rec_9025_[0].speed);
+        rec_9025_[0].speed = (int16_t)rec_[q1].Data[4];//DATA[2] = *(uint8_t *)(&iq) 
+        rec_9025_[0].speed = rec_9025_[0].speed | ((int16_t)rec_[q1].Data[5] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
+        RCLCPP_FATAL(rclcpp::get_logger("MF9025_position_set"),"id: %d", rec_9025_[0].speed);
 
 
-    rec_9025_[0].encoder = (uint16_t)Data[6];//DATA[2] = *(uint8_t *)(&iq) 
-    rec_9025_[0].encoder = rec_9025_[0].encoder | ((uint16_t)Data[7] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
+        rec_9025_[0].encoder = (uint16_t)rec_[q1].Data[6];//DATA[2] = *(uint8_t *)(&iq) 
+        rec_9025_[0].encoder = rec_9025_[0].encoder | ((uint16_t)rec_[q1].Data[7] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
+        break;
+    case RIGHT_ID:
+        rec_9025_[1].commond = (uint8_t)rec_[q1].Data[0];
+
+        rec_9025_[1].temperature = (int8_t)rec_[q1].Data[1];//DATA[1] = *(uint8_t *)(&temperature)
+        
+        rec_9025_[1].iq = (int16_t)rec_[q1].Data[2];//DATA[2] = *(uint8_t *)(&iq) 
+        rec_9025_[1].iq = rec_9025_[1].iq | ((int16_t)rec_[q1].Data[3] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
+
+        rec_9025_[1].speed = (int16_t)rec_[q1].Data[4];//DATA[2] = *(uint8_t *)(&iq) 
+        rec_9025_[1].speed = rec_9025_[0].speed | ((int16_t)rec_[q1].Data[5] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
+        RCLCPP_FATAL(rclcpp::get_logger("MF9025_position_set"),"id: %d", rec_9025_[1].speed);
+
+
+        rec_9025_[1].encoder = (uint16_t)rec_[q1].Data[6];//DATA[2] = *(uint8_t *)(&iq) 
+        rec_9025_[1].encoder = rec_9025_[1].encoder | ((uint16_t)rec_[q1].Data[7] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
+        break;    
+    default:
+        break;
+    }
+
 }

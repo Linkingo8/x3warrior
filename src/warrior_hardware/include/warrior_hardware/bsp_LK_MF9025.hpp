@@ -1,6 +1,7 @@
 #ifndef WARRIOR_HARDWARE_BSP_LK_MF9025_HPP_
 #define WARRIOR_HARDWARE_BSP_LK_MF9025_HPP_
 #include "warrior_hardware/can_driver.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include <string>
 #include <cstring>
 #include <vector>
@@ -9,8 +10,8 @@
 ///////////////////////////////////////////////////////////////
 #define GO1_NUM 4
 
-#define LEFT_ID  0x141
-#define RIGHT_ID 0x142
+#define LEFT_ID  0x141 //0
+#define RIGHT_ID 0x142 //1
 
 #ifndef PI 
     #define PI 3.14159265
@@ -35,7 +36,7 @@ namespace warrior_hardware
             void MF9025_torque_set(uint8_t id_shift, double speed);
             void MF9025_position_set(uint8_t id_shift, double speed);
             void MF9025_commond_send(uint16_t id);
-            void MF9025_message_rec(uint8_t *Data);
+            void MF9025_message_rec(VCI_CAN_OBJ *rec_,int16_t q1);
         private:
         /*0: left 1: right*/
             VCI_CAN_OBJ send_9025_[2];
