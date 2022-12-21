@@ -78,10 +78,12 @@ double Go1DataProcess::Go1_velocities_export(uint8_t id_temp)
 { 
     return go1_export_data_[id_temp].velocity;
 }
+
 double Go1DataProcess::Go1_positions_export(uint8_t id_temp)
 { 
     return go1_export_data_[id_temp].position;
 }
+
 double Go1DataProcess::Go1_torques_export(uint8_t id_temp)
 { 
     return go1_export_data_[id_temp].torque;
@@ -223,7 +225,7 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
         }
     }
 }
-
+/*send*/
 void Go1DataProcess::Go1_head_set(void)
 {
     for(int i = 0; i < GO1_NUM; i++)

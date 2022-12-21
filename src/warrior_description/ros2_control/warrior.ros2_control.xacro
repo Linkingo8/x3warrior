@@ -51,11 +51,11 @@
       <hardware>
         <plugin>warrior_hardware/MF9025HardwareInterface</plugin>
       </hardware>
-      <sensor name="imu">
+      <!-- <sensor name="imu">
         <state_interface name="pitch"/>
         <state_interface name="yaw"/>
         <state_interface name="roll"/>
-      </sensor>
+      </sensor> -->
       <joint name="left_9025">
         <command_interface name="position">
           <param name="min">-1</param>
@@ -216,6 +216,16 @@
         <state_interface name="acceleration"/>
       </joint>
 
+    </ros2_control>
+      <ros2_control name="imu_hardware" type="sensor">
+      <hardware>
+        <plugin>warrior_hardware/ImuHardwareInterface</plugin>
+      </hardware>
+      <sensor name="imu">
+        <state_interface name="pitch"/> 
+        <state_interface name="yaw"/>
+        <state_interface name="roll"/>
+      </sensor>
     </ros2_control>
   </xacro:macro>
 

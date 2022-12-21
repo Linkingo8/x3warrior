@@ -199,7 +199,7 @@ return_type Go1HardwareInterface::read()
     Go1_velocities_[id] = Go1_data_process_->Go1_velocities_export(id);
     Go1_positions_[id] = Go1_data_process_->Go1_positions_export(id);
     Go1_accelerations_[id] = Go1_data_process_->Go1_torques_export(id);
-    RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "Go1_velocities_[%d] %f:.....",id,Go1_velocities_[id]);
+//    RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "Go1_velocities_[%d] %f:.....",id,Go1_velocities_[id]);
   }
   return return_type::OK;
 }
@@ -222,7 +222,7 @@ return_type Go1HardwareInterface::write()
     Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(0),17);
     return return_type::OK;
  }
-  
+
 }
   // namespace warrior_hardware
 

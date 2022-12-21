@@ -10,10 +10,12 @@ int main(int argc, char * argv[])
     std::shared_ptr<rclcpp::Executor> executor =std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
     auto controller_manager_node = std::make_shared<controller_manager::ControllerManager>(executor, manager_node_name);
 
-    std::thread cm_thread([controller_manager_node]() {
+    std::thread cm_thread([controller_manager_node]() 
+    {
       // load controller_manager update time parameter
       int update_rate = 100;
-      if (!controller_manager_node->get_parameter("update_rate", update_rate)) {
+      if (!controller_manager_node->get_parameter("update_rate", update_rate)) 
+      {
         throw std::runtime_error("update_rate parameter not existing or empty");
       }
       RCLCPP_INFO(controller_manager_node->get_logger(), "update rate is %d Hz", update_rate);

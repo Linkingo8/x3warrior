@@ -136,7 +136,6 @@ namespace warrior_hardware
                 int num_;
                 int reclen_;
                 VCI_CAN_OBJ rec_[3000];//接收缓存，设为3000为佳。
-
     };
 }
 #endif
