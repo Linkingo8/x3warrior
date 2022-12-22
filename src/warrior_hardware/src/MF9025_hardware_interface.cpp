@@ -1,6 +1,6 @@
 
 #include "warrior_hardware/MF9025_hardware_interface.hpp"
-
+#include "warrior_hardware/hardware_singleton.hpp"
 #include <chrono>
 #include <cmath>
 #include <limits>
@@ -207,7 +207,8 @@ return_type MF9025HardwareInterface::start()
       LK_torque_[i] = 0;
     }
   }
-
+if(CanConfig::config_status() == 0)
+{
   can_device_num_ = VCI_FindUsbDevice2(pInfo1_);
   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>USBCAN DEVICE NUM:%d...",can_device_num_);
 
@@ -247,7 +248,7 @@ return_type MF9025HardwareInterface::start()
     RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Start CAN1 error\n\n"); 
     VCI_CloseDevice(VCI_USBCAN2,0);
   }
-
+}
   status_ = hardware_interface::status::STARTED;
 
   RCLCPP_INFO(

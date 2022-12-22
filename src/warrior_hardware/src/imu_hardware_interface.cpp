@@ -1,6 +1,6 @@
 
 #include "warrior_hardware/imu_hardware_interface.hpp"
-
+#include "warrior_hardware/hardware_singleton.hpp"
 #include <chrono>
 #include <cmath>
 #include <limits>
@@ -106,7 +106,8 @@ return_type ImuHardwareInterface::start()
     T_imu_date_.roll = 0;
   }
   #endif 
-
+if(CanConfig::config_status() == 0)
+{
   can_device_num_ = VCI_FindUsbDevice2(pInfo1_);
   RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), ">>USBCAN DEVICE NUM:%d...",can_device_num_);
 
@@ -146,7 +147,7 @@ return_type ImuHardwareInterface::start()
     RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Start CAN1 error\n\n"); 
     VCI_CloseDevice(VCI_USBCAN2,0);
   }
-
+}
   status_ = hardware_interface::status::STARTED;
 
   RCLCPP_INFO(
@@ -280,9 +281,9 @@ return_type ImuHardwareInterface::read()
     T_imu_date_.yaw = 2;
     T_imu_date_.roll = 3;
    #endif
-   RCLCPP_INFO(
-   rclcpp::get_logger("ImuHardwareInterface"), "Get pitch %.5f,yaw %.5f,roll %.5f",T_imu_date_.pitch,T_imu_date_.yaw,T_imu_date_.roll);
-  return return_type::OK;
+  //  RCLCPP_INFO(
+  //  rclcpp::get_logger("ImuHardwareInterface"), "Get pitch %.5f,yaw %.5f,roll %.5f",T_imu_date_.pitch,T_imu_date_.yaw,T_imu_date_.roll);
+  // return return_type::OK;
 }
 
 }  // namespace warrior_hardware

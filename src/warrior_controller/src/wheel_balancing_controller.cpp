@@ -99,18 +99,17 @@ controller_interface::return_type WheelBalancingController::update()
     // LK_L_handles_->set_position(10);
     // LK_R_handles_->set_position(10);
     /*Test*/
-    RCLCPP_ERROR(get_node()->get_logger(), 
-        "imu_joint pitch %f yaw %f roll %f"
-        ,imu_handles_->get_pitch()
-        ,imu_handles_->get_yaw()
-        ,imu_handles_->get_roll());
+    // RCLCPP_ERROR(get_node()->get_logger(), 
+    //     "imu_joint pitch %f yaw %f roll %f"
+    //     ,imu_handles_->get_pitch()
+    //     ,imu_handles_->get_yaw()
+    //     ,imu_handles_->get_roll());
     /*Test*/
     // RCLCPP_ERROR(get_node()->get_logger(), 
     //     "imu_joint position %f velocity %f acceleration %f"
     //     ,LK_L_handles_->get_position()
     //     ,LK_L_handles_->get_velocity()
     //     ,LK_L_handles_->get_acceleration());
-
     // RCLCPP_ERROR(get_node()->get_logger(), 
     //     "imu_joint position %f velocity %f acceleration %f"
     //     ,LK_R_handles_->get_position()

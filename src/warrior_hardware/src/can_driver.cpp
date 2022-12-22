@@ -21,25 +21,5 @@ namespace warrior_hardware{
         ,reclen_(0)
     {
     }
-    // MecanumbotSerialPort::MecanumbotSerialPort()
-    //     : serial_port_(-1)
-    //     , rx_frame_length_(0)
-    //     , rx_frame_crc_(HDLC_CRC_INIT_VALUE)
-    //     , rx_frame_escape_(false)
-    //     , tx_frame_length_(0)
-    //     , tx_frame_crc_(HDLC_CRC_INIT_VALUE)
-    // {
-
-    // }
-
-    // MecanumbotSerialPort::~MecanumbotSerialPort()
-    // {
-    //     close();
-    // }
-    void CanCommon::decode_imu_byte(uint8_t imu_data)
-    {
-        if(imu_data>0) imu_data = 0;
-    }
-
 
 }
