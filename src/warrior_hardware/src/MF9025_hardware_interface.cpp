@@ -6,6 +6,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <cstring>
 #include <vector>
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -29,6 +30,18 @@ return_type MF9025HardwareInterface::configure(const hardware_interface::Hardwar
     //LK date process
     MF9025_data_process_ = std::make_shared<MF9025DataProcess>();
     /*hardware param*/
+    char id_temp[3]{0};
+    auto MF9025_Left_ID_it_ = info_.hardware_parameters.find("left_id");
+    memcpy(id_temp,MF9025_Left_ID_it_->second.c_str(),3);
+    /*char -> 16*/
+    MF9025_left_id_ = MF9025_data_process_->charToHex(id_temp,3);
+    RCLCPP_FATAL(rclcpp::get_logger("MF9025HardwareInterface"),"left_id '%x' ",MF9025_left_id_);
+
+    auto MF9025_Right_ID_it_ = info_.hardware_parameters.find("right_id");
+    memcpy(id_temp,MF9025_Right_ID_it_->second.c_str(),3);
+    MF9025_right_id_ = MF9025_data_process_->charToHex(id_temp,3);
+    RCLCPP_FATAL(rclcpp::get_logger("MF9025HardwareInterface"),"right_id '%x' ",MF9025_right_id_);
+
     // auto imu_ID_it_ = info_.hardware_parameters.find("imu_id");
     // imu_ID_ = atoi(imu_ID_it_->second.c_str());
     /*sensor: there is one senosor so use this way of writting for the time of being*/

@@ -11,7 +11,7 @@
          type="warrior_hardware::MF9025HardwareInterface"
          base_class_type="hardware_interface::SystemInterface">
     <description>
-        Imu Hardware interface for warrior
+         MF9025 Hardware interface for warrior
     </description>
   </class>
 
@@ -19,7 +19,7 @@
          type="warrior_hardware::Go1HardwareInterface"
          base_class_type="hardware_interface::SystemInterface">
     <description>
-        serial port Hardware interface for warrior
+        Go1 Hardware interface for warrior
     </description>
   </class>
 

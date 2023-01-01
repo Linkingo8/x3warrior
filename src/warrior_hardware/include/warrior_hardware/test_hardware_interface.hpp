@@ -66,6 +66,7 @@ private:
 
   // control mode for each system
   std::vector<integration_level_t> control_mode_;
+  double test_id_;
 };
 
 }  // namespace warrior_hardware

@@ -2,6 +2,7 @@
 #define WARRIOR_HARDWARE_BSP_LK_MF9025_HPP_
 #include "warrior_hardware/can_driver.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "data_process.hpp"
 #include <string>
 #include <cstring>
 #include <vector>
@@ -28,7 +29,7 @@ namespace warrior_hardware
         uint16_t encoder;
     }LK_MF9025_rec;
     
-    class MF9025DataProcess
+    class MF9025DataProcess : public BasicDataProcess
     {
         public:
             /*int32_t 0.01dps/LSB*/
