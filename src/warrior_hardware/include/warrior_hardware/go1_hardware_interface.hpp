@@ -62,6 +62,11 @@ class Go1HardwareInterface
     std::vector<double> Go1_accelerations_;
     std::shared_ptr<Go1Config> Go1_port_config_;
     std::shared_ptr<Go1DataProcess> Go1_data_process_;
+    uint16_t GO1_LF_ID_;
+    uint16_t GO1_LB_ID_;
+    uint16_t GO1_RF_ID_;
+    uint16_t GO1_RB_ID_;
+
 };
 
 }  // namespace warrior_hardware

@@ -3,6 +3,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include "data_process.hpp"
 #include "warrior_hardware/crc.hpp"
 ///////////////////////////////////////////////////////////////
 //id must less than 3 instead leading to over memory problem///
@@ -27,7 +28,7 @@ namespace warrior_hardware
             int go1_port_;   
     };
     
-    class Go1DataProcess : public crc
+    class Go1DataProcess : public crc , public BasicDataProcess
     {
         /**
         * @brief Motor mode control information

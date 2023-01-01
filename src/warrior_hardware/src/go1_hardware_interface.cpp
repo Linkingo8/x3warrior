@@ -40,6 +40,33 @@ return_type Go1HardwareInterface::configure(
     //go1 date process and crc check
     Go1_data_process_ = std::make_shared<Go1DataProcess>(0x0000);
 
+    /*hardware param*/
+    char id_temp[1]{0};
+
+    auto Go1_LF_ID_it = info_.hardware_parameters.find("Go1_LF_id");
+    memcpy(id_temp,Go1_LF_ID_it->second.c_str(),1);
+    /*char -> 16*/
+    GO1_LF_ID_ = Go1_data_process_->charToHex(id_temp,1);
+    RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"),"Go1_LF_id '%x' ",GO1_LF_ID_);
+
+    auto Go1_LB_ID_it = info_.hardware_parameters.find("Go1_LB_id");
+    memcpy(id_temp,Go1_LB_ID_it->second.c_str(),1);
+    /*char -> 16*/
+    GO1_LB_ID_ = Go1_data_process_->charToHex(id_temp,1);
+    RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"),"Go1_LB_id '%x' ",GO1_LB_ID_);
+
+    auto Go1_RF_ID_it = info_.hardware_parameters.find("Go1_RF_id");
+    memcpy(id_temp,Go1_RF_ID_it->second.c_str(),1);
+    /*char -> 16*/
+    GO1_RF_ID_ = Go1_data_process_->charToHex(id_temp,1);
+    RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"),"Go1_RF_id '%x' ",GO1_RF_ID_);
+
+    auto Go1_RB_ID_it = info_.hardware_parameters.find("Go1_RB_id");
+    memcpy(id_temp,Go1_RB_ID_it->second.c_str(),1);
+    /*char -> 16*/
+    GO1_RB_ID_ = Go1_data_process_->charToHex(id_temp,1);
+    RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"),"Go1_LF_id '%x' ",GO1_RB_ID_);
+
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
 {
       // 3 state interfaces and 3 command interfaces on each joint

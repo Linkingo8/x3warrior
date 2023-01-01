@@ -99,6 +99,9 @@ private:
   std::vector<double> LK_positions_;
   std::vector<double> LK_velocities_;
   std::vector<double> LK_torque_;
+  uint16_t MF9025_left_id_;
+  uint16_t MF9025_right_id_;
+  char test_id_[3];
   /*usb -can*/
   int can_device_num_;
   VCI_BOARD_INFO pInfo1_[50];
