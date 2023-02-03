@@ -222,45 +222,45 @@ return_type MF9025HardwareInterface::start()
   }
 if(CanConfig::config_status() == 0)
 {
-  can_device_num_ = VCI_FindUsbDevice2(pInfo1_);
-  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>USBCAN DEVICE NUM:%d...",can_device_num_);
+  // can_device_num_ = VCI_FindUsbDevice2(pInfo1_);
+  // RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>USBCAN DEVICE NUM:%d...",can_device_num_);
 
-  if(VCI_OpenDevice(VCI_USBCAN2,0,0)!=1)//打开设备
-  {
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "failed to open can port");   
-    return hardware_interface::return_type::ERROR;         
-  }
-  if(VCI_ReadBoardInfo(VCI_USBCAN2,0,&pInfo_)==1)//读取设备序列号、版本等信息。
-  {
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Get VCI_ReadBoardInfo success!\n");  
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Serial_Num:%c\n", pInfo_.str_Serial_Num[0]); 
-  }
-  else
-  {
-    printf(">>Get VCI_ReadBoardInfo error!\n");
-    return hardware_interface::return_type::ERROR;
-  }
+  // if(VCI_OpenDevice(VCI_USBCAN2,0,0)!=1)//打开设备
+  // {
+  //   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "failed to open can port");   
+  //   return hardware_interface::return_type::ERROR;         
+  // }
+  // if(VCI_ReadBoardInfo(VCI_USBCAN2,0,&pInfo_)==1)//读取设备序列号、版本等信息。
+  // {
+  //   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Get VCI_ReadBoardInfo success!\n");  
+  //   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Serial_Num:%c\n", pInfo_.str_Serial_Num[0]); 
+  // }
+  // else
+  // {
+  //   printf(">>Get VCI_ReadBoardInfo error!\n");
+  //   return hardware_interface::return_type::ERROR;
+  // }
   
-  //初始化参数，严格参数二次开发函数库说明书。
-  VCI_INIT_CONFIG config;
-  config.AccCode=0;
-  config.AccMask=0xFFFFFFFF;
-  config.Filter=1;//接收所有帧
-  config.Timing0=0x00;/*波特率1000 Kbps  0x00  0x14*/
-  config.Timing1=0x14;
-  config.Mode=0;//正常模式
+  // //初始化参数，严格参数二次开发函数库说明书。
+  // VCI_INIT_CONFIG config;
+  // config.AccCode=0;
+  // config.AccMask=0xFFFFFFFF;
+  // config.Filter=1;//接收所有帧
+  // config.Timing0=0x00;/*波特率1000 Kbps  0x00  0x14*/
+  // config.Timing1=0x14;
+  // config.Mode=0;//正常模式
 
-  if(VCI_InitCAN(VCI_USBCAN2,0,0,&config) != 1)
-  {
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Init CAN1 error\n\n"); 
-    VCI_CloseDevice(VCI_USBCAN2,0);
-  }
+  // if(VCI_InitCAN(VCI_USBCAN2,0,0,&config) != 1)
+  // {
+  //   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Init CAN1 error\n\n"); 
+  //   VCI_CloseDevice(VCI_USBCAN2,0);
+  // }
 
-  if(VCI_StartCAN(VCI_USBCAN2,0,0)!=1)
-  {
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Start CAN1 error\n\n"); 
-    VCI_CloseDevice(VCI_USBCAN2,0);
-  }
+  // if(VCI_StartCAN(VCI_USBCAN2,0,0)!=1)
+  // {
+  //   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Start CAN1 error\n\n"); 
+  //   VCI_CloseDevice(VCI_USBCAN2,0);
+  // }
 }
   status_ = hardware_interface::status::STARTED;
 
