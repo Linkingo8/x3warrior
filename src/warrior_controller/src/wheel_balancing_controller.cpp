@@ -8,6 +8,8 @@ using namespace warrior_controller;
 /*?*/
 WheelBalancingController::WheelBalancingController()
     : controller_interface::ControllerInterface()
+    , command_subsciption_(nullptr)
+    , command_ptr_(nullptr)
 {
 }
 
@@ -84,6 +86,25 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
 
 controller_interface::return_type WheelBalancingController::update()
 {
+    auto command = command_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    }
+    const auto rc = (*command);
+
+    //  RCLCPP_ERROR(get_node()->get_logger(), "rc -> sw1 %d ",rc->s_l);
+
+    double position  = rc->ch_l_x * 100 + 100.0;
+    double velocity  = rc->ch_l_y * 100 + 200.0;
+    double accelration  = rc->ch_l_x * 100 + rc->ch_l_y * 100 + 300.0;
+
+    if(rc->s_l == 2) { //protection mode
+        LK_L_handles_->set_velocity(0);
+        LK_R_handles_->set_velocity(0);
+    } else {//other modes
+
+    }
+
     /*Go1 Test*/
     // RCLCPP_ERROR(get_node()->get_logger(), 
     // "imu_joint position %f velocity %f acceleration %f"
@@ -91,13 +112,11 @@ controller_interface::return_type WheelBalancingController::update()
     // ,Go1_LF_handles_->get_velocity()
     // ,Go1_LF_handles_->get_acceleration());
     // Go1_LF_handles_->set_position(10);
-    Go1_LF_handles_->set_position(3.14*6.33);
-    Go1_LB_handles_->set_position(3.14*6.33);
-    Go1_RF_handles_->set_position(3.14*6.33);
-    Go1_RB_handles_->set_position(3.14*6.33);
+    // Go1_LF_handles_->set_position(3.14*6.33);
+    // Go1_LB_handles_->set_position(3.14*6.33);
+    // Go1_RF_handles_->set_position(3.14*6.33);
+    // Go1_RB_handles_->set_position(3.14*6.33);
     /*LK commond Test*/
-    // LK_L_handles_->set_position(10);
-    // LK_R_handles_->set_position(10);
     /*Test*/
     // RCLCPP_ERROR(get_node()->get_logger(), 
     //     "imu_joint pitch %f yaw %f roll %f"
@@ -172,6 +191,11 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
         return CallbackReturn::ERROR;
     }
     leg_joint_name_.push_back(joint_Go_RB_name_);
+
+    command_subsciption_ = get_node()->create_subscription<warrior_interface::msg::DbusData>("/rc_msg", 10, [this](const std::shared_ptr<warrior_interface::msg::DbusData> rc)
+    {
+        command_ptr_.writeFromNonRT(rc);
+    });
 
     return CallbackReturn::SUCCESS;
 }

@@ -110,19 +110,6 @@ void MF9025DataProcess::MF9025_commond_send(uint16_t id)
     }
         break;    
     }
-
- //right
- if(VCI_Transmit(VCI_USBCAN2, 0, 0, send_9025_ + 1, 1) == 1)
- {
-    printf("CAN1 TX ID:0x%08X",send_9025_[0].ID);
-    if(send_9025_[0].ExternFlag==0) printf(" Standard ");
-    if(send_9025_[0].ExternFlag==1) printf(" Extend   ");
-    if(send_9025_[0].RemoteFlag==0) printf(" Data   ");
-    if(send_9025_[0].RemoteFlag==1) printf(" Remote ");
-    printf("DLC:0x%02X",send_9025_[0].DataLen);
-    printf(" data:0x");
-    printf("\n");
- }
 }
 
 void MF9025DataProcess::MF9025_message_rec(VCI_CAN_OBJ *rec_,int16_t q1) 

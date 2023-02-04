@@ -9,6 +9,7 @@
 #include <string>
 
 #include "warrior_controller/warrior_controller_compiler.h"
+#include "warrior_interface/msg/dbus_data.hpp"
 #include "warrior_controller/warrior_handle.hpp"
 
 namespace warrior_controller
@@ -67,6 +68,9 @@ namespace warrior_controller
             std::shared_ptr<ImuHandle> imu_handles_;
             std::shared_ptr<ImuHandle> get_angle(const std::string & joint_name);
             std::vector<std::string> imu_joint_name_;
+            /*remote*/
+            rclcpp::Subscription<warrior_interface::msg::DbusData>::SharedPtr command_subsciption_;
+            realtime_tools::RealtimeBuffer<std::shared_ptr<warrior_interface::msg::DbusData>> command_ptr_;
     };
 }
 

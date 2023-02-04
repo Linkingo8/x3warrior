@@ -264,8 +264,7 @@ if(CanConfig::config_status() == 0)
 }
   status_ = hardware_interface::status::STARTED;
 
-  RCLCPP_INFO(
-    rclcpp::get_logger("MF9025HardwareInterface"), "Sensor successfully started!");
+  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "Sensor successfully started!");
   return return_type::OK;
 }
 
@@ -321,10 +320,13 @@ return_type MF9025HardwareInterface::read()
 
 return_type MF9025HardwareInterface::write()
 {
-  LK_commands_velocities_[0] = 2000;
   MF9025_data_process_->MF9025_speed_set(1,LK_commands_velocities_[0]);
-  // rclcpp::get_logger(("MF9025HardwareInterface"), "LEFT_ID speed set: %f",LK_commands_velocities_[0]);
   MF9025_data_process_->MF9025_commond_send(LEFT_ID);
+  MF9025_data_process_->MF9025_speed_set(2,LK_commands_velocities_[1]);
+  MF9025_data_process_->MF9025_commond_send(RIGHT_ID);
+  //  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "LEFT_ID speed set: %f",LK_commands_velocities_[0]);
+  //  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "RIGHT_ID speed set: %f",LK_commands_velocities_[1]);
+
   return return_type::OK;
 }
 }  // namespace warrior_hardware

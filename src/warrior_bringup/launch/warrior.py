@@ -112,7 +112,7 @@ def generate_launch_description():
 
     nodes = [
         control_node,
-#        dbus_node,
+        dbus_node,
     ]
     
     return LaunchDescription(declared_arguments + nodes)
