@@ -2,6 +2,10 @@
 #include <pluginlib/class_list_macros.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+//eigen
+#include <iostream>
+#include <Eigen/Dense>
+
 #include "warrior_controller/wheel_balancing_controller.hpp"
 
 using namespace warrior_controller;
@@ -86,14 +90,18 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
 
 controller_interface::return_type WheelBalancingController::update()
 {
+    //feadback of LK and G01.
+    // RCLCPP_ERROR(get_node()->get_logger(), "left: \n LK_L position %f velocity %f accelration %f", 
+    //     LK_L_handles_->get_position(),LK_L_handles_->get_velocity(),LK_L_handles_->get_acceleration());
+    // RCLCPP_ERROR(get_node()->get_logger(), "right: \n LK_R position %f velocity %f accelration %f", 
+    //     LK_R_handles_->get_position(),LK_R_handles_->get_velocity(),LK_R_handles_->get_acceleration());
+    //read the remote date.
     auto command = command_ptr_.readFromRT();
     if (!command || !(*command)) {
         return controller_interface::return_type::OK;
     }
     const auto rc = (*command);
-
     //  RCLCPP_ERROR(get_node()->get_logger(), "rc -> sw1 %d ",rc->s_l);
-
     double position  = rc->ch_l_x * 100 + 100.0;
     double velocity  = rc->ch_l_y * 100 + 200.0;
     double accelration  = rc->ch_l_x * 100 + rc->ch_l_y * 100 + 300.0;
@@ -102,9 +110,9 @@ controller_interface::return_type WheelBalancingController::update()
         LK_L_handles_->set_velocity(0);
         LK_R_handles_->set_velocity(0);
     } else {//other modes
-
+        LK_L_handles_->set_velocity(100);
+        LK_R_handles_->set_velocity(100);
     }
-
     /*Go1 Test*/
     // RCLCPP_ERROR(get_node()->get_logger(), 
     // "imu_joint position %f velocity %f acceleration %f"

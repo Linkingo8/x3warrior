@@ -78,7 +78,7 @@ controller_interface::return_type TestController::update()
     // RCLCPP_ERROR(get_node()->get_logger(), "test_joint2 position %f velocity %f accelration %f", test_joint2_handles_->get_position()
     // ,test_joint2_handles_->get_velocity(),test_joint2_handles_->get_accelration());
     const auto rc = (*command);
-    // RCLCPP_ERROR(get_node()->get_logger(), "rc -> sw1 %d ",rc->s_l);
+    //RCLCPP_ERROR(get_node()->get_logger(), "rc -> sw1 %d ",rc->s_l);
     double position  = rc->ch_l_x + 100.0;
     double velocity  = rc->ch_l_y + 200.0;
     double accelration  = rc->ch_l_x + rc->ch_l_y + 300.0;

@@ -8,7 +8,6 @@
 #include <string>
 #include <cstring>
 #include <vector>
-
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -287,9 +286,9 @@ return_type MF9025HardwareInterface::read()
 		{
 			for(int q1=0;q1<reclen_;q1++)
 			{
-        // RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"), "Index:%04d  ",count_);count_++;
-        // RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"), "CAN%d RX ID:0x%08X", ind_+1, rec_[q1].ID);
-        // RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"),"DLC:0x%02X",rec_[q1].DataLen);//帧长度
+        RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"), "Index:%04d  ",count_);count_++;
+        RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"), "CAN%d RX ID:0x%08X", ind_+1, rec_[q1].ID);
+        RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"),"DLC:0x%02X",rec_[q1].DataLen);//帧长度
         switch(rec_[q1].ID)
         {
           case LEFT_ID:

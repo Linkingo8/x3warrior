@@ -24,6 +24,7 @@ find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(warrior_interface REQUIRED)
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 add_library(
   ${PROJECT_NAME}
@@ -33,6 +34,9 @@ add_library(
   src/wheel_balancing_controller.cpp
   src/warrior_handle.cpp
 )
+
+target_link_libraries (${PROJECT_NAME} Eigen3::Eigen)
+
 target_include_directories(
   ${PROJECT_NAME}
   PRIVATE

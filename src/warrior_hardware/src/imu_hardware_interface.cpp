@@ -113,13 +113,13 @@ if(CanConfig::config_status() == 0)
 
   if(VCI_OpenDevice(VCI_USBCAN2,0,0)!=1)//打开设备
   {
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "failed to open can port");   
+    RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), "failed to open can port");   
     return hardware_interface::return_type::ERROR;         
   }
   if(VCI_ReadBoardInfo(VCI_USBCAN2,0,&pInfo_)==1)//读取设备序列号、版本等信息。
   {
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Get VCI_ReadBoardInfo success!\n");  
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Serial_Num:%c\n", pInfo_.str_Serial_Num[0]); 
+    RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), ">>Get VCI_ReadBoardInfo success!\n");  
+    RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), ">>Serial_Num:%c\n", pInfo_.str_Serial_Num[0]); 
   }
   else
   {
@@ -138,13 +138,13 @@ if(CanConfig::config_status() == 0)
 
   if(VCI_InitCAN(VCI_USBCAN2,0,0,&config) != 1)
   {
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Init CAN1 error\n\n"); 
+    RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), ">>Init CAN1 error\n\n"); 
     VCI_CloseDevice(VCI_USBCAN2,0);
   }
 
   if(VCI_StartCAN(VCI_USBCAN2,0,0)!=1)
   {
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Start CAN1 error\n\n"); 
+    RCLCPP_INFO(rclcpp::get_logger("ImuHardwareInterface"), ">>Start CAN1 error\n\n"); 
     VCI_CloseDevice(VCI_USBCAN2,0);
   }
 }
