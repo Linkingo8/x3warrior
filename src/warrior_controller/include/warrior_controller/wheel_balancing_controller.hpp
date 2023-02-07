@@ -68,7 +68,22 @@ namespace warrior_controller
             std::shared_ptr<ImuHandle> imu_handles_;
             std::shared_ptr<ImuHandle> get_angle(const std::string & joint_name);
             std::vector<std::string> imu_joint_name_;
+            controller_interface::return_type updatingRemoteData(void);
             /*remote*/
+            struct rc_commmonds
+            {
+                float ch_l_x;
+                float ch_l_y;
+                float ch_r_x;
+                float ch_r_y;
+                uint8_t sw_l;
+                uint8_t sw_r;
+                float wheel;
+
+                rc_commmonds() : ch_l_x(0.0), ch_l_y(0.0), ch_r_x(0.0)
+                                 ,ch_r_y(0.0), sw_l(1),sw_r(1),wheel(0) {}
+            };
+            rc_commmonds rc_commmonds_;
             rclcpp::Subscription<warrior_interface::msg::DbusData>::SharedPtr command_subsciption_;
             realtime_tools::RealtimeBuffer<std::shared_ptr<warrior_interface::msg::DbusData>> command_ptr_;
     };

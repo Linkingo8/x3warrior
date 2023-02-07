@@ -14,6 +14,7 @@ WheelBalancingController::WheelBalancingController()
     : controller_interface::ControllerInterface()
     , command_subsciption_(nullptr)
     , command_ptr_(nullptr)
+    , rc_commmonds_()
 {
 }
 
@@ -90,37 +91,22 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
 
 controller_interface::return_type WheelBalancingController::update()
 {
-    // remote date
 
     //feadback of LK and G01.
-    // RCLCPP_ERROR(get_node()->get_logger(), "left: \n LK_L position %f velocity %f accelration %f", 
-    //     LK_L_handles_->get_position(),LK_L_handles_->get_velocity(),LK_L_handles_->get_acceleration());
-    // RCLCPP_ERROR(get_node()->get_logger(), "right: \n LK_R position %f velocity %f accelration %f", 
-    //     LK_R_handles_->get_position(),LK_R_handles_->get_velocity(),LK_R_handles_->get_acceleration());
 
-    //read the remote date.
-    auto command = command_ptr_.readFromRT();
-    if (!command || !(*command)) {
-        return controller_interface::return_type::OK;
-    }
-    const auto rc = (*command);
-    //  RCLCPP_ERROR(get_node()->get_logger(), "rc -> sw1 %d ",rc->s_l);
-    double lk_position  = rc->ch_l_x   * 100;
-    double lk_velocity  = rc->ch_l_y   * 100;
-    double lk_tourque  = rc->ch_r_x    * 100;
+    //feadback of imu
+    
+    //update the remote date.
+    WheelBalancingController::updatingRemoteData();
 
-    double go1_position  = rc->ch_l_x   * 100;
-    double go1_velocity  = rc->ch_l_y   * 100;
-    double go1_tourque  = rc->ch_r_x    * 100;
-
-    // RCLCPP_ERROR(get_node()->get_logger(), "remote rc->ch_l_x %f\n position %f\n", 
-    //     rc->ch_l_x,lk_position);
+    RCLCPP_ERROR(get_node()->get_logger(), "remote rc->ch_l_x %f\n", 
+        rc_commmonds_.ch_l_x);
     // RCLCPP_ERROR(get_node()->get_logger(), "remote rc->ch_l_y %f\n velocity %f\n", 
     //     rc->ch_l_y,lk_velocity);
     // RCLCPP_ERROR(get_node()->get_logger(), "remote rc->ch_l_y %f\n velocity %f\n", 
     //     rc->ch_r_x,lk_tourque);
-        
-    if(rc->s_l == 1) { //protection mode
+    
+    if(rc_commmonds_.sw_l == 1) { //protection mode
         LK_L_handles_->set_torque(0);
         LK_R_handles_->set_torque(0);
         Go1_LF_handles_->set_torque(0);
@@ -128,12 +114,12 @@ controller_interface::return_type WheelBalancingController::update()
         Go1_RF_handles_->set_torque(0);
         Go1_RB_handles_->set_torque(0);
     } else {//other modes
-        LK_L_handles_->set_torque(lk_tourque);
-        LK_R_handles_->set_torque(lk_tourque);
-        Go1_LF_handles_->set_torque(go1_tourque);
-        Go1_LB_handles_->set_torque(go1_tourque);
-        Go1_RF_handles_->set_torque(go1_tourque);
-        Go1_RB_handles_->set_torque(go1_tourque);
+        LK_L_handles_->set_torque(0);
+        LK_R_handles_->set_torque(0);
+        Go1_LF_handles_->set_torque(0);
+        Go1_LB_handles_->set_torque(0);
+        Go1_RF_handles_->set_torque(0);
+        Go1_RB_handles_->set_torque(0);
     }
      return controller_interface::return_type::OK;
 }
@@ -247,6 +233,26 @@ CallbackReturn WheelBalancingController::on_error(const rclcpp_lifecycle::State 
 CallbackReturn WheelBalancingController::on_shutdown(const rclcpp_lifecycle::State &)
 {
     return CallbackReturn::SUCCESS;
+}
+
+//get remote date
+controller_interface::return_type WheelBalancingController::updatingRemoteData(void)
+{
+    // look the subcription
+    auto command = command_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    }
+    const auto rc = (*command);
+    //load to private remote variable.
+     rc_commmonds_.ch_l_x  = rc->ch_l_x   * 1000;
+     rc_commmonds_.ch_l_y  = rc->ch_l_y   * 1000;
+     rc_commmonds_.ch_r_x  = rc->ch_r_x   * 1000;
+     rc_commmonds_.ch_r_y  = rc->ch_r_y   * 1000;
+     rc_commmonds_.sw_l = rc->s_l;
+     rc_commmonds_.sw_r = rc->s_r;
+     rc_commmonds_.wheel = rc->wheel;
+    return controller_interface::return_type::OK;
 }
 
 std::shared_ptr<ImuHandle> WheelBalancingController::get_angle(const std::string & joint_name)

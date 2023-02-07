@@ -40,26 +40,6 @@ return_type MF9025HardwareInterface::configure(const hardware_interface::Hardwar
     memcpy(id_temp,MF9025_Right_ID_it_->second.c_str(),3);
     MF9025_right_id_ = MF9025_data_process_->charToHex(id_temp,3);
     RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"),"right_id '%x' ",MF9025_right_id_);
-
-    // auto imu_ID_it_ = info_.hardware_parameters.find("imu_id");
-    // imu_ID_ = atoi(imu_ID_it_->second.c_str());
-    /*sensor: there is one senosor so use this way of writting for the time of being*/
-    // const auto & sensor_state_interfaces = info_.sensors[0].state_interfaces;
-    // if (sensor_state_interfaces.size() != ANGLE_NUM)
-    // {
-    //   return return_type::ERROR;
-    // }
-    // for (const auto & imu_key : {"pitch", "yaw", "roll"})
-    // {
-    //   if (
-    //     std::find_if(
-    //       sensor_state_interfaces.begin(), sensor_state_interfaces.end(), [&imu_key](const auto & interface_info) {
-    //         return interface_info.name == imu_key;
-    //       }) == sensor_state_interfaces.end())
-    //   {
-    //     return return_type::ERROR;
-    //   }
-    // }
   /*joint*/
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
@@ -219,8 +199,14 @@ return_type MF9025HardwareInterface::start()
       LK_torque_[i] = 0;
     }
   }
-if(CanConfig::config_status() == 0)
+RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>CanConfig::get_status() %d...",CanConfig::get_status());
+
+if(CanConfig::get_status() == 0)
 {
+  //config success flag
+  CanConfig::reverse_status();
+  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), " CanConfig::reverse_status() %d...",CanConfig::get_status());
+
   can_device_num_ = VCI_FindUsbDevice2(pInfo1_);
   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>USBCAN DEVICE NUM:%d...",can_device_num_);
 
@@ -262,7 +248,7 @@ if(CanConfig::config_status() == 0)
   }
 }
   status_ = hardware_interface::status::STARTED;
-
+  
   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "Sensor successfully started!");
   return return_type::OK;
 }
@@ -286,9 +272,6 @@ return_type MF9025HardwareInterface::read()
 		{
 			for(int q1=0;q1<reclen_;q1++)
 			{
-        // RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"), "Index:%04d  ",count_);count_++;
-        // RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"), "CAN%d RX ID:0x%08X", ind_+1, rec_[q1].ID);
-        // RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"),"DLC:0x%02X",rec_[q1].DataLen);//帧长度
         switch(rec_[q1].ID)
         {
           case LEFT_ID:
@@ -403,13 +386,11 @@ return_type MF9025HardwareInterface::read()
 
 return_type MF9025HardwareInterface::write()
 {
+  /*limtte*/
   MF9025_data_process_->MF9025_speed_set(1,LK_commands_velocities_[0]);
   MF9025_data_process_->MF9025_commond_send(LEFT_ID);
   MF9025_data_process_->MF9025_speed_set(2,LK_commands_velocities_[1]);
   MF9025_data_process_->MF9025_commond_send(RIGHT_ID);
-  //  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "LEFT_ID speed set: %f",LK_commands_torque_[0]);
-  //  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "RIGHT_ID speed set: %f",LK_commands_torque_[1]);
-
   return return_type::OK;
 }
 }  // namespace warrior_hardware

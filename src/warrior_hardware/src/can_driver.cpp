@@ -21,5 +21,4 @@ namespace warrior_hardware{
         ,reclen_(0)
     {
     }
-
 }

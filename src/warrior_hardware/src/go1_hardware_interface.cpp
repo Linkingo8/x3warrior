@@ -266,7 +266,7 @@ return_type Go1HardwareInterface::write()
     /*write*/
     Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(0),17);
 //check
-    Go1_data_process_->Go1_buff_print();
+    // Go1_data_process_->Go1_buff_print();
 
     /*head*/
     // Go1_data_process_->Go1_head_set();
