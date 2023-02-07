@@ -75,18 +75,24 @@ Go1DataProcess::Go1DataProcess(uint16_t CRC16_CCITT_INIT) : crc(CRC16_CCITT_INIT
 
 /*recieve*/
 double Go1DataProcess::Go1_velocities_export(uint8_t id_temp)
-{ 
-    return go1_export_data_[id_temp].velocity;
+{   
+    double velocities = go1_export_data_[id_temp].velocity;
+    velocities =(velocities / 256) * 2 * PI;
+    return velocities; /* rad / s */
 }
 
 double Go1DataProcess::Go1_positions_export(uint8_t id_temp)
 { 
-    return go1_export_data_[id_temp].position;
+    double position = go1_export_data_[id_temp].position;
+    position =(position / 32768) * 2 * PI;
+    return position;/* rad */
 }
 
 double Go1DataProcess::Go1_torques_export(uint8_t id_temp)
 { 
-    return go1_export_data_[id_temp].torque;
+    double torque = go1_feedback_data_[id_temp].fbk.torque;
+    torque /= 256;
+    return torque;/*N * m*/
 }
 
 void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
@@ -121,7 +127,7 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
     {
         go1_feedback_data_[i].head[0] = 0;
         go1_feedback_data_[i].head[1] = 0;
-        go1_feedback_data_[i].mode.id = 0;
+        go1_feedback_data_[i].mode.id = -1;
         go1_feedback_data_[i].mode.status = 0;
         go1_feedback_data_[i].mode.none = 0;
         go1_feedback_data_[i].fbk.force = 0;
@@ -140,7 +146,7 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
         //analysis id
         if(id == id_temp)
         {
-            if(id_temp > GO1_NUM-1)
+            if((id_temp > GO1_NUM-1) || id_temp < 0)
             {
                 return;
             }
@@ -155,11 +161,12 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
                 go1_feedback_data_[id_temp].fbk.torque = buff_temp[4];
                 go1_feedback_data_[id_temp].fbk.torque = go1_feedback_data_[id_temp].fbk.torque << 8;
                 go1_feedback_data_[id_temp].fbk.torque |= buff_temp[3];
+                RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_feedback_data_[%d] torque: %d",id_temp,go1_feedback_data_[go1_feedback_data_[id_temp].mode.id].fbk.torque);
                 //speed //merge to big-endian
                 go1_feedback_data_[id_temp].fbk.speed = buff_temp[6];
                 go1_feedback_data_[id_temp].fbk.speed = go1_feedback_data_[id_temp].fbk.speed << 8;
                 go1_feedback_data_[id_temp].fbk.speed |= buff_temp[5];
-                RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "speed: %d",go1_feedback_data_[id_temp].fbk.speed);
+                // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "speed: %d",go1_feedback_data_[id_temp].fbk.speed);
                 //position //merge to big-endian
                 uint32_t merge_to_32[4]{0};
                 merge_to_32[0] = buff_temp[10];
@@ -197,7 +204,7 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
                 go1_feedback_data_[id_temp].CRC16 = buff_temp[15];
                 go1_feedback_data_[id_temp].CRC16 = go1_feedback_data_[id_temp].CRC16 << 8;
                 go1_feedback_data_[id_temp].CRC16 |= buff_temp[14];
-                RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "CRC: %x",go1_feedback_data_[id_temp].CRC16);
+                // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "CRC: %x",go1_feedback_data_[id_temp].CRC16);
 
                 go1_export_data_[id_temp].velocity = (go1_feedback_data_[id_temp].fbk.speed /256) * (2 * PI);
                 go1_export_data_[id_temp].position = (go1_feedback_data_[id_temp].fbk.pos /32768) * (2 * PI);
@@ -226,43 +233,39 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
     }
 }
 /*send*/
-void Go1DataProcess::Go1_head_set(void)
+void Go1DataProcess::Go1_head_set(uint8_t id)
 {
-    for(int i = 0; i < GO1_NUM; i++)
-    {
-        go1_control_data_[i].tx.data.head[0] = 0XFE;
-        go1_control_data_[i].tx.data.head[1] = 0xEE;
-        // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go[%d] Go1 head1:%x  head2:%x",i ,go1_control_data_[i].tx.tx_buff[0],go1_control_data_[i].tx.tx_buff[1]);
-    }
+        go1_control_data_[id].tx.data.head[0] = 0XFE;
+        go1_control_data_[id].tx.data.head[1] = 0xEE;
 }
 
-void Go1DataProcess::Go1_id_set(void)
+void Go1DataProcess::Go1_id_set(uint8_t id)
 {
-    for(int i = 0; i < GO1_NUM; i++)
-    {
-        go1_control_data_[i].tx.data.mode.id = 0x00;
-        go1_control_data_[i].tx.data.mode.status = 0x01;
-        go1_control_data_[i].tx.data.mode.none = 0x00;     
-    }   
-    
+        go1_control_data_[id].tx.data.mode.id = id;
+        go1_control_data_[id].tx.data.mode.status = 0x01;
+        go1_control_data_[id].tx.data.mode.none = 0x00;  
 }
 
 void Go1DataProcess::Go1_speed_set(uint8_t index,double k_sped,double spd_set)
 {
+    if(index > 3) {
+        RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "Go1_speed_set id error!");    
+        return;
+    }
     float k_temp = k_sped;
     float target_temp = spd_set;
-    go1_control_data_[index].tx.data.comd.spd_set = (256 * target_temp)  / (2 * PI);
-    go1_control_data_[index].tx.data.comd.k_spd = (1280 * k_temp);
-    // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_control_data_[position].tx.data.comd.k_spd %x",go1_control_data_[index].tx.data.comd.k_spd);    
+
+    int16_t spd_set_to_buffer = (256 * target_temp)  / (2 * PI);
+    uint16_t  k_spd_to_buffer = (1280 * k_temp);
     //change to little endian
     uint8_t n_right,n_left; //right表示低8位，left表示高8位
-    n_right = go1_control_data_[index].tx.data.comd.spd_set &0xFF; //取低8位 n_right =  2 ^8 -1 = 255  
-    n_left = (go1_control_data_[index].tx.data.comd.spd_set  >> 8) & 0xff; //取高8位 n_right =  2 ^7 -1 = 127
+    n_right = spd_set_to_buffer &0xFF; //取低8位 n_right =  2 ^8 -1 = 255  
+    n_left = (spd_set_to_buffer  >> 8) & 0xff; //取高8位 n_right =  2 ^7 -1 = 127
     go1_control_data_[index].tx.tx_buff[5] =  n_right;
     go1_control_data_[index].tx.tx_buff[6] =  n_left;
 
-    n_right = go1_control_data_[index].tx.data.comd.k_spd &0xFF; //取低8位 n_right =  2 ^8 -1 = 255  
-    n_left = (go1_control_data_[index].tx.data.comd.k_spd  >> 8) & 0xff; //取高8位 n_right =  2 ^7 -1 = 127
+    n_right = k_spd_to_buffer &0xFF; //取低8位 n_right =  2 ^8 -1 = 255  
+    n_left = (k_spd_to_buffer  >> 8) & 0xff; //取高8位 n_right =  2 ^7 -1 = 127
     go1_control_data_[index].tx.tx_buff[13] =  n_right;
     go1_control_data_[index].tx.tx_buff[14] =  n_left;    
 
@@ -288,16 +291,22 @@ void Go1DataProcess::Go1_zero_torque_set(uint8_t index)
     go1_control_data_[index].tx.data.comd.tor_set = 0x00;
     go1_control_data_[index].tx.data.comd.pos_set = 0x00;
     go1_control_data_[index].tx.data.comd.spd_set = 0x00;
+    for(int i = 0;i < 17;i++)
+        RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_control_data_[%d].tx.tx_buff[%d] %x",index,i,go1_control_data_[index].tx.tx_buff[i]); 
 }
 
 void Go1DataProcess::Go1_torque_set(uint8_t index,double tor_set)
 {
+    if(index > 3) {
+        RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "Go1_torque_set id error!");    
+        return;
+    }
     float target_temp = tor_set;
-    go1_control_data_[index].tx.data.comd.tor_set= (256 * target_temp);   
+    int16_t torset_to_buffer = (256 * target_temp); 
     //change to little endian
     uint8_t n_right,n_left; //right表示低8位，left表示高8位
-    n_right = go1_control_data_[index].tx.data.comd.tor_set &0xFF; //取低8位 n_right =  2 ^8 -1 = 255  
-    n_left = (go1_control_data_[index].tx.data.comd.tor_set  >> 8) & 0xff; //取高8位 n_right =  2 ^7 -1 = 127
+    n_right = torset_to_buffer &0xFF; //取低8位 n_right =  2 ^8 -1 = 255  
+    n_left  = (torset_to_buffer>>8) & 0xff; //取高8位 n_right =  2 ^7 -1 = 127
     go1_control_data_[index].tx.tx_buff[3] =  n_right;
     go1_control_data_[index].tx.tx_buff[4] =  n_left;
 }
@@ -328,13 +337,9 @@ void Go1DataProcess::Go1_position_set(uint8_t index,double k_pos,double pos_set)
     go1_control_data_[index].tx.tx_buff[12] =  n_left;        
 }
 
-void Go1DataProcess::Go1_crc_append(void)
+void Go1DataProcess::Go1_crc_append(uint8_t id)
 {
-    for(int i = 0; i < GO1_NUM; i++)
-    {
-        // //calc and assert
-        Append_CRC16_Check_Sum((uint8_t *)go1_control_data_[i].tx.tx_buff,17);     
-    }
+    Append_CRC16_Check_Sum((uint8_t *)go1_control_data_[id].tx.tx_buff,17);     
 }
 
 uint8_t* Go1DataProcess::Go1_buff_get(uint8_t index){
@@ -360,5 +365,14 @@ void Go1DataProcess::Go1_buff_print(void)
         {
          RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "buff[%d]:%x",j,go1_control_data_[i].tx.tx_buff[j]);
         }
+    }
+}
+
+void Go1DataProcess::Go1_buff_zero(void)
+{
+    /*head check*/
+    for(int i = 0; i < 4; i++)
+    {
+        memset(go1_control_data_[i].tx.tx_buff,0,17);
     }
 }

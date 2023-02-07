@@ -90,11 +90,14 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
 
 controller_interface::return_type WheelBalancingController::update()
 {
+    // remote date
+
     //feadback of LK and G01.
     // RCLCPP_ERROR(get_node()->get_logger(), "left: \n LK_L position %f velocity %f accelration %f", 
     //     LK_L_handles_->get_position(),LK_L_handles_->get_velocity(),LK_L_handles_->get_acceleration());
     // RCLCPP_ERROR(get_node()->get_logger(), "right: \n LK_R position %f velocity %f accelration %f", 
     //     LK_R_handles_->get_position(),LK_R_handles_->get_velocity(),LK_R_handles_->get_acceleration());
+
     //read the remote date.
     auto command = command_ptr_.readFromRT();
     if (!command || !(*command)) {
@@ -102,46 +105,36 @@ controller_interface::return_type WheelBalancingController::update()
     }
     const auto rc = (*command);
     //  RCLCPP_ERROR(get_node()->get_logger(), "rc -> sw1 %d ",rc->s_l);
-    double position  = rc->ch_l_x * 100 + 100.0;
-    double velocity  = rc->ch_l_y * 100 + 200.0;
-    double accelration  = rc->ch_l_x * 100 + rc->ch_l_y * 100 + 300.0;
+    double lk_position  = rc->ch_l_x   * 100;
+    double lk_velocity  = rc->ch_l_y   * 100;
+    double lk_tourque  = rc->ch_r_x    * 100;
 
-    if(rc->s_l == 2) { //protection mode
-        LK_L_handles_->set_velocity(0);
-        LK_R_handles_->set_velocity(0);
+    double go1_position  = rc->ch_l_x   * 100;
+    double go1_velocity  = rc->ch_l_y   * 100;
+    double go1_tourque  = rc->ch_r_x    * 100;
+
+    // RCLCPP_ERROR(get_node()->get_logger(), "remote rc->ch_l_x %f\n position %f\n", 
+    //     rc->ch_l_x,lk_position);
+    // RCLCPP_ERROR(get_node()->get_logger(), "remote rc->ch_l_y %f\n velocity %f\n", 
+    //     rc->ch_l_y,lk_velocity);
+    // RCLCPP_ERROR(get_node()->get_logger(), "remote rc->ch_l_y %f\n velocity %f\n", 
+    //     rc->ch_r_x,lk_tourque);
+        
+    if(rc->s_l == 1) { //protection mode
+        LK_L_handles_->set_torque(0);
+        LK_R_handles_->set_torque(0);
+        Go1_LF_handles_->set_torque(0);
+        Go1_LB_handles_->set_torque(0);
+        Go1_RF_handles_->set_torque(0);
+        Go1_RB_handles_->set_torque(0);
     } else {//other modes
-        LK_L_handles_->set_velocity(100);
-        LK_R_handles_->set_velocity(100);
+        LK_L_handles_->set_torque(lk_tourque);
+        LK_R_handles_->set_torque(lk_tourque);
+        Go1_LF_handles_->set_torque(go1_tourque);
+        Go1_LB_handles_->set_torque(go1_tourque);
+        Go1_RF_handles_->set_torque(go1_tourque);
+        Go1_RB_handles_->set_torque(go1_tourque);
     }
-    /*Go1 Test*/
-    // RCLCPP_ERROR(get_node()->get_logger(), 
-    // "imu_joint position %f velocity %f acceleration %f"
-    // ,Go1_LF_handles_->get_position()
-    // ,Go1_LF_handles_->get_velocity()
-    // ,Go1_LF_handles_->get_acceleration());
-    // Go1_LF_handles_->set_position(10);
-    // Go1_LF_handles_->set_position(3.14*6.33);
-    // Go1_LB_handles_->set_position(3.14*6.33);
-    // Go1_RF_handles_->set_position(3.14*6.33);
-    // Go1_RB_handles_->set_position(3.14*6.33);
-    /*LK commond Test*/
-    /*Test*/
-    // RCLCPP_ERROR(get_node()->get_logger(), 
-    //     "imu_joint pitch %f yaw %f roll %f"
-    //     ,imu_handles_->get_pitch()
-    //     ,imu_handles_->get_yaw()
-    //     ,imu_handles_->get_roll());
-    /*Test*/
-    // RCLCPP_ERROR(get_node()->get_logger(), 
-    //     "imu_joint position %f velocity %f acceleration %f"
-    //     ,LK_L_handles_->get_position()
-    //     ,LK_L_handles_->get_velocity()
-    //     ,LK_L_handles_->get_acceleration());
-    // RCLCPP_ERROR(get_node()->get_logger(), 
-    //     "imu_joint position %f velocity %f acceleration %f"
-    //     ,LK_R_handles_->get_position()
-    //     ,LK_R_handles_->get_velocity()
-    //     ,LK_R_handles_->get_acceleration());
      return controller_interface::return_type::OK;
 }
 

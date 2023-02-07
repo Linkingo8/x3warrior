@@ -33,8 +33,8 @@ add_library(
 )
 #link extern lib
 target_link_libraries (${PROJECT_NAME}  libcontrolcan_x86.so)
-target_link_libraries (${PROJECT_NAME} Eigen3::Eigen)
 #target_link_libraries (${PROJECT_NAME}  libcontrolcan_aarch64.so)
+target_link_libraries (${PROJECT_NAME} Eigen3::Eigen)
 target_include_directories(
   ${PROJECT_NAME}
   PRIVATE

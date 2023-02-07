@@ -221,45 +221,45 @@ return_type MF9025HardwareInterface::start()
   }
 if(CanConfig::config_status() == 0)
 {
-  // can_device_num_ = VCI_FindUsbDevice2(pInfo1_);
-  // RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>USBCAN DEVICE NUM:%d...",can_device_num_);
+  can_device_num_ = VCI_FindUsbDevice2(pInfo1_);
+  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>USBCAN DEVICE NUM:%d...",can_device_num_);
 
-  // if(VCI_OpenDevice(VCI_USBCAN2,0,0)!=1)//打开设备
-  // {
-  //   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "failed to open can port");   
-  //   return hardware_interface::return_type::ERROR;         
-  // }
-  // if(VCI_ReadBoardInfo(VCI_USBCAN2,0,&pInfo_)==1)//读取设备序列号、版本等信息。
-  // {
-  //   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Get VCI_ReadBoardInfo success!\n");  
-  //   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Serial_Num:%c\n", pInfo_.str_Serial_Num[0]); 
-  // }
-  // else
-  // {
-  //   printf(">>Get VCI_ReadBoardInfo error!\n");
-  //   return hardware_interface::return_type::ERROR;
-  // }
+  if(VCI_OpenDevice(VCI_USBCAN2,0,0)!=1)//打开设备
+  {
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "failed to open can port");   
+    return hardware_interface::return_type::ERROR;         
+  }
+  if(VCI_ReadBoardInfo(VCI_USBCAN2,0,&pInfo_)==1)//读取设备序列号、版本等信息。
+  {
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Get VCI_ReadBoardInfo success!\n");  
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Serial_Num:%c\n", pInfo_.str_Serial_Num[0]); 
+  }
+  else
+  {
+    printf(">>Get VCI_ReadBoardInfo error!\n");
+    return hardware_interface::return_type::ERROR;
+  }
   
-  // //初始化参数，严格参数二次开发函数库说明书。
-  // VCI_INIT_CONFIG config;
-  // config.AccCode=0;
-  // config.AccMask=0xFFFFFFFF;
-  // config.Filter=1;//接收所有帧
-  // config.Timing0=0x00;/*波特率1000 Kbps  0x00  0x14*/
-  // config.Timing1=0x14;
-  // config.Mode=0;//正常模式
+  //初始化参数，严格参数二次开发函数库说明书。
+  VCI_INIT_CONFIG config;
+  config.AccCode=0;
+  config.AccMask=0xFFFFFFFF;
+  config.Filter=1;//接收所有帧
+  config.Timing0=0x00;/*波特率1000 Kbps  0x00  0x14*/
+  config.Timing1=0x14;
+  config.Mode=0;//正常模式
 
-  // if(VCI_InitCAN(VCI_USBCAN2,0,0,&config) != 1)
-  // {
-  //   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Init CAN1 error\n\n"); 
-  //   VCI_CloseDevice(VCI_USBCAN2,0);
-  // }
+  if(VCI_InitCAN(VCI_USBCAN2,0,0,&config) != 1)
+  {
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Init CAN1 error\n\n"); 
+    VCI_CloseDevice(VCI_USBCAN2,0);
+  }
 
-  // if(VCI_StartCAN(VCI_USBCAN2,0,0)!=1)
-  // {
-  //   RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Start CAN1 error\n\n"); 
-  //   VCI_CloseDevice(VCI_USBCAN2,0);
-  // }
+  if(VCI_StartCAN(VCI_USBCAN2,0,0)!=1)
+  {
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Start CAN1 error\n\n"); 
+    VCI_CloseDevice(VCI_USBCAN2,0);
+  }
 }
   status_ = hardware_interface::status::STARTED;
 
@@ -286,9 +286,9 @@ return_type MF9025HardwareInterface::read()
 		{
 			for(int q1=0;q1<reclen_;q1++)
 			{
-        RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"), "Index:%04d  ",count_);count_++;
-        RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"), "CAN%d RX ID:0x%08X", ind_+1, rec_[q1].ID);
-        RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"),"DLC:0x%02X",rec_[q1].DataLen);//帧长度
+        // RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"), "Index:%04d  ",count_);count_++;
+        // RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"), "CAN%d RX ID:0x%08X", ind_+1, rec_[q1].ID);
+        // RCLCPP_INFO(rclcpp::get_logger("WarriorbotHardware"),"DLC:0x%02X",rec_[q1].DataLen);//帧长度
         switch(rec_[q1].ID)
         {
           case LEFT_ID:
@@ -298,7 +298,11 @@ return_type MF9025HardwareInterface::read()
             LK_positions_[0] = MF9025_data_process_->MF9025_position_export(rec_,q1);
             LK_torque_[0] = MF9025_data_process_->MF9025_torque_export(rec_,q1);
             RCLCPP_INFO(
-              rclcpp::get_logger("MF9025HardwareInterface"), "LEFT_ID speed:%f",LK_velocities_[0]);
+               rclcpp::get_logger("MF9025HardwareInterface"), " LK_velocities_:%f",LK_velocities_[0]);
+            RCLCPP_INFO(
+               rclcpp::get_logger("MF9025HardwareInterface"), " LK_positions_:%f",LK_positions_[0]);
+            RCLCPP_INFO(
+               rclcpp::get_logger("MF9025HardwareInterface"), " LK_torque_:%f",LK_torque_[0]);
             break;
           }
           case RIGHT_ID:
@@ -309,10 +313,90 @@ return_type MF9025HardwareInterface::read()
             LK_torque_[1] = MF9025_data_process_->MF9025_torque_export(rec_,q1);
             break;
           }
+          case IMU_PARAM_ID:
+          {
+            rm_imu_data.accel_rangle = rec_[q1].Data[0] &0x0F;
+            rm_imu_data.gyro_rangle = (rec_[q1].Data[0] &0xF0) >> 4;
+            rm_imu_data.sensor_control_temperature = rec_[q1].Data[2];
+            rm_imu_data.imu_sensor_rotation = rec_[q1].Data[3] & 0x1F;
+            rm_imu_data.ahrs_rotation_sequence = (rec_[q1].Data[3] & 0xE0) >> 5;
+            rm_imu_data.quat_euler = rec_[q1].Data[4] & 0x01;
+            switch(rm_imu_data.gyro_rangle)
+            {
+                case 0: rm_imu_data.gyro_sen = GYRO_2000_SEN; break;
+                case 1: rm_imu_data.gyro_sen = GYRO_1000_SEN; break;
+                case 2: rm_imu_data.gyro_sen = GYRO_500_SEN;  break;
+                case 3: rm_imu_data.gyro_sen = GYRO_250_SEN;  break;
+                case 4: rm_imu_data.gyro_sen = GYRO_125_SEN;  break;
+            }
+            switch(rm_imu_data.accel_rangle)
+            {
+                case 0: rm_imu_data.accel_sen = ACCEL_3G_SEN;  break;
+                case 1: rm_imu_data.accel_sen = ACCEL_6G_SEN;  break;
+                case 2: rm_imu_data.accel_sen = ACCEL_12G_SEN; break;
+                case 3: rm_imu_data.accel_sen = ACCEL_24G_SEN; break;
+            }
+            break;
+          }
+		      case IMU_QUAT_ID:
+          {
+            if(rm_imu_data.quat_euler && rec_[q1].DataLen == 6)
+            {
+              memcpy(rm_imu_data.euler_angle, &rec_[q1].Data[0], rec_[q1].DataLen);
+              rm_imu_data.euler_angle_fp32[0] = rm_imu_data.euler_angle[0] * 0.0001f;
+              rm_imu_data.euler_angle_fp32[1] = rm_imu_data.euler_angle[1] * 0.0001f;
+              rm_imu_data.euler_angle_fp32[2] = rm_imu_data.euler_angle[2] * 0.0001f;
+            }
+            else if(rm_imu_data.quat_euler == 0 && rec_[q1].DataLen == 8)
+            {
+
+              memcpy(rm_imu_data.quat, &rec_[q1].Data[0], rec_[q1].DataLen);                   // received datas were magnified 10000 timnes
+              rm_imu_data.quat_fp32[0] = rm_imu_data.quat[0] * 0.0001f;          // 10000 times smaller
+              rm_imu_data.quat_fp32[1] = rm_imu_data.quat[1] * 0.0001f;          // 10000 times smaller
+              rm_imu_data.quat_fp32[2] = rm_imu_data.quat[2] * 0.0001f;          // 10000 times smaller
+              rm_imu_data.quat_fp32[3] = rm_imu_data.quat[3] * 0.0001f;          // 10000 times smaller 
+            }
+            break;
+          }
+          case IMU_GYRO_ID:
+          { 
+              memcpy(rm_imu_data.gyro_int16, &rec_[q1].Data[0],6);
+              rm_imu_data.gyro_fp32[0] = rm_imu_data.gyro_int16[0] * rm_imu_data.gyro_sen;
+              rm_imu_data.gyro_fp32[1] = rm_imu_data.gyro_int16[1] * rm_imu_data.gyro_sen;
+              rm_imu_data.gyro_fp32[2] = rm_imu_data.gyro_int16[2] * rm_imu_data.gyro_sen;
+              rm_imu_data.sensor_temperature = (int16_t)((rec_[q1].Data[6] << 3) | (rec_[q1].Data[7] >> 5));
+              if (rm_imu_data.sensor_temperature > 1023)
+              {
+              rm_imu_data.sensor_temperature -= 2048;
+              }
+              break;
+          }
+          case IMU_ACCEL_ID:
+          {
+              memcpy(rm_imu_data.accel_int16, &rec_[q1].Data[0],6);
+              rm_imu_data.accel_fp32[0] = rm_imu_data.accel_int16[0] * rm_imu_data.accel_sen;
+              rm_imu_data.accel_fp32[1] = rm_imu_data.accel_int16[1] * rm_imu_data.accel_sen;
+              rm_imu_data.accel_fp32[2] = rm_imu_data.accel_int16[2] * rm_imu_data.accel_sen;
+              memcpy(&rm_imu_data.sensor_time, (&rec_[q1].Data[0] + 6), 2);
+              break;
+          }
+          case IMU_MAG_ID:
+          {
+
+             memcpy(rm_imu_data.mag_int16, &rec_[q1].Data[0],6);
+             break;
+          }
         }
+        RM_imu_date_.yaw   = atan2f(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[3]+rm_imu_data.quat_fp32[1]*rm_imu_data.quat_fp32[2],
+                                rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[0]+rm_imu_data.quat_fp32[1]*rm_imu_data.quat_fp32[1]-0.5f)*100.f;
+        RM_imu_date_.pitch = asinf(2*(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[2]-rm_imu_data.quat_fp32[1]*rm_imu_data.quat_fp32[3]))*100.f;
+        RM_imu_date_.roll  = atan2f(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[1]+rm_imu_data.quat_fp32[2]*rm_imu_data.quat_fp32[3],
+                                rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[0]+rm_imu_data.quat_fp32[3]*rm_imu_data.quat_fp32[3]-0.5f)*100.f;
 			}
+      RCLCPP_INFO(
+        rclcpp::get_logger("ImuHardwareInterface"), "Get pitch %.5f,yaw %.5f,roll %.5f",RM_imu_date_.pitch,RM_imu_date_.yaw,RM_imu_date_.roll);
 		}
-    ind_=!ind_;//变换通道号，以便下次读取另一通道，交替读取。	
+    //ind_=!ind_;//变换通道号，以便下次读取另一通道，交替读取。	
 
   return return_type::OK;
 }
@@ -323,8 +407,8 @@ return_type MF9025HardwareInterface::write()
   MF9025_data_process_->MF9025_commond_send(LEFT_ID);
   MF9025_data_process_->MF9025_speed_set(2,LK_commands_velocities_[1]);
   MF9025_data_process_->MF9025_commond_send(RIGHT_ID);
-  //  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "LEFT_ID speed set: %f",LK_commands_velocities_[0]);
-  //  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "RIGHT_ID speed set: %f",LK_commands_velocities_[1]);
+  //  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "LEFT_ID speed set: %f",LK_commands_torque_[0]);
+  //  RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), "RIGHT_ID speed set: %f",LK_commands_torque_[1]);
 
   return return_type::OK;
 }

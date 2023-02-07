@@ -13,7 +13,7 @@ uint16_t crc::CRC16_CCITT(uint8_t* bytes,int dwLength,uint16_t wCRC)
                     wCRC >>= 1;
                     wCRC ^= polynomial;
                 } else {
-                    wCRC >>= 1;
+                    wCRC >>= 1;                    
                 }
             }
         }

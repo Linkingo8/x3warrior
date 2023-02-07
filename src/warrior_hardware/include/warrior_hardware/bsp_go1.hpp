@@ -89,7 +89,8 @@ namespace warrior_hardware
         */
         typedef struct
         {
-            union{  
+            union
+            {
                 uint8_t tx_buff[17];
                 struct{
                     uint8_t head[2];    // head                 2Byte
@@ -108,14 +109,15 @@ namespace warrior_hardware
             double Go1_positions_export(uint8_t id_temp);
             double Go1_torques_export(uint8_t id_temp);
             /* send */
-            void Go1_head_set(void);
-            void Go1_id_set(void);
+            void Go1_head_set(uint8_t id);
+            void Go1_id_set(uint8_t id);
             void Go1_speed_set(uint8_t index,double k_sped,double spd_set);
             void Go1_speed_set(uint8_t index,double spd_set);//damping mode
             void Go1_torque_set(uint8_t index,double tor_set);
             void Go1_zero_torque_set(uint8_t index);
             void Go1_position_set(uint8_t index,double k_pos,double pos_set);
-            void Go1_crc_append(void);
+            void Go1_crc_append(uint8_t id);
+            void Go1_buff_zero(void);
             uint8_t* Go1_buff_get(uint8_t index);
             /* debug */
             void Go1_head_print(void);
