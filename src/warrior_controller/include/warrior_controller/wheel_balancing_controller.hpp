@@ -6,8 +6,10 @@
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
 #include <rclcpp_lifecycle/state.hpp>
 #include <realtime_tools/realtime_buffer.h>
+#include <realtime_tools/realtime_buffer.h>
+#include <realtime_tools/realtime_publisher.h>
 #include <string>
-
+#include "std_msgs/msg/string.hpp"
 #include "warrior_controller/warrior_controller_compiler.h"
 #include "warrior_interface/msg/dbus_data.hpp"
 #include "warrior_controller/warrior_handle.hpp"
@@ -84,8 +86,14 @@ namespace warrior_controller
                                  ,ch_r_y(0.0), sw_l(1),sw_r(1),wheel(0) {}
             };
             rc_commmonds rc_commmonds_;
+            /// remote data suscription.
             rclcpp::Subscription<warrior_interface::msg::DbusData>::SharedPtr command_subsciption_;
+            /// remote subcription data buffer.
             realtime_tools::RealtimeBuffer<std::shared_ptr<warrior_interface::msg::DbusData>> command_ptr_;
+            ///imu data publisher 
+            std::shared_ptr<rclcpp::Publisher<std_msgs::msg::String>> imu_data_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::String>>realtime_imu_data_publisher_ = nullptr;
+            size_t count_;
     };
 }
 
