@@ -29,17 +29,37 @@ return_type MF9025HardwareInterface::configure(const hardware_interface::Hardwar
     //LK date process
     MF9025_data_process_ = std::make_shared<MF9025DataProcess>();
     /*hardware param*/
-    char id_temp[3]{0};
+    char id_temp[3]{0};// id convertion temporary variables
     auto MF9025_Left_ID_it_ = info_.hardware_parameters.find("left_id");
     memcpy(id_temp,MF9025_Left_ID_it_->second.c_str(),3);
     /*char -> 16*/
     MF9025_left_id_ = MF9025_data_process_->charToHex(id_temp,3);
     RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"),"left_id '%x' ",MF9025_left_id_);
-
     auto MF9025_Right_ID_it_ = info_.hardware_parameters.find("right_id");
     memcpy(id_temp,MF9025_Right_ID_it_->second.c_str(),3);
     MF9025_right_id_ = MF9025_data_process_->charToHex(id_temp,3);
     RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"),"right_id '%x' ",MF9025_right_id_);
+ /// sensor
+  const auto & state_interfaces = info_.sensors[0].state_interfaces;
+  if (state_interfaces.size() != ANGLE_NUM)
+    {
+        RCLCPP_FATAL(
+        rclcpp::get_logger("MF9025HardwareInterface"),
+        "Sensor '%s' has %d state interfaces. 3 expected.", info_.sensors[0].name.c_str());
+      return return_type::ERROR;
+    }
+
+    for (const auto & imu_key : {"pitch", "yaw", "roll"})
+    {
+      if (
+        std::find_if(
+          state_interfaces.begin(), state_interfaces.end(), [&imu_key](const auto & interface_info) {
+            return interface_info.name == imu_key;
+          }) == state_interfaces.end())
+      {
+        return return_type::ERROR;
+      }
+    }
   /*joint*/
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
@@ -84,7 +104,7 @@ return_type MF9025HardwareInterface::configure(const hardware_interface::Hardwar
       return return_type::ERROR;
     }
   }
-
+ 
     fprintf(stderr, "MF9025HardwareInterface configured successfully.\n");
     // initialize the angle value
     return return_type::OK;
@@ -94,14 +114,14 @@ std::vector<hardware_interface::StateInterface>
 MF9025HardwareInterface::export_state_interfaces()
 {
     std::vector<hardware_interface::StateInterface> state_interfaces;
-    // const auto & sensor_name = info_.sensors[0].name;
+    const auto & sensor_name = info_.sensors[0].name;
    #ifdef RM_IMU_USE
-    // state_interfaces.emplace_back(
-    //   hardware_interface::StateInterface(sensor_name, "pitch", &RM_imu_date_.pitch));
-    // state_interfaces.emplace_back(
-    //   hardware_interface::StateInterface(sensor_name, "yaw", &RM_imu_date_.yaw));
-    // state_interfaces.emplace_back(
-    //   hardware_interface::StateInterface(sensor_name, "roll", &RM_imu_date_.roll));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(sensor_name, "pitch", &RM_imu_date_.pitch));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(sensor_name, "yaw", &RM_imu_date_.yaw));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(sensor_name, "roll", &RM_imu_date_.roll));
    #endif
 
   #ifdef T_IMU_USE

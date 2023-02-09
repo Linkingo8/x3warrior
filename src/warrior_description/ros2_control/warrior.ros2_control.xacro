@@ -47,12 +47,18 @@
         <state_interface name="acceleration"/>
       </joint>
     </ros2_control>
+
     <ros2_control name="can_hardware" type="system">
       <hardware>
         <plugin>warrior_hardware/MF9025HardwareInterface</plugin>
         <param name="left_id">401</param>
         <param name="right_id">402</param>
       </hardware>
+      <sensor name="imu">
+        <state_interface name="pitch"/> 
+        <state_interface name="yaw"/>
+        <state_interface name="roll"/>
+      </sensor>
       <joint name="left_9025">
         <command_interface name="position">
           <param name="min">-1</param>
@@ -87,6 +93,7 @@
         <state_interface name="velocity"/>
         <state_interface name="torque"/>
       </joint>
+
     </ros2_control>
     <ros2_control name="serialport" type="system">
       <hardware>
@@ -215,9 +222,8 @@
         <state_interface name="velocity"/>
         <state_interface name="acceleration"/>
       </joint>
-
     </ros2_control>
-      <ros2_control name="imu_hardware" type="sensor">
+    <!-- <ros2_control name="imu_hardware" type="sensor">
       <hardware>
         <plugin>warrior_hardware/ImuHardwareInterface</plugin>
       </hardware>
@@ -226,7 +232,7 @@
         <state_interface name="yaw"/>
         <state_interface name="roll"/>
       </sensor>
-    </ros2_control>
+    </ros2_control> -->
   </xacro:macro>
 
 </robot>

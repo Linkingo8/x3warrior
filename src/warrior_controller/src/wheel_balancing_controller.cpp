@@ -16,7 +16,6 @@ WheelBalancingController::WheelBalancingController()
     , command_ptr_(nullptr)
     , imu_data_publisher_(nullptr)
     , realtime_imu_data_publisher_(nullptr)
-    , count_(0)
     , rc_commmonds_()
 
 {
@@ -53,6 +52,7 @@ controller_interface::InterfaceConfiguration WheelBalancingController::state_int
         state_interfaces_config.names.push_back(joint + "/" + "yaw");
         state_interfaces_config.names.push_back(joint + "/" + "roll");
     }
+
     for(std::string joint : wheel_joint_name_)
     {
         state_interfaces_config.names.push_back(joint + "/" + hardware_interface::HW_IF_POSITION);
@@ -97,7 +97,7 @@ controller_interface::return_type WheelBalancingController::update()
 {
 
     //feadback of LK and G01.
-
+    double x = imu_handles_->get_roll();
     //feadback of imu
     
     //update the remote date.
@@ -125,14 +125,19 @@ controller_interface::return_type WheelBalancingController::update()
         Go1_RF_handles_->set_torque(0);
         Go1_RB_handles_->set_torque(0);
     }
-
+#ifdef IMU_PLOT
     if (realtime_imu_data_publisher_->trylock())
     {
       auto & imu_data_message = realtime_imu_data_publisher_->msg_;
-      imu_data_message.data = "helloworld" + std::to_string(count_);
-      RCLCPP_INFO(get_node()->get_logger(), imu_data_message.data);
+      imu_data_message.pitch = imu_handles_->get_pitch();
+      imu_data_message.yaw = imu_handles_->get_yaw();
+      imu_data_message.roll = imu_handles_->get_roll();
+      RCLCPP_INFO(get_node()->get_logger(),"IMU Pitch %f", imu_data_message.pitch);
+      RCLCPP_INFO(get_node()->get_logger(),"IMU Yaw %f", imu_data_message.yaw);
+      RCLCPP_INFO(get_node()->get_logger(),"IMU Roll %f", imu_data_message.roll);
       realtime_imu_data_publisher_->unlockAndPublish();
     }
+#endif
 
      return controller_interface::return_type::OK;
 }
@@ -196,14 +201,20 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
     {
         command_ptr_.writeFromNonRT(rc);
     });
+
+#ifdef IMU_PLOT
     // initialize transform publisher and message
-    imu_data_publisher_ = get_node()->create_publisher<std_msgs::msg::String>("/test_topic", 
+    imu_data_publisher_ = get_node()->create_publisher<warrior_interface::msg::ImuData>("/test_topic", 
         rclcpp::SystemDefaultsQoS());
     realtime_imu_data_publisher_ =
-        std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::String>>(
+        std::make_shared<realtime_tools::RealtimePublisher<warrior_interface::msg::ImuData>>(
             imu_data_publisher_);
     auto & imu_data_message = realtime_imu_data_publisher_->msg_;
-    imu_data_message.data = "heloo world" + std::to_string(count_++);
+    imu_data_message.pitch = 0.00;
+    imu_data_message.yaw = 0.00;
+    imu_data_message.roll = 0.00;
+#endif
+
     return CallbackReturn::SUCCESS;
 }
 
@@ -211,6 +222,7 @@ CallbackReturn WheelBalancingController::on_activate(const rclcpp_lifecycle::Sta
 {
     // Initialize the joint handle
     imu_handles_ = get_angle(imu_joint_name_.at(0));
+
     LK_L_handles_  = get_LK_handle(wheel_joint_name_.at(0));
     LK_R_handles_ =  get_LK_handle(wheel_joint_name_.at(1));
 

@@ -12,8 +12,11 @@
 #include "std_msgs/msg/string.hpp"
 #include "warrior_controller/warrior_controller_compiler.h"
 #include "warrior_interface/msg/dbus_data.hpp"
+#include "warrior_interface/msg/imu_data.hpp"
 #include "warrior_controller/warrior_handle.hpp"
-
+#define IMU_PLOT
+#define LK_PLOT
+#define GO1_PLOT
 namespace warrior_controller
 {
     using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -91,9 +94,8 @@ namespace warrior_controller
             /// remote subcription data buffer.
             realtime_tools::RealtimeBuffer<std::shared_ptr<warrior_interface::msg::DbusData>> command_ptr_;
             ///imu data publisher 
-            std::shared_ptr<rclcpp::Publisher<std_msgs::msg::String>> imu_data_publisher_ = nullptr;
-            std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::String>>realtime_imu_data_publisher_ = nullptr;
-            size_t count_;
+            std::shared_ptr<rclcpp::Publisher<warrior_interface::msg::ImuData>> imu_data_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<warrior_interface::msg::ImuData>>realtime_imu_data_publisher_ = nullptr;
     };
 }
 

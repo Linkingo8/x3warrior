@@ -23,13 +23,13 @@
     </description>
   </class>
 
-  <class name="warrior_hardware/ImuHardwareInterface"
+  <!-- <class name="warrior_hardware/ImuHardwareInterface"
          type="warrior_hardware::ImuHardwareInterface"
          base_class_type="hardware_interface::SensorInterface">
     <description>
         Imu Hardware interface for warrior
     </description>
-  </class>
+  </class> -->
 
 
 </library>

@@ -49,14 +49,14 @@ std::vector<hardware_interface::StateInterface>
 ImuHardwareInterface::export_state_interfaces()
 {
     std::vector<hardware_interface::StateInterface> state_interfaces;
-    const auto & sensor_name = info_.sensors[0].name;
+    // const auto & sensor_name = info_.sensors[0].name;
   #ifdef RM_IMU_USE
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "pitch", &RM_imu_date_.pitch));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "yaw", &RM_imu_date_.yaw));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "roll", &RM_imu_date_.roll));
+    // state_interfaces.emplace_back(
+    //   hardware_interface::StateInterface(sensor_name, "pitch", &RM_imu_date_.pitch));
+    // state_interfaces.emplace_back(
+    //   hardware_interface::StateInterface(sensor_name, "yaw", &RM_imu_date_.yaw));
+    // state_interfaces.emplace_back(
+    //   hardware_interface::StateInterface(sensor_name, "roll", &RM_imu_date_.roll));
   #endif
 
   #ifdef T_IMU_USE

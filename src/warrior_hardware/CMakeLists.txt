@@ -29,7 +29,7 @@ add_library(
   src/bsp_go1.cpp
   src/bsp_LK_MF9025.cpp
   src/crc.cpp
-  src/imu_hardware_interface.cpp
+#  src/imu_hardware_interface.cpp
 )
 #link extern lib
 target_link_libraries (${PROJECT_NAME}  libcontrolcan_x86.so)
