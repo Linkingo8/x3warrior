@@ -77,21 +77,18 @@ Go1DataProcess::Go1DataProcess(uint16_t CRC16_CCITT_INIT) : crc(CRC16_CCITT_INIT
 double Go1DataProcess::Go1_velocities_export(uint8_t id_temp)
 {   
     double velocities = go1_export_data_[id_temp].velocity;
-    velocities =(velocities / 256) * 2 * PI;
     return velocities; /* rad / s */
 }
 
 double Go1DataProcess::Go1_positions_export(uint8_t id_temp)
 { 
     double position = go1_export_data_[id_temp].position;
-    position =(position / 32768) * 2 * PI;
     return position;/* rad */
 }
 
 double Go1DataProcess::Go1_torques_export(uint8_t id_temp)
 { 
-    double torque = go1_feedback_data_[id_temp].fbk.torque;
-    torque /= 256;
+    double torque = double(go1_feedback_data_[id_temp].fbk.torque / 256.0);
     return torque;/*N * m*/
 }
 
@@ -209,6 +206,9 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
                 go1_export_data_[id_temp].velocity = (go1_feedback_data_[id_temp].fbk.speed /256) * (2 * PI);
                 go1_export_data_[id_temp].position = (go1_feedback_data_[id_temp].fbk.pos /32768) * (2 * PI);
                 go1_export_data_[id_temp].torque = (go1_feedback_data_[id_temp].fbk.torque /256);
+                // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_export_data_[%d].velocity: %f",id_temp,go1_export_data_[id_temp].velocity);
+                // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_export_data_[%d].position: %f",id_temp,go1_export_data_[id_temp].position);
+                RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_export_data_[%d].torque: %.3f",id_temp,go1_export_data_[id_temp].torque);
             }
         }
     }
@@ -306,7 +306,7 @@ void Go1DataProcess::Go1_torque_set(uint8_t index,double tor_set)
     //change to little endian
     uint8_t n_right,n_left; //right表示低8位，left表示高8位
     n_right = torset_to_buffer &0xFF; //取低8位 n_right =  2 ^8 -1 = 255  
-    n_left  = (torset_to_buffer>>8) & 0xff; //取高8位 n_right =  2 ^7 -1 = 127
+    n_left  = (torset_to_buffer >>8) & 0xff; //取高8位 n_right =  2 ^7 -1 = 127
     go1_control_data_[index].tx.tx_buff[3] =  n_right;
     go1_control_data_[index].tx.tx_buff[4] =  n_left;
 }

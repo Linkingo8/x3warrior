@@ -13,6 +13,8 @@
 #include "warrior_controller/warrior_controller_compiler.h"
 #include "warrior_interface/msg/dbus_data.hpp"
 #include "warrior_interface/msg/imu_data.hpp"
+#include "warrior_interface/msg/lk9025_feedback.hpp"
+#include "warrior_interface/msg/go1_feedback.hpp"
 #include "warrior_controller/warrior_handle.hpp"
 #define IMU_PLOT
 #define LK_PLOT
@@ -59,8 +61,8 @@ namespace warrior_controller
         private:
             /*GO1*/
             std::shared_ptr<Go1Handle> Go1_LF_handles_;
-            std::shared_ptr<Go1Handle> Go1_LB_handles_;
             std::shared_ptr<Go1Handle> Go1_RF_handles_;
+            std::shared_ptr<Go1Handle> Go1_LB_handles_;
             std::shared_ptr<Go1Handle> Go1_RB_handles_;
             std::shared_ptr<Go1Handle> get_Go1_handle(const std::string & joint_name);
             std::vector<std::string> leg_joint_name_;
@@ -96,6 +98,12 @@ namespace warrior_controller
             ///imu data publisher 
             std::shared_ptr<rclcpp::Publisher<warrior_interface::msg::ImuData>> imu_data_publisher_ = nullptr;
             std::shared_ptr<realtime_tools::RealtimePublisher<warrior_interface::msg::ImuData>>realtime_imu_data_publisher_ = nullptr;
+            ///9025 data publisher 
+            std::shared_ptr<rclcpp::Publisher<warrior_interface::msg::LK9025Feedback>> LK9025_data_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<warrior_interface::msg::LK9025Feedback>>realtime_LK9025_data_publisher_ = nullptr;
+            ///Go1 data publisher 
+            std::shared_ptr<rclcpp::Publisher<warrior_interface::msg::Go1Feedback>> Go1_data_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<warrior_interface::msg::Go1Feedback>>realtime_Go1_data_publisher_ = nullptr;
     };
 }
 

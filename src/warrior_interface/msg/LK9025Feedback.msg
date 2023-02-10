@@ -1,0 +1,6 @@
+float64 lpositions
+float64 lvelocities
+float64 ltorques
+float64 rpositions
+float64 rvelocities
+float64 rtorques

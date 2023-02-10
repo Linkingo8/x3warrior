@@ -191,8 +191,8 @@ return_type Go1HardwareInterface::start()
       Go1_commands_torque_and_position_[i] = 0;
     }
   }
-    /* initilize the buff to 0 */
-    Go1_data_process_->Go1_buff_zero();
+  /* initilize the buff to 0 */
+  Go1_data_process_->Go1_buff_zero();
   if(Go1_port_config_->open("/dev/ttyUSB0") !=  0)
   {
     RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "Go1Port hardware failed been open!");
@@ -220,79 +220,77 @@ return_type Go1HardwareInterface::stop()
 return_type Go1HardwareInterface::read()
 {
   uint8_t buff[17]{0};
-  Go1_port_config_->read_frames(buff,17);
+  Go1_port_config_->read_frames(buff,17);  
   uint8_t id = (buff[2] & 0xF);
-  // if(id < 4)
-  //   RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "id:%d",id);
-  Go1_data_process_->Go1_data_rec(id,buff);
-  if(id<4)
+  if(id<4 && buff[0] == 0xFD && buff[1]==0xEE)
   {
+    Go1_data_process_->Go1_data_rec(id,buff);
     Go1_velocities_[id] = Go1_data_process_->Go1_velocities_export(id);
     Go1_positions_[id] = Go1_data_process_->Go1_positions_export(id);
     Go1_accelerations_[id] = Go1_data_process_->Go1_torques_export(id);
-    // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "Go1_accelerations_[%d] %f:.....",id,Go1_accelerations_[id]);
   }
-  // for(int i = 0;i < 4;i++)
-  //   RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "\n\n4: Go1_accelerations_[%d] %f:.....\n\n",i,Go1_accelerations_[i]);
-
   return return_type::OK;
 }
 
 return_type Go1HardwareInterface::write()
 {
-//transmit
-    /*head*/
-    Go1_data_process_->Go1_head_set(1);
-    /*id*/
-    Go1_data_process_->Go1_id_set(1);
-    /*control data*/
-    Go1_data_process_->Go1_torque_set(1,0.09f);
-    // Go1_data_process_->Go1_speed_set(1,0.02f, 6.28*6.33f);
-    /*crc*/
-    Go1_data_process_->Go1_crc_append(1);
-    /*write*/
-    Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(1),17);
-
+  //transmit
+///0
     /*head*/
     Go1_data_process_->Go1_head_set(0);
     /*id*/
     Go1_data_process_->Go1_id_set(0);
     /*control data*/
-    Go1_data_process_->Go1_position_set(0,0.02f,-3.14*6.33);
-    // Go1_data_process_->Go1_speed_set(0,0.02f,6.28*6.33  );
-    //  Go1_data_process_->Go1_torque_set(0,0.05f);
+    // Go1_data_process_->Go1_torque_set(0,Go1_commands_torques_[0]);
+    Go1_data_process_->Go1_torque_set(0,Go1_commands_torques_[0]);
+    // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "\n\n4: Go1_commands_torques_[0] %f:.....\n\n",Go1_commands_torques_[0]);
     /*crc*/
     Go1_data_process_->Go1_crc_append(0);
     /*write*/
     Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(0),17);
+///1
+    /*head*/
+    Go1_data_process_->Go1_head_set(1);
+    /*id*/
+    Go1_data_process_->Go1_id_set(1);
+    /*control data*/
+    // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "\n\n4: Go1_commands_torques_[1] %f:.....\n\n",Go1_commands_torques_[1]);
+    // Go1_data_process_->Go1_torque_set(0,Go1_commands_torques_[0]);
+    Go1_data_process_->Go1_torque_set(1,Go1_commands_torques_[1]);
+    /*crc*/
+    Go1_data_process_->Go1_crc_append(1);
+    /*write*/
+    Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(1),17);
+///2  
+      /*head*/
+    Go1_data_process_->Go1_head_set(2);
+    /*id*/
+    Go1_data_process_->Go1_id_set(2);
+    /*control data*/
+    // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "\n\n4: Go1_commands_torques_[2] %f:.....\n\n",Go1_commands_torques_[2]);
+    // Go1_data_process_->Go1_torque_set(0,Go1_commands_torques_[0]);
+    Go1_data_process_->Go1_torque_set(2,Go1_commands_torques_[2]);
+    /*crc*/
+    Go1_data_process_->Go1_crc_append(2);
+    /*write*/
+    Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(2),17);
+///3
+      /*head*/
+    Go1_data_process_->Go1_head_set(3);
+    /*id*/
+    Go1_data_process_->Go1_id_set(3);
+    /*control data*/
+    // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "\n\n4: Go1_commands_torques_[3] %f:.....\n\n",Go1_commands_torques_[3]);
+    // Go1_data_process_->Go1_torque_set(0,Go1_commands_torques_[0]);
+    Go1_data_process_->Go1_torque_set(3,Go1_commands_torques_[3]);
+    /*crc*/
+    Go1_data_process_->Go1_crc_append(3);
+    /*write*/
+    Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(3),17);
+
+
 //check
     // Go1_data_process_->Go1_buff_print();
-
-    /*head*/
-    // Go1_data_process_->Go1_head_set();
-    // Go1_data_process_->Go1_id_set();
-    // // Go1_data_process_->Go1_torque_set(0,0.12);
-    // Go1_data_process_->Go1_torque_set(3,0.12);
-    // // for (uint8_t i = 0; i < GO1_NUM; i++)
-    // // {
-    // //   RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "Go1_commands_torques_[%d] %f:.....",i,Go1_commands_torques_[i]);
-
-    // //   // Go1_data_process_->Go1_speed_set(i,0.05f,Go1_commands_velocities_[i]);
-    // //   // Go1_data_process_->Go1_torque_set(i,Go1_commands_torques_[i]);
-    // //   // Go1_data_process_->Go1_position_set(i,0.05f,Go1_commands_positions_[i]);
-    // //   // Go1_data_process_->Go1_speed_set(i,0.00f,0.00f);
-    // //   // Go1_data_process_->Go1_position_set(i,0.02f,3.14*6.33);
-    // //    Go1_data_process_->Go1_torque_set(i,-0.2);
-    // //   // Go1_data_process_->Go1_zero_torque_set(i); 
-    // // }
-
-    // Go1_data_process_->Go1_crc_append();
-    // // for(uint8_t i = 0; i < GO1_NUM; i++)
-    // //   Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(i),17);
-    // // Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(0),17);
-    // Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(3),17);
-
-
     return return_type::OK;
  }
 

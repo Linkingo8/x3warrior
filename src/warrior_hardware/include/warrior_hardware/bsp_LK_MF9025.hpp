@@ -9,10 +9,9 @@
 ///////////////////////////////////////////////////////////////
 //id must less than 2 instead leading to over memory problem///
 ///////////////////////////////////////////////////////////////
-#define GO1_NUM 4
-
-#define LEFT_ID  0x141 //0
-#define RIGHT_ID 0x142 //1
+#define GO1_NUM 4 
+#define RIGHT_ID  0x141 //1
+#define LEFT_ID 0x142 //2
 
 #ifndef PI 
     #define PI 3.14159265
@@ -38,9 +37,9 @@ namespace warrior_hardware
             void MF9025_position_set(uint8_t id_shift, double speed);
             void MF9025_commond_send(uint16_t id);
             void MF9025_message_rec(VCI_CAN_OBJ *rec_,int16_t q1);
-            double MF9025_velocitise_export(VCI_CAN_OBJ *rec_,int16_t q1);
-            double MF9025_position_export(VCI_CAN_OBJ *rec_,int16_t q1);
-            double MF9025_torque_export(VCI_CAN_OBJ *rec_,int16_t q1);
+            double MF9025_velocitise_export(VCI_CAN_OBJ *rec_,uint8_t id);
+            double MF9025_position_export(VCI_CAN_OBJ *rec_,uint8_t id);
+            double MF9025_torque_export(VCI_CAN_OBJ *rec_,uint8_t id);
         private:
         /*0: left 1: right*/
             VCI_CAN_OBJ send_9025_[2];

@@ -16,6 +16,10 @@ WheelBalancingController::WheelBalancingController()
     , command_ptr_(nullptr)
     , imu_data_publisher_(nullptr)
     , realtime_imu_data_publisher_(nullptr)
+    , LK9025_data_publisher_(nullptr)
+    , realtime_LK9025_data_publisher_(nullptr)
+    , Go1_data_publisher_(nullptr)
+    , realtime_Go1_data_publisher_(nullptr)
     , rc_commmonds_()
 
 {
@@ -95,36 +99,46 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
 
 controller_interface::return_type WheelBalancingController::update()
 {
+    ///Right-handed coordinate systgem
+    /// for go1     id:0    id: 1 id: 2 id :3
+    /// torque      + f     + b   + b   + f
+    /// for lk9025  id:1  id: 2
+    /// torque
 
     //feadback of LK and G01.
-    double x = imu_handles_->get_roll();
+    
     //feadback of imu
     
     //update the remote date.
     WheelBalancingController::updatingRemoteData();
-
-    // RCLCPP_ERROR(get_node()->get_logger(), "remote rc->ch_l_x %f\n", 
-    //     rc_commmonds_.ch_l_x);
-    // RCLCPP_ERROR(get_node()->get_logger(), "remote rc->ch_l_y %f\n velocity %f\n", 
-    //     rc->ch_l_y,lk_velocity);
-    // RCLCPP_ERROR(get_node()->get_logger(), "remote rc->ch_l_y %f\n velocity %f\n", 
-    //     rc->ch_r_x,lk_tourque);
     
     if(rc_commmonds_.sw_l == 1) { //protection mode
         LK_L_handles_->set_torque(0);
         LK_R_handles_->set_torque(0);
+        /// left leg //     + - up       - + down
         Go1_LF_handles_->set_torque(0);
         Go1_LB_handles_->set_torque(0);
+        /// right leg //    - + up       + - down
         Go1_RF_handles_->set_torque(0);
         Go1_RB_handles_->set_torque(0);
+        
     } else {//other modes
         LK_L_handles_->set_torque(0);
         LK_R_handles_->set_torque(0);
-        Go1_LF_handles_->set_torque(0);
-        Go1_LB_handles_->set_torque(0);
-        Go1_RF_handles_->set_torque(0);
-        Go1_RB_handles_->set_torque(0);
+        /// left leg
+        Go1_LF_handles_->set_torque(0.0f);
+        Go1_LB_handles_->set_torque(0.0f);
+        /// right leg
+        Go1_RF_handles_->set_torque(0.0f);
+        Go1_RB_handles_->set_torque(0.0f);
     }
+    // RCLCPP_INFO(get_node()->get_logger(), "0 Go1_LF_handles_->get_velocity() %f",Go1_LF_handles_->get_velocity());
+    // RCLCPP_INFO(get_node()->get_logger(), "1 Go1_LR_handles_->get_velocity() %f",Go1_RF_handles_->get_velocity());
+
+    // RCLCPP_INFO(get_node()->get_logger(), "0 Go1_LF_ha ndles_->get_position() %f",Go1_LB_handles_->get_position());
+    // RCLCPP_INFO(get_node()->get_logger(), "1 Go1_LR_handles_->get_position() %f",Go1_RB_handles_->get_position());
+
+    /// publish sensor feedback.
 #ifdef IMU_PLOT
     if (realtime_imu_data_publisher_->trylock())
     {
@@ -132,10 +146,44 @@ controller_interface::return_type WheelBalancingController::update()
       imu_data_message.pitch = imu_handles_->get_pitch();
       imu_data_message.yaw = imu_handles_->get_yaw();
       imu_data_message.roll = imu_handles_->get_roll();
-      RCLCPP_INFO(get_node()->get_logger(),"IMU Pitch %f", imu_data_message.pitch);
-      RCLCPP_INFO(get_node()->get_logger(),"IMU Yaw %f", imu_data_message.yaw);
-      RCLCPP_INFO(get_node()->get_logger(),"IMU Roll %f", imu_data_message.roll);
       realtime_imu_data_publisher_->unlockAndPublish();
+    }
+#endif
+
+#ifdef LK_PLOT
+    if (realtime_LK9025_data_publisher_->trylock())
+    {
+      auto & lk9025_data_message = realtime_LK9025_data_publisher_->msg_;
+      lk9025_data_message.lpositions = LK_L_handles_->get_position();
+      lk9025_data_message.lvelocities = LK_L_handles_->get_velocity();
+      lk9025_data_message.ltorques = LK_L_handles_->get_acceleration();
+      lk9025_data_message.rpositions = LK_R_handles_->get_position();
+      lk9025_data_message.rvelocities = LK_R_handles_->get_velocity();
+      lk9025_data_message.rtorques = LK_R_handles_->get_acceleration();
+      realtime_LK9025_data_publisher_->unlockAndPublish();
+    }
+#endif
+
+#ifdef GO1_PLOT
+    if (realtime_Go1_data_publisher_->trylock())
+    {
+      auto & Go1_data_message = realtime_Go1_data_publisher_->msg_;
+      Go1_data_message.lfpositions = Go1_LF_handles_->get_position();
+      Go1_data_message.lfvelocities = Go1_LF_handles_->get_velocity();
+      Go1_data_message.lftorques = Go1_LF_handles_->get_acceleration();
+
+      Go1_data_message.rfpositions = Go1_RF_handles_->get_position();
+      Go1_data_message.rfvelocities = Go1_RF_handles_->get_velocity();
+      Go1_data_message.rftorques = Go1_RF_handles_->get_acceleration();
+
+      Go1_data_message.rbpositions = Go1_RB_handles_->get_position();
+      Go1_data_message.rbvelocities = Go1_RB_handles_->get_velocity();
+      Go1_data_message.rbtorques = Go1_RB_handles_->get_acceleration();
+      
+      Go1_data_message.lbpositions = Go1_LB_handles_->get_position();
+      Go1_data_message.lbvelocities = Go1_LB_handles_->get_velocity();
+      Go1_data_message.lbtorques = Go1_LB_handles_->get_acceleration();
+      realtime_Go1_data_publisher_->unlockAndPublish();
     }
 #endif
 
@@ -204,7 +252,7 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
 
 #ifdef IMU_PLOT
     // initialize transform publisher and message
-    imu_data_publisher_ = get_node()->create_publisher<warrior_interface::msg::ImuData>("/test_topic", 
+    imu_data_publisher_ = get_node()->create_publisher<warrior_interface::msg::ImuData>("/imu_feedback", 
         rclcpp::SystemDefaultsQoS());
     realtime_imu_data_publisher_ =
         std::make_shared<realtime_tools::RealtimePublisher<warrior_interface::msg::ImuData>>(
@@ -213,6 +261,47 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
     imu_data_message.pitch = 0.00;
     imu_data_message.yaw = 0.00;
     imu_data_message.roll = 0.00;
+#endif
+
+#ifdef LK_PLOT
+    // initialize transform publisher and message
+    LK9025_data_publisher_ = get_node()->create_publisher<warrior_interface::msg::LK9025Feedback>("/lk9025_feedback", 
+        rclcpp::SystemDefaultsQoS());
+    realtime_LK9025_data_publisher_ =
+        std::make_shared<realtime_tools::RealtimePublisher<warrior_interface::msg::LK9025Feedback>>(
+            LK9025_data_publisher_);
+    auto & lk9025_data_message = realtime_LK9025_data_publisher_->msg_;
+    lk9025_data_message.lpositions = 0.00;
+    lk9025_data_message.lvelocities = 0.00;
+    lk9025_data_message.ltorques = 0.00;
+    lk9025_data_message.rpositions = 0.00;
+    lk9025_data_message.rvelocities = 0.00;
+    lk9025_data_message.rtorques = 0.00;
+#endif
+
+#ifdef GO1_PLOT
+    // initialize transform publisher and message
+    Go1_data_publisher_ = get_node()->create_publisher<warrior_interface::msg::Go1Feedback>("/go1_feedback", 
+        rclcpp::SystemDefaultsQoS());
+    realtime_Go1_data_publisher_ =
+        std::make_shared<realtime_tools::RealtimePublisher<warrior_interface::msg::Go1Feedback>>(
+            Go1_data_publisher_);
+    auto & Go1_data_message = realtime_Go1_data_publisher_->msg_;
+    Go1_data_message.lfpositions = 0.00;
+    Go1_data_message.lfvelocities = 0.00;
+    Go1_data_message.lftorques = 0.00;
+
+    Go1_data_message.rfpositions = 0.00;
+    Go1_data_message.rfvelocities = 0.00;
+    Go1_data_message.rftorques = 0.00;
+
+    Go1_data_message.rbpositions = 0.00;
+    Go1_data_message.rbvelocities = 0.00;
+    Go1_data_message.rbtorques = 0.00;
+
+    Go1_data_message.lbpositions = 0.00;
+    Go1_data_message.lbvelocities = 0.00;
+    Go1_data_message.lbtorques = 0.00;
 #endif
 
     return CallbackReturn::SUCCESS;
@@ -227,9 +316,9 @@ CallbackReturn WheelBalancingController::on_activate(const rclcpp_lifecycle::Sta
     LK_R_handles_ =  get_LK_handle(wheel_joint_name_.at(1));
 
     Go1_LF_handles_ =  get_Go1_handle(leg_joint_name_.at(0));
-    Go1_LB_handles_ =  get_Go1_handle(leg_joint_name_.at(1));
-    Go1_RF_handles_ =  get_Go1_handle(leg_joint_name_.at(2));
-    Go1_RB_handles_ =  get_Go1_handle(leg_joint_name_.at(3));
+    Go1_RF_handles_ =  get_Go1_handle(leg_joint_name_.at(1));
+    Go1_RB_handles_ =  get_Go1_handle(leg_joint_name_.at(2));
+    Go1_LB_handles_ =  get_Go1_handle(leg_joint_name_.at(3));
 
     if (!imu_handles_) {
         return CallbackReturn::ERROR;

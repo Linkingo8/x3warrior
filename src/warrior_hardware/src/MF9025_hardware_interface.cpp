@@ -296,24 +296,32 @@ return_type MF9025HardwareInterface::read()
         {
           case LEFT_ID:
           {
+            /// recieve the data of 9025
             MF9025_data_process_->MF9025_message_rec(rec_,q1);
-            LK_velocities_[0] = MF9025_data_process_->MF9025_velocitise_export(rec_,q1);
-            LK_positions_[0] = MF9025_data_process_->MF9025_position_export(rec_,q1);
-            LK_torque_[0] = MF9025_data_process_->MF9025_torque_export(rec_,q1);
-            RCLCPP_INFO(
-               rclcpp::get_logger("MF9025HardwareInterface"), " LK_velocities_:%f",LK_velocities_[0]);
-            RCLCPP_INFO(
-               rclcpp::get_logger("MF9025HardwareInterface"), " LK_positions_:%f",LK_positions_[0]);
-            RCLCPP_INFO(
-               rclcpp::get_logger("MF9025HardwareInterface"), " LK_torque_:%f",LK_torque_[0]);
+            /// loard to interface variables  // id: 1/2
+            LK_velocities_[0] = MF9025_data_process_->MF9025_velocitise_export(rec_,1);
+            LK_positions_[0] = MF9025_data_process_->MF9025_position_export(rec_,1);
+            LK_torque_[0] = MF9025_data_process_->MF9025_torque_export(rec_,1);
+            //- RCLCPP_INFO(
+            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_velocities_:%f",LK_velocities_[0]);
+            // RCLCPP_INFO(
+            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_positions_:%f",LK_positions_[0]);
+            // RCLCPP_INFO(
+            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_torque_:%f",LK_torque_[0]);
             break;
           }
           case RIGHT_ID:
           {
             MF9025_data_process_->MF9025_message_rec(rec_,q1);
-            LK_velocities_[1] = MF9025_data_process_->MF9025_velocitise_export(rec_,q1);
-            LK_positions_[1] = MF9025_data_process_->MF9025_position_export(rec_,q1);
-            LK_torque_[1] = MF9025_data_process_->MF9025_torque_export(rec_,q1);
+            LK_velocities_[1] = MF9025_data_process_->MF9025_velocitise_export(rec_,2);
+            LK_positions_[1] = MF9025_data_process_->MF9025_position_export(rec_,2);
+            LK_torque_[1] = MF9025_data_process_->MF9025_torque_export(rec_,2);
+            //1 RCLCPP_INFO(
+            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_velocities_:%f",LK_velocities_[1]);
+            // RCLCPP_INFO(
+            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_positions_:%f",LK_positions_[1]);
+            // RCLCPP_INFO(
+            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_torque_:%f",LK_torque_[1]);
             break;
           }
           case IMU_PARAM_ID:
@@ -396,8 +404,8 @@ return_type MF9025HardwareInterface::read()
         RM_imu_date_.roll  = atan2f(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[1]+rm_imu_data.quat_fp32[2]*rm_imu_data.quat_fp32[3],
                                 rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[0]+rm_imu_data.quat_fp32[3]*rm_imu_data.quat_fp32[3]-0.5f)*100.f;
 			}
-      RCLCPP_INFO(
-        rclcpp::get_logger("ImuHardwareInterface"), "Get pitch %.5f,yaw %.5f,roll %.5f",RM_imu_date_.pitch,RM_imu_date_.yaw,RM_imu_date_.roll);
+      // RCLCPP_INFO(
+      //   rclcpp::get_logger("ImuHardwareInterface"), "Get pitch %.5f,yaw %.5f,roll %.5f",RM_imu_date_.pitch,RM_imu_date_.yaw,RM_imu_date_.roll);
 		}
     //ind_=!ind_;//变换通道号，以便下次读取另一通道，交替读取。	
 
@@ -406,11 +414,13 @@ return_type MF9025HardwareInterface::read()
 
 return_type MF9025HardwareInterface::write()
 {
-  /*limtte*/
-  MF9025_data_process_->MF9025_speed_set(1,LK_commands_velocities_[0]);
+  /// left leg + f
+  MF9025_data_process_->MF9025_torque_set(2,LK_commands_torque_[0]);//0
   MF9025_data_process_->MF9025_commond_send(LEFT_ID);
-  MF9025_data_process_->MF9025_speed_set(2,LK_commands_velocities_[1]);
+  /// right leg + b
+  MF9025_data_process_->MF9025_torque_set(1,LK_commands_torque_[1]);//1
   MF9025_data_process_->MF9025_commond_send(RIGHT_ID);
+
   return return_type::OK;
 }
 }  // namespace warrior_hardware
