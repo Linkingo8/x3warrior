@@ -13,8 +13,9 @@ public:
     LQR(){}
 
     void computeGain();
+    MatrixXd care(void);
     VectorXd control(const VectorXd &x);
-
+    Eigen::MatrixXd calcGainK();
 };
 
 // int main()

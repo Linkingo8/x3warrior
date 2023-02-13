@@ -143,7 +143,7 @@ controller_interface::return_type WheelBalancingController::update()
     
     //update the remote date.
     WheelBalancingController::updatingRemoteData();
-    lqr_->computeGain();
+    lqr_->K = lqr_->calcGainK();
     std::cout << lqr_->K << std::endl;
     
     if(rc_commmonds_.sw_l == 1) { //protection mode
