@@ -15,6 +15,7 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>warrior_interface</depend>
+  <depend>warrior_common</depend>
   
 
   <build_depend>pluginlib</build_depend>

@@ -24,6 +24,7 @@ find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(warrior_interface REQUIRED)
+find_package(warrior_common REQUIRED)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 add_library(
@@ -35,7 +36,13 @@ add_library(
   src/warrior_handle.cpp
 )
 
-target_link_libraries (${PROJECT_NAME} Eigen3::Eigen)
+include_directories(include ${catkin_INCLUDE_DIRS})
+
+target_link_libraries (
+  ${PROJECT_NAME} 
+  Eigen3::Eigen
+  warrior_common::warrior_common
+  )
 
 target_include_directories(
   ${PROJECT_NAME}
@@ -50,18 +57,18 @@ ament_target_dependencies(
   rclcpp
   rclcpp_lifecycle
   warrior_interface
+  warrior_common
 )
 
 pluginlib_export_plugin_description_file(controller_interface warrior_controller.xml)
 
 install(
   TARGETS
-    ${PROJECT_NAME}
+  ${PROJECT_NAME}
   DESTINATION lib
 )
 install(
-  DIRECTORY
-    include
+  DIRECTORY include/
   DESTINATION include
 )
 

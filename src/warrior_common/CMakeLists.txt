@@ -17,22 +17,22 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
-
-
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 add_library(
   ${PROJECT_NAME}
   SHARED
-  src/limiter
+  src/limiter.cpp
+  src/lqr.cpp
 )
+
+target_link_libraries (${PROJECT_NAME} Eigen3::Eigen)
 
 target_include_directories(
   ${PROJECT_NAME}
-  PRIVATE
-  include
+  PUBLIC 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
 )
 
 if(BUILD_TESTING)
@@ -45,5 +45,30 @@ if(BUILD_TESTING)
   #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
+
+
+install(
+  TARGETS
+  ${PROJECT_NAME}
+  DESTINATION lib
+)
+
+install(
+  DIRECTORY
+    include
+  DESTINATION include
+)
+
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 
 ament_package()

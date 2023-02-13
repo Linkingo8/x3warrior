@@ -9,13 +9,17 @@
 #include <realtime_tools/realtime_buffer.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <string>
+#include <Eigen/Dense>
+#include <iostream>
 #include "std_msgs/msg/string.hpp"
 #include "warrior_controller/warrior_controller_compiler.h"
+#include "warrior_common/lqr.hpp"
 #include "warrior_interface/msg/dbus_data.hpp"
 #include "warrior_interface/msg/imu_data.hpp"
 #include "warrior_interface/msg/lk9025_feedback.hpp"
 #include "warrior_interface/msg/go1_feedback.hpp"
 #include "warrior_controller/warrior_handle.hpp"
+
 #define IMU_PLOT
 #define LK_PLOT
 #define GO1_PLOT
@@ -90,6 +94,13 @@ namespace warrior_controller
                 rc_commmonds() : ch_l_x(0.0), ch_l_y(0.0), ch_r_x(0.0)
                                  ,ch_r_y(0.0), sw_l(1),sw_r(1),wheel(0) {}
             };
+            /*lqr controller*/
+            MatrixXd A_;
+            MatrixXd B_;
+            MatrixXd Q_;
+            MatrixXd R_;
+            std::shared_ptr<LQR> lqr_;
+            void initLQRParam(void);
             rc_commmonds rc_commmonds_;
             /// remote data suscription.
             rclcpp::Subscription<warrior_interface::msg::DbusData>::SharedPtr command_subsciption_;

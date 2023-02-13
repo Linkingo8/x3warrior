@@ -1,12 +1,8 @@
 #include <hardware_interface/types/hardware_interface_type_values.hpp>
 #include <pluginlib/class_list_macros.hpp>
 #include <rclcpp/rclcpp.hpp>
-
-//eigen
-#include <iostream>
-#include <Eigen/Dense>
-
 #include "warrior_controller/wheel_balancing_controller.hpp"
+
 
 using namespace warrior_controller;
 /*?*/
@@ -21,8 +17,36 @@ WheelBalancingController::WheelBalancingController()
     , Go1_data_publisher_(nullptr)
     , realtime_Go1_data_publisher_(nullptr)
     , rc_commmonds_()
-
-{
+    , A_(6, 6)
+    , B_(6, 2)
+    , Q_(6, 6)
+    , R_(2, 2)
+    , lqr_(nullptr)
+{ 
+        A_ <<   0,              0,          0,          0,          4.900,          -4.900,
+                0,              0,          0,          0,          -40.6842,       -40.6842,
+                0,              0,          0,          0,          -197.900,       -197.900,
+                1.0000,         0,          0,          0,          0,               0 ,
+                0,              1.0000,     0,          0,          0,               0,
+                0,              0,          1.0000,     0,          0,               0;
+        B_ <<   -1.9887,     -2.7600,
+                16.5121,     -34.7769,  
+                -22.6242,    -169.1604, 
+                0,           0, 
+                0,           0, 
+                0,           0;
+        Q_ <<   1,              0,          0,          0,          0,               0,
+                0,              1,          0,          0,          0,               0,
+                0,              0,          1,          0,          0,               0,
+                0,              0,          0,          1,          0,               0,
+                0,              0,          0,          0,          1,               0,
+                0,              0,          0,          0,          0,               1; 
+        R_ <<   1,   0,
+                0,   1; 
+        // lqr_-> A = A_;
+        // lqr_-> B = B_;
+        // lqr_-> Q = Q_;
+        // lqr_-> R = R_;
 }
 
 controller_interface::InterfaceConfiguration WheelBalancingController::command_interface_configuration() const
@@ -106,7 +130,7 @@ controller_interface::return_type WheelBalancingController::update()
     /// torque
 
     //feadback of LK and G01.
-    
+
     //feadback of imu
     
     //update the remote date.
@@ -121,7 +145,6 @@ controller_interface::return_type WheelBalancingController::update()
         /// right leg //    - + up       + - down
         Go1_RF_handles_->set_torque(0);
         Go1_RB_handles_->set_torque(0);
-        
     } else {//other modes
         LK_L_handles_->set_torque(0);
         LK_R_handles_->set_torque(0);
@@ -132,13 +155,9 @@ controller_interface::return_type WheelBalancingController::update()
         Go1_RF_handles_->set_torque(0.0f);
         Go1_RB_handles_->set_torque(0.0f);
     }
-    // RCLCPP_INFO(get_node()->get_logger(), "0 Go1_LF_handles_->get_velocity() %f",Go1_LF_handles_->get_velocity());
-    // RCLCPP_INFO(get_node()->get_logger(), "1 Go1_LR_handles_->get_velocity() %f",Go1_RF_handles_->get_velocity());
+    /// define state-vector A;
 
-    // RCLCPP_INFO(get_node()->get_logger(), "0 Go1_LF_ha ndles_->get_position() %f",Go1_LB_handles_->get_position());
-    // RCLCPP_INFO(get_node()->get_logger(), "1 Go1_LR_handles_->get_position() %f",Go1_RB_handles_->get_position());
-
-    /// publish sensor feedback.
+/// publish sensor feedback.
 #ifdef IMU_PLOT
     if (realtime_imu_data_publisher_->trylock())
     {
@@ -249,6 +268,9 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
     {
         command_ptr_.writeFromNonRT(rc);
     });
+
+    lqr_ = std::make_shared<LQR>();
+    WheelBalancingController::initLQRParam();
 
 #ifdef IMU_PLOT
     // initialize transform publisher and message
@@ -374,6 +396,15 @@ controller_interface::return_type WheelBalancingController::updatingRemoteData(v
      rc_commmonds_.sw_r = rc->s_r;
      rc_commmonds_.wheel = rc->wheel;
     return controller_interface::return_type::OK;
+}
+
+void WheelBalancingController::initLQRParam(void)
+{
+        lqr_ -> A = A_;
+        lqr_ -> B = B_;
+        lqr_ -> Q = Q_;
+        lqr_ -> R = R_;
+        std::cout <<  lqr_ -> A << std::endl;
 }
 
 std::shared_ptr<ImuHandle> WheelBalancingController::get_angle(const std::string & joint_name)

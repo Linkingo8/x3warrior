@@ -16,6 +16,7 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(warrior_common REQUIRED)
 #find extern lib
 link_directories (${PROJECT_SOURCE_DIR}/lib)
 ## COMPILE
@@ -34,7 +35,10 @@ add_library(
 #link extern lib
 target_link_libraries (${PROJECT_NAME}  libcontrolcan_x86.so)
 #target_link_libraries (${PROJECT_NAME}  libcontrolcan_aarch64.so)
-target_link_libraries (${PROJECT_NAME} Eigen3::Eigen)
+target_link_libraries (
+  ${PROJECT_NAME} Eigen3::Eigen
+  warrior_common::warrior_common
+  )
 target_include_directories(
   ${PROJECT_NAME}
   PRIVATE

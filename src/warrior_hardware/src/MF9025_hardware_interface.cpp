@@ -9,6 +9,7 @@
 #include <cstring>
 #include <vector>
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "warrior_common/lqr.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace warrior_hardware
