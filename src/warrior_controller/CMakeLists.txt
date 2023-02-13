@@ -38,17 +38,17 @@ add_library(
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
+target_include_directories(
+  ${PROJECT_NAME}
+  PUBLIC 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 target_link_libraries (
   ${PROJECT_NAME} 
   Eigen3::Eigen
   warrior_common::warrior_common
   )
-
-target_include_directories(
-  ${PROJECT_NAME}
-  PRIVATE
-  include
-)
 ament_target_dependencies(
   ${PROJECT_NAME}
   controller_interface
@@ -63,14 +63,15 @@ ament_target_dependencies(
 pluginlib_export_plugin_description_file(controller_interface warrior_controller.xml)
 
 install(
-  TARGETS
-  ${PROJECT_NAME}
-  DESTINATION lib
-)
-install(
-  DIRECTORY include/
+  DIRECTORY include
   DESTINATION include
 )
+
+install(
+  TARGETS ${PROJECT_NAME}
+  DESTINATION lib
+)
+
 
 ament_export_include_directories(
   include

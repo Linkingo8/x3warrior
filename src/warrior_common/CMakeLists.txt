@@ -48,7 +48,6 @@ endif()
 
 ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 
-
 install(
   TARGETS
   ${PROJECT_NAME}
@@ -56,8 +55,7 @@ install(
 )
 
 install(
-  DIRECTORY
-    include
+  DIRECTORY include/
   DESTINATION include
 )
 

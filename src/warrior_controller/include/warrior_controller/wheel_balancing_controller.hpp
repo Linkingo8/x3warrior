@@ -99,6 +99,8 @@ namespace warrior_controller
             MatrixXd B_;
             MatrixXd Q_;
             MatrixXd R_;
+            MatrixXd K_;
+            MatrixXd P_;
             std::shared_ptr<LQR> lqr_;
             void initLQRParam(void);
             rc_commmonds rc_commmonds_;

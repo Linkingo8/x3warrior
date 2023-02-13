@@ -21,6 +21,8 @@ WheelBalancingController::WheelBalancingController()
     , B_(6, 2)
     , Q_(6, 6)
     , R_(2, 2)
+    , K_(2, 6)
+    , P_(2, 2)
     , lqr_(nullptr)
 { 
         A_ <<   0,              0,          0,          0,          4.900,          -4.900,
@@ -41,6 +43,12 @@ WheelBalancingController::WheelBalancingController()
                 0,              0,          0,          1,          0,               0,
                 0,              0,          0,          0,          1,               0,
                 0,              0,          0,          0,          0,               1; 
+        // R_ <<   1,              0,          0,          0,          0,               0,
+        //         0,              1,          0,          0,          0,               0,
+        //         0,              0,          1,          0,          0,               0,
+        //         0,              0,          0,          1,          0,               0,
+        //         0,              0,          0,          0,          1,               0,
+        //         0,              0,          0,          0,          0,               1; 
         R_ <<   1,   0,
                 0,   1; 
         // lqr_-> A = A_;
@@ -135,6 +143,8 @@ controller_interface::return_type WheelBalancingController::update()
     
     //update the remote date.
     WheelBalancingController::updatingRemoteData();
+    lqr_->computeGain();
+    std::cout << lqr_->K << std::endl;
     
     if(rc_commmonds_.sw_l == 1) { //protection mode
         LK_L_handles_->set_torque(0);
@@ -404,6 +414,8 @@ void WheelBalancingController::initLQRParam(void)
         lqr_ -> B = B_;
         lqr_ -> Q = Q_;
         lqr_ -> R = R_;
+        lqr_ -> K = K_;
+        lqr_ -> P = P_;
         std::cout <<  lqr_ -> A << std::endl;
 }
 

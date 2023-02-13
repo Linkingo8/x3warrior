@@ -16,7 +16,7 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(warrior_common REQUIRED)
+find_package(warrior_common REQUIRED NO_MODULE)
 #find extern lib
 link_directories (${PROJECT_SOURCE_DIR}/lib)
 ## COMPILE
@@ -39,11 +39,18 @@ target_link_libraries (
   ${PROJECT_NAME} Eigen3::Eigen
   warrior_common::warrior_common
   )
+
 target_include_directories(
   ${PROJECT_NAME}
-  PRIVATE
-  include
+  PUBLIC 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
 )
+target_link_libraries (
+  ${PROJECT_NAME} 
+  Eigen3::Eigen
+  warrior_common::warrior_common
+  )
 ament_target_dependencies(
   ${PROJECT_NAME}
   hardware_interface

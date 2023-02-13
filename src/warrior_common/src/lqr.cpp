@@ -8,6 +8,8 @@ VectorXd LQR::control(const VectorXd &x)
 
 void LQR::computeGain()
 {
-    P = (A.transpose() * Q * A + R).inverse();
-    K = (B.transpose() * P * A).transpose();
+    for(int i = 0;i<100;i++)
+    K = (-R + B.transpose() * Q * B).inverse() * B.transpose() * Q * A;
+//     P = (A.transpose() * Q * A + R).inverse();
+//     K = (B.transpose() * P * A).transpose();
 }
