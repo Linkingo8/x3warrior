@@ -130,7 +130,7 @@ namespace warrior_hardware
             void give_id_to_go1_processor(void)
             {
                 id_temp_++;
-                if(id_temp_>3) id_temp_ = 0;
+                if(id_temp_>3) id_temp_ = -1;
             }
             uint8_t id_now(void)
             {

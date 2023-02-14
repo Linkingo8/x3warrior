@@ -24,6 +24,11 @@ WheelBalancingController::WheelBalancingController()
     , K_(2, 6)
     , P_(2, 2)
     , lqr_(nullptr)
+    , left_destination_()
+    , leg_balance_controller_()
+    , pitch_now_(0.0)
+    , pitch_last_(0.0)
+
 { 
         A_ <<   0,              0,          0,          0,          4.900,          -4.900,
                 0,              0,          0,          0,          -40.6842,       -40.6842,
@@ -43,18 +48,9 @@ WheelBalancingController::WheelBalancingController()
                 0,              0,          0,          1,          0,               0,
                 0,              0,          0,          0,          1,               0,
                 0,              0,          0,          0,          0,               1; 
-        // R_ <<   1,              0,          0,          0,          0,               0,
-        //         0,              1,          0,          0,          0,               0,
-        //         0,              0,          1,          0,          0,               0,
-        //         0,              0,          0,          1,          0,               0,
-        //         0,              0,          0,          0,          1,               0,
-        //         0,              0,          0,          0,          0,               1; 
         R_ <<   1,   0,
                 0,   1; 
-        // lqr_-> A = A_;
-        // lqr_-> B = B_;
-        // lqr_-> Q = Q_;
-        // lqr_-> R = R_;
+
 }
 
 controller_interface::InterfaceConfiguration WheelBalancingController::command_interface_configuration() const
@@ -134,6 +130,18 @@ controller_interface::return_type WheelBalancingController::update()
     // x_dot = Ax + Bu
     /// x[x x_dot theta theta_dot fai fai_dot]
     /// x[驱动轮位移 驱动轮加速度 关节电机位移 关节电机加速度 陀螺仪 陀螺仪加速度]
+    /// define state-vector A;
+
+    // u = k(x_d - x)
+    // u = [tau_W,tau_B]
+
+    // k = lqr_ - > k       [*]
+
+    // x_d [x,  theta,  fai,    x_dot,  theta_dot,    fai_dot]_des  [*]
+    // x_d [0,  theta,  0,      0,      0,                  0]_des  [*]
+
+    // x[lk_pos,theta_cal,imu_pitch,lk_velocities,theta_cal_dot,imu_pitch_dot]
+    
 
     ///Right-handed coordinate systgem
     /// for go1     id:0    id: 1 id: 2 id :3
@@ -149,8 +157,19 @@ controller_interface::return_type WheelBalancingController::update()
     WheelBalancingController::updatingRemoteData();
     /// calculate the lqr k.
     lqr_->K = lqr_->calcGainK();
+    /// set the x_d to struct
+    WheelBalancingController::updateXdes(0);
+    /// get the feedback struct
+    WheelBalancingController::updateX(0);
+    /// give k to controller
+    WheelBalancingController::setLegLQRGain(lqr_->K,0);
+    /// set the x_d to controller
+    WheelBalancingController::setLegLQRXd(0);
+    /// set the X to controller
+    WheelBalancingController::setLegLQRX(0);
+    WheelBalancingController::calclegLQRU(0);
+
     /// set the line input to track the root of system
-    // std::cout << lqr_->K << std::endl;
     if(rc_commmonds_.sw_l == 1) { //protection mode
         LK_L_handles_->set_torque(0);
         LK_R_handles_->set_torque(0);
@@ -170,7 +189,6 @@ controller_interface::return_type WheelBalancingController::update()
         Go1_RF_handles_->set_torque(0.0f);
         Go1_RB_handles_->set_torque(0.0f);
     }
-    /// define state-vector A;
 /// publish sensor feedback.
 #ifdef IMU_PLOT
     if (realtime_imu_data_publisher_->trylock())
@@ -391,6 +409,112 @@ CallbackReturn WheelBalancingController::on_shutdown(const rclcpp_lifecycle::Sta
 {
     return CallbackReturn::SUCCESS;
 }
+/// banlance controller
+/// 0 left 1 right 
+void WheelBalancingController::setLegLQRGain(MatrixXd K,uint8_t index)
+{
+    leg_balance_controller_[index].K = K;
+    // std::cout << leg_balance_controller_[index].K;
+}
+
+void WheelBalancingController::updateXdes(uint8_t index)
+{
+    if(index == 0)
+    {
+        left_destination_.x = 0.0f;
+        left_destination_.x_dot = 0.0f;
+        left_destination_.theta = 0.0f;
+        left_destination_.theta_dot = 0.0f;
+        left_destination_.fai = 0.0f;
+        left_destination_.fai_dot = 0.0f;
+    }
+    if(index == 1)
+    {
+        left_destination_.x = 0;
+        left_destination_.x_dot = 0;
+        left_destination_.theta = 0;
+        left_destination_.theta_dot = 0;
+        left_destination_.fai = 0;
+        left_destination_.fai_dot = 0;
+    }
+}
+
+void WheelBalancingController::setLegLQRXd(uint8_t index)
+{
+    if(index == 0)
+    {
+        leg_balance_controller_[index].X_d << left_destination_.x
+        ,left_destination_.x_dot
+        ,left_destination_.theta
+        ,left_destination_.theta_dot
+        ,left_destination_.fai
+        ,left_destination_.fai_dot;
+        // std::cout << leg_balance_controller_[index].X_d << std::endl;
+    }
+    if(index == 1)
+    {
+        // leg_balance_controller_[index].X_d(1,1) = left_destination_.x;
+        // leg_balance_controller_[index].X_d(1,2) = left_destination_.x_dot;
+        // leg_balance_controller_[index].X_d(1,3) = left_destination_.theta;
+        // leg_balance_controller_[index].X_d(1,4) = left_destination_.theta_dot;
+        // leg_balance_controller_[index].X_d(1,5) = left_destination_.fai;
+        // leg_balance_controller_[index].X_d(1,6) = left_destination_.fai_dot;
+    }
+}
+
+void WheelBalancingController::updateX(uint8_t index)
+{
+    pitch_now_ = imu_handles_->get_pitch();
+        if(index == 0)
+    {
+        left_set_feedback_.x = LK_L_handles_->get_position();
+        left_set_feedback_.x_dot = LK_L_handles_->get_velocity();
+        left_set_feedback_.theta = 0.0f;
+        left_set_feedback_.theta_dot = 0.0f;
+        left_set_feedback_.fai = pitch_now_;
+        left_set_feedback_.fai_dot = pitch_now_ - pitch_last_;
+    }
+    if(index == 1)
+    {
+        left_set_feedback_.x = 0;
+        left_set_feedback_.x_dot = 0;
+        left_set_feedback_.theta = 0;
+        left_set_feedback_.theta_dot = 0;
+        left_set_feedback_.fai = 0;
+        left_set_feedback_.fai_dot = 0;
+    }
+    pitch_last_ = pitch_now_;
+}
+
+void WheelBalancingController::setLegLQRX(uint8_t index)
+{
+    if(index == 0)
+    {
+        leg_balance_controller_[index].X << left_set_feedback_.x
+        ,left_set_feedback_.x_dot
+        ,left_set_feedback_.theta
+        ,left_set_feedback_.theta_dot
+        ,left_set_feedback_.fai
+        ,left_set_feedback_.fai_dot;
+        // std::cout << leg_balance_controller_[index].X << std::endl;
+    }
+    if(index == 1)
+    {
+    }    
+}
+void WheelBalancingController::calclegLQRU(uint8_t index)
+{
+    if(index == 0)
+    {
+        leg_balance_controller_[index].U = leg_balance_controller_[index].K * 
+                    (leg_balance_controller_[index].X_d.transpose() - leg_balance_controller_[index].X.transpose());
+        // std::cout << leg_balance_controller_[index].U << std::endl;
+        
+    }
+    if(index == 1)
+    {
+    }        
+}
 
 //get remote date
 controller_interface::return_type WheelBalancingController::updatingRemoteData(void)
@@ -420,7 +544,7 @@ void WheelBalancingController::initLQRParam(void)
         lqr_ -> R = R_;
         lqr_ -> K = K_;
         lqr_ -> P = P_;
-        std::cout <<  lqr_ -> A << std::endl;
+        // std::cout <<  lqr_ -> A << std::endl;
 }
 
 std::shared_ptr<ImuHandle> WheelBalancingController::get_angle(const std::string & joint_name)

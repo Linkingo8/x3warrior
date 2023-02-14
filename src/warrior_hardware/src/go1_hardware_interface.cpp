@@ -229,9 +229,9 @@ return_type Go1HardwareInterface::read()
     Go1_positions_[id] = Go1_data_process_->Go1_positions_export(id);
     Go1_accelerations_[id] = Go1_data_process_->Go1_torques_export(id);
     // Go1_data_process_->give_id_to_go1_processor(id);
-    for(int i = 0; i<4; i++)
-      RCLCPP_INFO(
-        rclcpp::get_logger("Go1HardwareInterface"), "Go1_positions_[%d]:%.5f",i,Go1_positions_[i]);
+    // for(int i = 0; i<4; i++)
+    //   RCLCPP_INFO(
+    //     rclcpp::get_logger("Go1HardwareInterface"), "Go1_positions_[%d]:%.5f",i,Go1_positions_[i]);
   }
   memset(buff,0,17);
   return return_type::OK;

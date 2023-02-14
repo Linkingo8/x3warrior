@@ -94,6 +94,37 @@ namespace warrior_controller
                 rc_commmonds() : ch_l_x(0.0), ch_l_y(0.0), ch_r_x(0.0)
                                  ,ch_r_y(0.0), sw_l(1),sw_r(1),wheel(0) {}
             };
+            rc_commmonds rc_commmonds_;
+            /* balance controller */
+            struct state_variables
+            {
+                double x;
+                double x_dot;
+                double theta;
+                double theta_dot;
+                double fai;
+                double fai_dot;
+               state_variables()  : x(0),x_dot(0),theta(0)
+                                    ,theta_dot(0),fai(0),fai_dot(0){}
+            };
+            state_variables left_destination_,left_set_feedback_;
+
+            struct leg_balance_controller
+            {
+                MatrixXd K;
+                MatrixXd X_d;
+                MatrixXd X;
+                MatrixXd U;
+                leg_balance_controller() : K(2,6), X_d(1,6),X(1,6),U(2,1){}
+            };
+            leg_balance_controller leg_balance_controller_[2];
+            double pitch_now_,pitch_last_;//use and update in updateX
+            void setLegLQRGain(MatrixXd K,uint8_t index);
+            void setLegLQRXd(uint8_t index);
+            void setLegLQRX(uint8_t index);
+            void calclegLQRU(uint8_t index);
+            void updateXdes(uint8_t index);
+            void updateX(uint8_t index);
             /*lqr controller*/
             MatrixXd A_;
             MatrixXd B_;
@@ -103,7 +134,6 @@ namespace warrior_controller
             MatrixXd P_;
             std::shared_ptr<LQR> lqr_;
             void initLQRParam(void);
-            rc_commmonds rc_commmonds_;
             /// remote data suscription.
             rclcpp::Subscription<warrior_interface::msg::DbusData>::SharedPtr command_subsciption_;
             /// remote subcription data buffer.

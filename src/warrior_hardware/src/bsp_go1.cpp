@@ -152,7 +152,7 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
             }
             else
             {
-                RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "id[%d]  ",id_temp);
+                // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "id[%d]  ",id_temp);
 
                 go1_feedback_data_[id_temp].head[0] = 0xFD;
                 go1_feedback_data_[id_temp].head[1] = 0xEE;
@@ -191,7 +191,7 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
                 /*bit fields*/
                 //MError
                 go1_feedback_data_[id_temp].fbk.MError = (buff_temp[12] & 0xE0) >> 5;
-                RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "pos:%x",go1_feedback_data_[id_temp].fbk.MError);
+                // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "pos:%x",go1_feedback_data_[id_temp].fbk.MError);
                 // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "pos:%x",go1_feedback_data_[id_temp].fbk.MError);
                 //fource
                 uint16_t bit12_temp[2]{0x0000};
