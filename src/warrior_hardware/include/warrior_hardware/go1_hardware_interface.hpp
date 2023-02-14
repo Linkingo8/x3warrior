@@ -71,3 +71,4 @@ class Go1HardwareInterface
 
 }  // namespace warrior_hardware
 #endif  // WARRIOR_HARDWARE__TEST_HARDWARE_INTERFACE_HPP_
+

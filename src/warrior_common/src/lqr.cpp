@@ -1,3 +1,4 @@
+
 #include "warrior_common/lqr.hpp"
 
 VectorXd LQR::control(const VectorXd &x)
@@ -44,15 +45,6 @@ MatrixXd LQR::care(void)
 
   Eigen::MatrixXd LQR::calcGainK()
   {
-      /**
-      * Calculate LQR Gain K
-      * Solves Riccati Equation using Arimoto Potter Method
-      * 
-      * author: Horibe Takamasa
-      */
-
-      // https://www.mathworks.com/help/control/ref/lqr.html
-      // http://www.kostasalexis.com/lqr-control.html
       Eigen::MatrixXd  S = care();
       return R.inverse() * (B.transpose() * S);
   }

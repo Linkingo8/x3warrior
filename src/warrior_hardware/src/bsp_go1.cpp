@@ -66,7 +66,10 @@ int Go1Config::read_frames(uint8_t* data, size_t size)
     return 1;
 }
 
-Go1DataProcess::Go1DataProcess(uint16_t CRC16_CCITT_INIT) : crc(CRC16_CCITT_INIT){}
+Go1DataProcess::Go1DataProcess(uint16_t CRC16_CCITT_INIT) 
+: crc(CRC16_CCITT_INIT)
+, tramsmit_status_(0)
+{}
 /**
 * @brief Motor state control states 
 * @param ControlData_t go1_control_data
@@ -149,6 +152,8 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
             }
             else
             {
+                RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "id[%d]  ",id_temp);
+
                 go1_feedback_data_[id_temp].head[0] = 0xFD;
                 go1_feedback_data_[id_temp].head[1] = 0xEE;
                 go1_feedback_data_[id_temp].mode.id = buff_temp[2] & 0xF;
@@ -158,7 +163,7 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
                 go1_feedback_data_[id_temp].fbk.torque = buff_temp[4];
                 go1_feedback_data_[id_temp].fbk.torque = go1_feedback_data_[id_temp].fbk.torque << 8;
                 go1_feedback_data_[id_temp].fbk.torque |= buff_temp[3];
-                RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_feedback_data_[%d] torque: %d",id_temp,go1_feedback_data_[go1_feedback_data_[id_temp].mode.id].fbk.torque);
+                // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_feedback_data_[%d] torque: %d",id_temp,go1_feedback_data_[go1_feedback_data_[id_temp].mode.id].fbk.torque);
                 //speed //merge to big-endian
                 go1_feedback_data_[id_temp].fbk.speed = buff_temp[6];
                 go1_feedback_data_[id_temp].fbk.speed = go1_feedback_data_[id_temp].fbk.speed << 8;
@@ -178,12 +183,15 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
                 go1_feedback_data_[id_temp].fbk.pos |= merge_to_32[1];
                 go1_feedback_data_[id_temp].fbk.pos |= merge_to_32[2];
                 go1_feedback_data_[id_temp].fbk.pos |= merge_to_32[3];
+                // if(id_temp == 2)
+                //     RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "pos:%d",go1_feedback_data_[id_temp].fbk.pos);
                 // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "pos: %d",go1_feedback_data_[id_temp].fbk.pos);
                 //temperature
                 go1_feedback_data_[id_temp].fbk.temp = buff_temp[11];
                 /*bit fields*/
                 //MError
                 go1_feedback_data_[id_temp].fbk.MError = (buff_temp[12] & 0xE0) >> 5;
+                RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "pos:%x",go1_feedback_data_[id_temp].fbk.MError);
                 // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "pos:%x",go1_feedback_data_[id_temp].fbk.MError);
                 //fource
                 uint16_t bit12_temp[2]{0x0000};
@@ -203,12 +211,12 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
                 go1_feedback_data_[id_temp].CRC16 |= buff_temp[14];
                 // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "CRC: %x",go1_feedback_data_[id_temp].CRC16);
 
-                go1_export_data_[id_temp].velocity = (go1_feedback_data_[id_temp].fbk.speed /256) * (2 * PI);
-                go1_export_data_[id_temp].position = (go1_feedback_data_[id_temp].fbk.pos /32768) * (2 * PI);
-                go1_export_data_[id_temp].torque = (go1_feedback_data_[id_temp].fbk.torque /256);
+                go1_export_data_[id_temp].velocity = float(go1_feedback_data_[id_temp].fbk.speed /256.00) * float(2 * PI);
+                go1_export_data_[id_temp].position = float(go1_feedback_data_[id_temp].fbk.pos /32768.00) * float(2 * PI);
+                go1_export_data_[id_temp].torque = (go1_feedback_data_[id_temp].fbk.torque /256.00);
                 // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_export_data_[%d].velocity: %f",id_temp,go1_export_data_[id_temp].velocity);
                 // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_export_data_[%d].position: %f",id_temp,go1_export_data_[id_temp].position);
-                RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_export_data_[%d].torque: %.3f",id_temp,go1_export_data_[id_temp].torque);
+                // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_export_data_[%d].torque: %.3f",id_temp,go1_export_data_[id_temp].torque);
             }
         }
     }

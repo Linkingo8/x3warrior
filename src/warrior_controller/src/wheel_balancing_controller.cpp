@@ -131,6 +131,10 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
 
 controller_interface::return_type WheelBalancingController::update()
 {
+    // x_dot = Ax + Bu
+    /// x[x x_dot theta theta_dot fai fai_dot]
+    /// x[驱动轮位移 驱动轮加速度 关节电机位移 关节电机加速度 陀螺仪 陀螺仪加速度]
+
     ///Right-handed coordinate systgem
     /// for go1     id:0    id: 1 id: 2 id :3
     /// torque      + f     + b   + b   + f
@@ -138,14 +142,15 @@ controller_interface::return_type WheelBalancingController::update()
     /// torque
 
     //feadback of LK and G01.
-
+ 
     //feadback of imu
     
     //update the remote date.
     WheelBalancingController::updatingRemoteData();
+    /// calculate the lqr k.
     lqr_->K = lqr_->calcGainK();
-    std::cout << lqr_->K << std::endl;
-    
+    /// set the line input to track the root of system
+    // std::cout << lqr_->K << std::endl;
     if(rc_commmonds_.sw_l == 1) { //protection mode
         LK_L_handles_->set_torque(0);
         LK_R_handles_->set_torque(0);
@@ -166,7 +171,6 @@ controller_interface::return_type WheelBalancingController::update()
         Go1_RB_handles_->set_torque(0.0f);
     }
     /// define state-vector A;
-
 /// publish sensor feedback.
 #ifdef IMU_PLOT
     if (realtime_imu_data_publisher_->trylock())
@@ -214,8 +218,8 @@ controller_interface::return_type WheelBalancingController::update()
       Go1_data_message.lbtorques = Go1_LB_handles_->get_acceleration();
       realtime_Go1_data_publisher_->unlockAndPublish();
     }
-#endif
 
+#endif
      return controller_interface::return_type::OK;
 }
 

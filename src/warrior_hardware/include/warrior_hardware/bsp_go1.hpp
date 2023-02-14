@@ -122,10 +122,28 @@ namespace warrior_hardware
             /* debug */
             void Go1_head_print(void);
             void Go1_buff_print(void);
+            void tramsmit_status_detect(void)
+            {
+                tramsmit_status_++;
+                if(tramsmit_status_>4) tramsmit_status_= 0;
+            };
+            void give_id_to_go1_processor(void)
+            {
+                id_temp_++;
+                if(id_temp_>3) id_temp_ = 0;
+            }
+            uint8_t id_now(void)
+            {
+
+                return id_temp_;
+            }
+
         private:
             MotorData_t go1_feedback_data_[4];
             ControlData_t go1_control_data_[4];
             MotorData_Export_t go1_export_data_[4];
+            uint8_t tramsmit_status_;
+            uint8_t id_temp_;
     };
 }
 #endif

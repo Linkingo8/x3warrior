@@ -8,6 +8,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <iostream>
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "warrior_common/lqr.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -289,6 +290,7 @@ return_type MF9025HardwareInterface::stop()
 
 return_type MF9025HardwareInterface::read()
 {
+  //  std::cout << "reading..." << std::endl;
     if((reclen_=VCI_Receive(VCI_USBCAN2,0,ind_,rec_,3000,100))>0)//调用接收函数，如果有数据，进行数据处理显示。
 		{
 			for(int q1=0;q1<reclen_;q1++)
@@ -303,7 +305,7 @@ return_type MF9025HardwareInterface::read()
             LK_velocities_[0] = MF9025_data_process_->MF9025_velocitise_export(rec_,1);
             LK_positions_[0] = MF9025_data_process_->MF9025_position_export(rec_,1);
             LK_torque_[0] = MF9025_data_process_->MF9025_torque_export(rec_,1);
-            //- RCLCPP_INFO(
+            // RCLCPP_INFO(
             //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_velocities_:%f",LK_velocities_[0]);
             // RCLCPP_INFO(
             //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_positions_:%f",LK_positions_[0]);
@@ -317,7 +319,7 @@ return_type MF9025HardwareInterface::read()
             LK_velocities_[1] = MF9025_data_process_->MF9025_velocitise_export(rec_,2);
             LK_positions_[1] = MF9025_data_process_->MF9025_position_export(rec_,2);
             LK_torque_[1] = MF9025_data_process_->MF9025_torque_export(rec_,2);
-            //1 RCLCPP_INFO(
+            // RCLCPP_INFO(
             //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_velocities_:%f",LK_velocities_[1]);
             // RCLCPP_INFO(
             //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_positions_:%f",LK_positions_[1]);

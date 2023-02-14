@@ -23,6 +23,8 @@
 #define LK_COMMOND_NUM  3
 #define LK_STATE_NUM    3
 #define RM_IMU_USE
+#define LKMF9025_MAX_POSITION 65534
+#define LKMF9025_MIN_POSITION 0
 
 //#define T_IMU_USE
 
