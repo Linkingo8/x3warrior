@@ -241,7 +241,7 @@ return_type Go1HardwareInterface::write()
 {
       Go1_data_process_->give_id_to_go1_processor();
     //transmit
-    if(Go1_data_process_->id_now() != -1)
+    if(Go1_data_process_->id_now() != 4)
     {
       /*head*/
       Go1_data_process_->Go1_head_set(Go1_data_process_->id_now());

@@ -25,6 +25,7 @@ WheelBalancingController::WheelBalancingController()
     , P_(2, 2)
     , lqr_(nullptr)
     , left_destination_()
+    , left_set_feedback_()
     , leg_balance_controller_()
     , pitch_now_(0.0)
     , pitch_last_(0.0)
@@ -48,8 +49,8 @@ WheelBalancingController::WheelBalancingController()
                 0,              0,          0,          1,          0,               0,
                 0,              0,          0,          0,          1,               0,
                 0,              0,          0,          0,          0,               1; 
-        R_ <<   1,   0,
-                0,   1; 
+        R_ <<   100,    0,
+                0,      1; 
 
 }
 
@@ -150,9 +151,15 @@ controller_interface::return_type WheelBalancingController::update()
     /// torque
 
     //feadback of LK and G01.
- 
     //feadback of imu
-    
+    /// give all data to controller
+    WheelBalancingController::updateDataFromInterface();
+    /// data pre-handle
+    /// get x
+    WheelBalancingController::init9025EncoderZeros();
+    WheelBalancingController::update9025TotalDis();
+    /// get theta
+    /// use these data
     //update the remote date.
     WheelBalancingController::updatingRemoteData();
     /// calculate the lqr k.
@@ -167,21 +174,22 @@ controller_interface::return_type WheelBalancingController::update()
     WheelBalancingController::setLegLQRXd(0);
     /// set the X to controller
     WheelBalancingController::setLegLQRX(0);
+    /// calculate the input of system.
     WheelBalancingController::calclegLQRU(0);
 
     /// set the line input to track the root of system
     if(rc_commmonds_.sw_l == 1) { //protection mode
-        LK_L_handles_->set_torque(0);
-        LK_R_handles_->set_torque(0);
+        LK_L_handles_->set_torque(0.0f);
+        LK_R_handles_->set_torque(0.0f);
         /// left leg //     + - up       - + down
-        Go1_LF_handles_->set_torque(0);
-        Go1_LB_handles_->set_torque(0);
+        Go1_LF_handles_->set_torque(0.0f);
+        Go1_LB_handles_->set_torque(0.0f);
         /// right leg //    - + up       + - down
-        Go1_RF_handles_->set_torque(0);
-        Go1_RB_handles_->set_torque(0);
+        Go1_RF_handles_->set_torque(0.0f);
+        Go1_RB_handles_->set_torque(0.0f);
     } else {//other modes
-        LK_L_handles_->set_torque(0);
-        LK_R_handles_->set_torque(0);
+        LK_L_handles_->set_torque(0.0f);
+        LK_R_handles_->set_torque(0.0f);
         /// left leg
         Go1_LF_handles_->set_torque(0.0f);
         Go1_LB_handles_->set_torque(0.0f);
@@ -357,7 +365,6 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
     Go1_data_message.lbvelocities = 0.00;
     Go1_data_message.lbtorques = 0.00;
 #endif
-
     return CallbackReturn::SUCCESS;
 }
 
@@ -365,9 +372,10 @@ CallbackReturn WheelBalancingController::on_activate(const rclcpp_lifecycle::Sta
 {
     // Initialize the joint handle
     imu_handles_ = get_angle(imu_joint_name_.at(0));
-
-    LK_L_handles_  = get_LK_handle(wheel_joint_name_.at(0));
-    LK_R_handles_ =  get_LK_handle(wheel_joint_name_.at(1));
+    
+    LK_R_handles_ =  get_LK_handle(wheel_joint_name_.at(0));
+    LK_L_handles_  = get_LK_handle(wheel_joint_name_.at(1));
+    
 
     Go1_LF_handles_ =  get_Go1_handle(leg_joint_name_.at(0));
     Go1_RF_handles_ =  get_Go1_handle(leg_joint_name_.at(1));
@@ -387,6 +395,8 @@ CallbackReturn WheelBalancingController::on_activate(const rclcpp_lifecycle::Sta
         return CallbackReturn::ERROR;
     }
     return CallbackReturn::SUCCESS;
+    // WheelBalancingController::InitXdes(0);  
+
 }
 
 CallbackReturn WheelBalancingController::on_deactivate(const rclcpp_lifecycle::State &)
@@ -411,10 +421,76 @@ CallbackReturn WheelBalancingController::on_shutdown(const rclcpp_lifecycle::Sta
 }
 /// banlance controller
 /// 0 left 1 right 
+/// get the value of all i will need in the controller.
+void WheelBalancingController::init9025EncoderZeros(void)
+{
+    if(need_data_form_hi_.left_init_flag==0)
+    {
+        need_data_form_hi_.left_lk9025_pos = LK_L_handles_->get_position();
+        need_data_form_hi_.left_lk9025_ecoder_zero = need_data_form_hi_.left_lk9025_pos;
+        need_data_form_hi_.left_lk9025_total_dis = need_data_form_hi_.left_lk9025_ecoder_zero;
+        need_data_form_hi_.left_init_flag = 1;
+    }
+    if(need_data_form_hi_.right_init_flag==0)
+    {
+        need_data_form_hi_.right_lk9025_pos = LK_R_handles_->get_position();
+        need_data_form_hi_.right_lk9025_ecoder_zero = need_data_form_hi_.right_lk9025_pos;
+        need_data_form_hi_.right_lk9025_total_dis = need_data_form_hi_.right_lk9025_ecoder_zero;
+        need_data_form_hi_.right_init_flag = 1;
+    }
+}
+
+void WheelBalancingController::update9025TotalDis(void)
+{
+    int8_t l_dir(0),r_dir(0);
+    /// get the rotate direction.1 + -1 -
+    if(need_data_form_hi_.left_lk9025_vel > 0)  l_dir = 1; else if(need_data_form_hi_.left_lk9025_vel<0) l_dir = -1; else l_dir = 0;
+    if(need_data_form_hi_.right_lk9025_vel > 0)  r_dir = 1; else if(need_data_form_hi_.right_lk9025_vel<0) r_dir = -1; else r_dir = 0;
+    /// calculate the distance
+        //left
+    if(l_dir == 1)
+    {
+        /// get circle cnt
+            //overflow judge
+        if(need_data_form_hi_.left_lk9025_ecoder_last - need_data_form_hi_.left_lk9025_pos > 0x7FFF)//forward rotate down overflow last(65534)-now(1) > 
+            need_data_form_hi_.left_lk9025_circle_cnt++;
+    }
+    else
+    {
+        if(need_data_form_hi_.left_lk9025_pos - need_data_form_hi_.left_lk9025_ecoder_last > 0x7FFF)//back rotate up overflow now(65535) - last(0) > 
+            need_data_form_hi_.left_lk9025_circle_cnt--;
+    }
+    /// total dis = circle_cnt * 65535 + pos
+    if(uint16_t(need_data_form_hi_.left_lk9025_pos) != need_data_form_hi_.left_lk9025_ecoder_last && l_dir != 0)
+        need_data_form_hi_.left_lk9025_total_dis = need_data_form_hi_.left_lk9025_circle_cnt * 65535 
+                    + (need_data_form_hi_.left_lk9025_pos);
+    std::cout << need_data_form_hi_.left_lk9025_total_dis << std::endl;
+        /// right
+    if(r_dir == 1)
+    {
+        /// get circle cnt
+            //overflow judge
+        if(need_data_form_hi_.right_lk9025_ecoder_last - need_data_form_hi_.right_lk9025_pos > 0x7FFF)//forward rotate down overflow last(65534)-now(1) > 
+            need_data_form_hi_.right_lk9025_circle_cnt++;
+    }
+    else
+    {
+        if(need_data_form_hi_.right_lk9025_pos - need_data_form_hi_.right_lk9025_ecoder_last > 0x7FFF)//back rotate up overflow now(65535) - last(0) > 
+            need_data_form_hi_.right_lk9025_circle_cnt--;
+    }
+    /// total dis = circle_cnt * 65535 + pos
+    if(uint16_t(need_data_form_hi_.right_lk9025_pos) != need_data_form_hi_.right_lk9025_ecoder_last && r_dir != 0)
+        need_data_form_hi_.right_lk9025_total_dis = need_data_form_hi_.right_lk9025_circle_cnt * 65535 
+                    + (need_data_form_hi_.right_lk9025_pos);    
+    need_data_form_hi_.right_lk9025_ecoder_last = need_data_form_hi_.right_lk9025_pos;
+    need_data_form_hi_.left_lk9025_ecoder_last = need_data_form_hi_.left_lk9025_pos;
+    std::cout << need_data_form_hi_.right_lk9025_total_dis << std::endl;
+}
+
 void WheelBalancingController::setLegLQRGain(MatrixXd K,uint8_t index)
 {
     leg_balance_controller_[index].K = K;
-    // std::cout << leg_balance_controller_[index].K;
+    // std::cout << leg_balance_controller_[index].K << std::endl;
 }
 
 void WheelBalancingController::updateXdes(uint8_t index)
@@ -449,7 +525,7 @@ void WheelBalancingController::setLegLQRXd(uint8_t index)
         ,left_destination_.theta_dot
         ,left_destination_.fai
         ,left_destination_.fai_dot;
-        // std::cout << leg_balance_controller_[index].X_d << std::endl;
+        //  std::cout <<"X_d:"<< leg_balance_controller_[index].X_d << std::endl;
     }
     if(index == 1)
     {
@@ -464,11 +540,11 @@ void WheelBalancingController::setLegLQRXd(uint8_t index)
 
 void WheelBalancingController::updateX(uint8_t index)
 {
-    pitch_now_ = imu_handles_->get_pitch();
-        if(index == 0)
+    pitch_now_ = need_data_form_hi_.pitch;
+    if(index == 0)
     {
-        left_set_feedback_.x = LK_L_handles_->get_position();
-        left_set_feedback_.x_dot = LK_L_handles_->get_velocity();
+        left_set_feedback_.x = need_data_form_hi_.left_lk9025_pos;
+        left_set_feedback_.x_dot = need_data_form_hi_.left_lk9025_vel;
         left_set_feedback_.theta = 0.0f;
         left_set_feedback_.theta_dot = 0.0f;
         left_set_feedback_.fai = pitch_now_;
@@ -476,9 +552,9 @@ void WheelBalancingController::updateX(uint8_t index)
     }
     if(index == 1)
     {
-        left_set_feedback_.x = 0;
+        left_set_feedback_.x = 10;
         left_set_feedback_.x_dot = 0;
-        left_set_feedback_.theta = 0;
+        left_set_feedback_.theta = -2;
         left_set_feedback_.theta_dot = 0;
         left_set_feedback_.fai = 0;
         left_set_feedback_.fai_dot = 0;
@@ -502,20 +578,57 @@ void WheelBalancingController::setLegLQRX(uint8_t index)
     {
     }    
 }
+
 void WheelBalancingController::calclegLQRU(uint8_t index)
 {
     if(index == 0)
     {
-        leg_balance_controller_[index].U = leg_balance_controller_[index].K * 
+        leg_balance_controller_[index].U = -leg_balance_controller_[index].K * 
                     (leg_balance_controller_[index].X_d.transpose() - leg_balance_controller_[index].X.transpose());
-        // std::cout << leg_balance_controller_[index].U << std::endl;
-        
     }
     if(index == 1)
     {
     }        
 }
 
+void WheelBalancingController::updateDataFromInterface(void)
+{
+    need_data_form_hi_.left_lk9025_pos = LK_L_handles_->get_position();
+    need_data_form_hi_.left_lk9025_vel = LK_L_handles_->get_velocity();
+    need_data_form_hi_.left_lk9025_tor = LK_L_handles_->get_acceleration();
+
+    need_data_form_hi_.right_lk9025_pos = LK_R_handles_->get_position();
+    need_data_form_hi_.right_lk9025_vel = LK_R_handles_->get_velocity();
+    need_data_form_hi_.right_lk9025_tor = LK_R_handles_->get_acceleration();
+
+    need_data_form_hi_.lf_go1_pos = Go1_LF_handles_->get_position();
+    need_data_form_hi_.lf_go1_vel = Go1_LF_handles_->get_velocity();
+    need_data_form_hi_.lf_go1_tor = Go1_LF_handles_->get_acceleration();
+
+    need_data_form_hi_.rf_go1_pos = Go1_RF_handles_->get_position();
+    need_data_form_hi_.rf_go1_vel = Go1_RF_handles_->get_velocity();
+    need_data_form_hi_.rf_go1_tor = Go1_RF_handles_->get_acceleration();
+
+    need_data_form_hi_.rb_go1_pos = Go1_RB_handles_->get_position();
+    need_data_form_hi_.rb_go1_vel = Go1_RB_handles_->get_velocity();
+    need_data_form_hi_.rb_go1_tor = Go1_RB_handles_->get_acceleration();
+
+    need_data_form_hi_.lb_go1_pos = Go1_LB_handles_->get_position();
+    need_data_form_hi_.lb_go1_vel = Go1_LB_handles_->get_velocity();
+    need_data_form_hi_.lb_go1_tor = Go1_LB_handles_->get_acceleration();
+
+    need_data_form_hi_.pitch = imu_handles_->get_pitch();
+    need_data_form_hi_.yaw = imu_handles_->get_yaw();
+    need_data_form_hi_.roll = imu_handles_->get_roll();
+
+
+    std::cout << "need_data_form_hi_.left_lk9025_pos" << "  " << need_data_form_hi_.left_lk9025_pos << std::endl;
+    std::cout << "need_data_form_hi_.left_lk9025_ecoder_zero" << "  " << need_data_form_hi_.left_lk9025_ecoder_zero << std::endl;
+
+    std::cout << "need_data_form_hi_.right_lk9025_pos" << "  " << need_data_form_hi_.right_lk9025_pos << std::endl;
+    std::cout << "need_data_form_hi_.right_lk9025_ecoder_zero" << "  " << need_data_form_hi_.right_lk9025_ecoder_zero << std::endl;
+
+}
 //get remote date
 controller_interface::return_type WheelBalancingController::updatingRemoteData(void)
 {
@@ -757,6 +870,7 @@ std::shared_ptr<Go1Handle> WheelBalancingController::get_Go1_handle(const std::s
                                         std::ref(*zero_torque_command),
                                         std::ref(*torque_and_position_command));
 }
+
 
 PLUGINLIB_EXPORT_CLASS(
     warrior_controller::WheelBalancingController,

@@ -69,6 +69,7 @@ int Go1Config::read_frames(uint8_t* data, size_t size)
 Go1DataProcess::Go1DataProcess(uint16_t CRC16_CCITT_INIT) 
 : crc(CRC16_CCITT_INIT)
 , tramsmit_status_(0)
+, id_temp_(0)
 {}
 /**
 * @brief Motor state control states 
@@ -256,7 +257,7 @@ void Go1DataProcess::Go1_id_set(uint8_t id)
 
 void Go1DataProcess::Go1_speed_set(uint8_t index,double k_sped,double spd_set)
 {
-    if(index > 3) {
+    if(index > 3 || index == 0) {
         RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "Go1_speed_set id error!");    
         return;
     }
@@ -383,4 +384,14 @@ void Go1DataProcess::Go1_buff_zero(void)
     {
         memset(go1_control_data_[i].tx.tx_buff,0,17);
     }
+}
+
+void Go1DataProcess::give_id_to_go1_processor(void)
+{
+    // id_temp_ = 1;
+    id_temp_++;
+    if(id_temp_> 3) id_temp_ = 0;
+    RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "id_temp_ %d",id_temp_);
+    // std::cout << id_temp_ << std::endl;
+
 }

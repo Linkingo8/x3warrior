@@ -11,6 +11,7 @@
 #include <string>
 #include <Eigen/Dense>
 #include <iostream>
+#include <cmath>
 #include "std_msgs/msg/string.hpp"
 #include "warrior_controller/warrior_controller_compiler.h"
 #include "warrior_common/lqr.hpp"
@@ -66,8 +67,9 @@ namespace warrior_controller
             /*GO1*/
             std::shared_ptr<Go1Handle> Go1_LF_handles_;
             std::shared_ptr<Go1Handle> Go1_RF_handles_;
-            std::shared_ptr<Go1Handle> Go1_LB_handles_;
             std::shared_ptr<Go1Handle> Go1_RB_handles_;
+            std::shared_ptr<Go1Handle> Go1_LB_handles_;
+            
             std::shared_ptr<Go1Handle> get_Go1_handle(const std::string & joint_name);
             std::vector<std::string> leg_joint_name_;
             /*MF9025*/
@@ -80,6 +82,65 @@ namespace warrior_controller
             std::shared_ptr<ImuHandle> get_angle(const std::string & joint_name);
             std::vector<std::string> imu_joint_name_;
             controller_interface::return_type updatingRemoteData(void);
+            /*get data from interface*/
+            struct data_used_from_interface
+            {
+                double left_lk9025_pos;
+                double left_lk9025_vel;
+                double left_lk9025_tor;
+                double left_lk9025_ecoder_zero;
+                uint16_t left_lk9025_ecoder_last;
+                int32_t left_lk9025_circle_cnt;
+                int32_t left_lk9025_total_dis;
+                uint8_t left_init_flag;
+
+                double right_lk9025_pos;
+                double right_lk9025_vel;
+                double right_lk9025_tor;
+                double right_lk9025_ecoder_zero;
+                uint16_t right_lk9025_ecoder_last;
+                int32_t right_lk9025_circle_cnt;
+                int32_t right_lk9025_total_dis;
+                uint8_t right_init_flag;
+
+                double lf_go1_pos;
+                double lf_go1_vel;
+                double lf_go1_tor;
+
+                double rf_go1_pos;
+                double rf_go1_vel;
+                double rf_go1_tor;
+
+                double rb_go1_pos;
+                double rb_go1_vel;
+                double rb_go1_tor;
+
+                double lb_go1_pos;
+                double lb_go1_vel;
+                double lb_go1_tor;
+
+                double pitch;
+                double yaw;
+                double roll;
+                data_used_from_interface():left_lk9025_pos(0.0), left_lk9025_vel(0.0), left_lk9025_tor(0.0)
+                                        ,right_lk9025_pos(0.0), right_lk9025_vel(0.0), right_lk9025_tor(0.0)
+                                        ,lf_go1_pos(0.0),rf_go1_vel(0.0),rf_go1_tor(0.0)
+                                        ,rf_go1_pos(0.0),lf_go1_vel(0.0),lf_go1_tor(0.0)
+                                        ,rb_go1_pos(0.0),rb_go1_vel(0.0),rb_go1_tor(0.0)
+                                        ,lb_go1_pos(0.0),lb_go1_vel(0.0),lb_go1_tor(0.0) 
+                                        ,left_lk9025_ecoder_zero(0.0),right_lk9025_ecoder_zero(0.0)
+                                        ,left_init_flag(0),right_init_flag(0)
+                                        ,left_lk9025_circle_cnt(0),right_lk9025_circle_cnt(0)
+                                        ,left_lk9025_ecoder_last(0),right_lk9025_ecoder_last(0)
+                                        ,left_lk9025_total_dis(0),right_lk9025_total_dis(0){}
+            };
+            data_used_from_interface need_data_form_hi_;
+            /// update the data at first of time
+            void updateDataFromInterface(void);
+            /// get 9025 distance
+            void update9025TotalDis(void);
+            /// init the zero of lk9025 encoder.
+            void init9025EncoderZeros(void);
             /*remote*/
             struct rc_commmonds
             {
@@ -90,7 +151,6 @@ namespace warrior_controller
                 uint8_t sw_l;
                 uint8_t sw_r;
                 float wheel;
-
                 rc_commmonds() : ch_l_x(0.0), ch_l_y(0.0), ch_r_x(0.0)
                                  ,ch_r_y(0.0), sw_l(1),sw_r(1),wheel(0) {}
             };
@@ -125,6 +185,7 @@ namespace warrior_controller
             void calclegLQRU(uint8_t index);
             void updateXdes(uint8_t index);
             void updateX(uint8_t index);
+            // void InitXdes(uint8_t index);
             /*lqr controller*/
             MatrixXd A_;
             MatrixXd B_;

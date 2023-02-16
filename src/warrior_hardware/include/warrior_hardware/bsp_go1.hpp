@@ -3,6 +3,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <iostream>
 #include "data_process.hpp"
 #include "warrior_hardware/crc.hpp"
 ///////////////////////////////////////////////////////////////
@@ -127,14 +128,9 @@ namespace warrior_hardware
                 tramsmit_status_++;
                 if(tramsmit_status_>4) tramsmit_status_= 0;
             };
-            void give_id_to_go1_processor(void)
-            {
-                id_temp_++;
-                if(id_temp_>3) id_temp_ = -1;
-            }
+            void give_id_to_go1_processor(void);
             uint8_t id_now(void)
             {
-
                 return id_temp_;
             }
 
