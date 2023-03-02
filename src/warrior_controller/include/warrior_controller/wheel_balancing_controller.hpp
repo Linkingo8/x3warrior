@@ -32,8 +32,13 @@
 #define LEFT_CONTROLLER_INDEX 0
 #define RIGHT_CONTROLLER_INDEX 1
 #define DRIVER_RADIUS 0.0775f
+#define G01_REDUCTION_RATIO 6.33f
+#define GO1_0_ZEROS  0.0874224f
+#define GO1_3_ZEROS -0.812973f
+#define LEFT_LEG_FAI_ZERO 1.5662f
 namespace warrior_controller
 {
+
     using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
     class WheelBalancingController
         : public controller_interface::ControllerInterface
@@ -99,7 +104,6 @@ namespace warrior_controller
                 double left_lk9025_ecoder_zero;
                 uint16_t left_lk9025_ecoder_last;
                 int32_t left_lk9025_circle_cnt;
-                double left_lk9025_total_dis;
                 uint8_t left_init_flag;
 
                 double right_lk9025_pos;
@@ -108,12 +112,19 @@ namespace warrior_controller
                 double right_lk9025_ecoder_zero;
                 uint16_t right_lk9025_ecoder_last;
                 int32_t right_lk9025_circle_cnt;
-                double right_lk9025_total_dis;
                 uint8_t right_init_flag;
+
+                double right_leg_total_dis;
+                double right_leg_dis_dot;
+                double left_leg_total_dis;
+                double left_leg_dis_dot;
+                double left_leg_fai1;
+                double left_leg_fai4;
 
                 double lf_go1_pos;
                 double lf_go1_vel;
                 double lf_go1_tor;
+                double lf_go1_zero_fai;
 
                 double rf_go1_pos;
                 double rf_go1_vel;
@@ -136,27 +147,14 @@ namespace warrior_controller
                 double pitch;
                 double yaw;
                 double roll;
-                data_used_from_interface()
-                                        // :left_lk9025_pos(0.0), left_lk9025_vel(0.0), left_lk9025_tor(0.0)
-                                        // ,right_lk9025_pos(0.0), right_lk9025_vel(0.0), right_lk9025_tor(0.0)
-                                        // ,lf_go1_pos(0.0),rf_go1_vel(0.0),rf_go1_tor(0.0)
-                                        // ,rf_go1_pos(0.0),lf_go1_vel(0.0),lf_go1_tor(0.0)
-                                        // ,rb_go1_pos(0.0),rb_go1_vel(0.0),rb_go1_tor(0.0)
-                                        // ,lb_go1_pos(0.0),lb_go1_vel(0.0),lb_go1_tor(0.0) 
-                                        // ,left_lk9025_ecoder_zero(0.0),right_lk9025_ecoder_zero(0.0)
-                                        // ,left_init_flag(0),right_init_flag(0)
-                                        // ,left_lk9025_circle_cnt(0),right_lk9025_circle_cnt(0)
-                                        // ,left_lk9025_ecoder_last(0),right_lk9025_ecoder_last(0)
-                                        // ,left_lk9025_total_dis(0),right_lk9025_total_dis(0)
-                                        // ,left_fai1_(0.0),left_fai4_(0.0),right_fai1_(0.0),right_fai4_(0.0)
-                {memset(this,0,sizeof(data_used_from_interface));}
+                data_used_from_interface() {memset(this,0,sizeof(data_used_from_interface));}
             };
             data_used_from_interface need_data_form_hi_;
             /// update the data at first of time
             void updateDataFromInterface(void);
             /// get 9025 distance
             void update9025TotalDis(void);
-            /// init the zero of lk9025 encoder.
+            /// initialize the zero of lk9025 encoder.
             void init9025EncoderZeros(void);
             /*remote*/
             struct rc_commmonds
@@ -175,9 +173,9 @@ namespace warrior_controller
             /* balance controller */
             struct state_variables
             {
-                double x;
-                double x_dot;
-                double theta;
+                double x;       //^
+                double x_dot;   //差单位
+                double theta;   
                 double theta_dot;
                 double fai;
                 double fai_dot;

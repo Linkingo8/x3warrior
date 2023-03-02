@@ -155,13 +155,15 @@ controller_interface::return_type WheelBalancingController::update()
 
     //feadback of LK and G01.
     //feadback of imu
-    /// give all data to controller
+    /// give all data to controller /// /// get x_dot
     WheelBalancingController::updateDataFromInterface();
     /// data pre-handle
-    /// get x
+    /// get x  
     WheelBalancingController::init9025EncoderZeros();
+    WheelBalancingController::initG01EncoderZeros();
     WheelBalancingController::update9025TotalDis();
     /// get theta
+    left_five_bar_->virtualLegCalc(need_data_form_hi_.left_leg_fai1,need_data_form_hi_.left_leg_fai4);
     /// use these data
     //update the remote date.
     WheelBalancingController::updatingRemoteData();
@@ -183,7 +185,6 @@ controller_interface::return_type WheelBalancingController::update()
     /// calc the Fy
     left_Fy_pid_->getOutput(10.0,left_five_bar_->exportBarLength()->L0);
     /// calculate the L0 and theata
-    left_five_bar_->virtualLegCalc(1.00,2.00);
     left_vmc_->getDataOfLeg(left_five_bar_->exportBarLength(),left_five_bar_->exportLinkageParam());
     /// calc the vmc output jacobian matrix
     left_vmc_->VMCControllerCalc();
@@ -322,7 +323,7 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
 
     left_lqr_ = std::make_shared<LQR>();
     /// real leg data L1 L2 L3 L4 L5
-    left_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(1.0,2.0,3.0,4.0,5.0);
+    left_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(0.1478,0.285,0.285,0.1478,0.18);
     left_vmc_ = std::make_shared<VMC>();
     left_Fy_pid_ = std::make_shared<MiniPID>(1,0,0);
     WheelBalancingController::initLQRParam();
@@ -442,14 +443,14 @@ void WheelBalancingController::init9025EncoderZeros(void)
     {
         need_data_form_hi_.left_lk9025_pos = LK_L_handles_->get_position();
         need_data_form_hi_.left_lk9025_ecoder_zero = need_data_form_hi_.left_lk9025_pos;
-        need_data_form_hi_.left_lk9025_total_dis = 0.0f;
+        need_data_form_hi_.left_leg_total_dis = 0.0f;
         need_data_form_hi_.left_init_flag = 1;//zero point initilized flag
     }
     if(need_data_form_hi_.right_init_flag==0)
     {
         need_data_form_hi_.right_lk9025_pos = LK_R_handles_->get_position();
         need_data_form_hi_.right_lk9025_ecoder_zero = need_data_form_hi_.right_lk9025_pos;
-        need_data_form_hi_.right_lk9025_total_dis = 0.0f;
+        need_data_form_hi_.right_leg_total_dis = 0.0f;
         need_data_form_hi_.right_init_flag = 1;
     }
 }
@@ -468,7 +469,7 @@ void WheelBalancingController::update9025TotalDis(void)
             //overflow judge
         if(need_data_form_hi_.left_lk9025_ecoder_last - need_data_form_hi_.left_lk9025_pos > 0x7FFF)//forward rotate down overflow last(65534)-now(1) > 
         {
-                need_data_form_hi_.left_lk9025_circle_cnt++;
+            need_data_form_hi_.left_lk9025_circle_cnt++;
         }
     }
     else
@@ -480,7 +481,7 @@ void WheelBalancingController::update9025TotalDis(void)
     }
     /// total dis = circle_cnt * 65535 + (pos-zero)
     if(uint16_t(need_data_form_hi_.left_lk9025_pos) != need_data_form_hi_.left_lk9025_ecoder_last && l_dir != 0)
-        need_data_form_hi_.left_lk9025_total_dis = (need_data_form_hi_.left_lk9025_circle_cnt 
+        need_data_form_hi_.left_leg_total_dis = (need_data_form_hi_.left_lk9025_circle_cnt 
                     + ((need_data_form_hi_.left_lk9025_pos - need_data_form_hi_.left_lk9025_ecoder_zero) / 65535.0f))
                         * 2 * PI * DRIVER_RADIUS;
         /// right
@@ -499,7 +500,7 @@ void WheelBalancingController::update9025TotalDis(void)
         }
     }
     if(uint16_t(need_data_form_hi_.right_lk9025_pos) != need_data_form_hi_.right_lk9025_ecoder_last && r_dir != 0)
-        need_data_form_hi_.right_lk9025_total_dis = (need_data_form_hi_.right_lk9025_circle_cnt 
+        need_data_form_hi_.right_leg_total_dis = (need_data_form_hi_.right_lk9025_circle_cnt 
                     + ( (need_data_form_hi_.right_lk9025_pos - need_data_form_hi_.right_lk9025_ecoder_zero) / 65535.0f) )
                         * 2 * PI * DRIVER_RADIUS;    
     need_data_form_hi_.right_lk9025_ecoder_last = need_data_form_hi_.right_lk9025_pos;
@@ -507,11 +508,11 @@ void WheelBalancingController::update9025TotalDis(void)
     // std::cout << "right velocity:" << need_data_form_hi_.right_lk9025_vel << std::endl;
     // std::cout << "right dis:" << need_data_form_hi_.right_lk9025_pos << std::endl;
     // std::cout << "right cnt -----!" << need_data_form_hi_.right_lk9025_circle_cnt << std::endl;
-    std::cout << "left totla dis:" << need_data_form_hi_.left_lk9025_total_dis << std::endl;
+    // std::cout << "left totla dis:" << need_data_form_hi_.left_leg_total_dis << std::endl;
     // std::cout << "left velocity:" << need_data_form_hi_.left_lk9025_vel << std::endl;
     // std::cout << "left dis:" << need_data_form_hi_.left_lk9025_pos << std::endl;
     // std::cout << "left cnt -----!" << need_data_form_hi_.left_lk9025_circle_cnt << std::endl;
-    std::cout << "right totla dis:" << need_data_form_hi_.right_lk9025_total_dis << std::endl;
+    // std::cout << "right totla dis:" << need_data_form_hi_.right_leg_total_dis << std::endl;
 
 }
 /// @brief pass the k to controller
@@ -574,7 +575,7 @@ void WheelBalancingController::updateX(uint8_t index)
     if(index == 0)
     {
         left_set_feedback_.x = need_data_form_hi_.left_lk9025_pos;
-        left_set_feedback_.x_dot = need_data_form_hi_.left_lk9025_total_dis;
+        left_set_feedback_.x_dot = need_data_form_hi_.left_leg_total_dis;
         left_set_feedback_.theta = pitch_now_;
         left_set_feedback_.theta_dot = pitch_now_ - pitch_last_;
         left_set_feedback_.fai = pitch_now_;
@@ -647,16 +648,35 @@ void WheelBalancingController::updateDataFromInterface(void)
     need_data_form_hi_.lb_go1_vel = Go1_LB_handles_->get_velocity();
     need_data_form_hi_.lb_go1_tor = Go1_LB_handles_->get_acceleration();
 
-    need_data_form_hi_.pitch = imu_handles_->get_pitch();
+    need_data_form_hi_.left_leg_dis_dot = ((need_data_form_hi_.left_lk9025_vel / 360.0f) * 2 * PI * DRIVER_RADIUS);
+    need_data_form_hi_.right_leg_dis_dot = ((need_data_form_hi_.right_lk9025_vel / 360.0f) * 2 * PI * DRIVER_RADIUS);
+
+    need_data_form_hi_.pitch = imu_handles_->get_pitch(); 
     need_data_form_hi_.yaw = imu_handles_->get_yaw();
     need_data_form_hi_.roll = imu_handles_->get_roll();
 
+    // need_data_form_hi_.left_leg_fai1 = need_data_form_hi_.lf_go1_pos / G01_REDUCTION_RATIO;
+    need_data_form_hi_.left_leg_fai1 = LEFT_LEG_FAI_ZERO - (need_data_form_hi_.lf_go1_pos / G01_REDUCTION_RATIO - GO1_0_ZEROS);
+    need_data_form_hi_.left_leg_fai4 = PI - (LEFT_LEG_FAI_ZERO + (need_data_form_hi_.lb_go1_pos / G01_REDUCTION_RATIO - GO1_3_ZEROS));
+    // need_data_form_hi_.left_leg_fai4 =  (need_data_form_hi_.lb_go1_pos / G01_REDUCTION_RATIO);
 
     // std::cout << "need_data_form_hi_.left_lk9025_pos" << "  " << need_data_form_hi_.left_lk9025_pos << std::endl;
     // std::cout << "need_data_form_hi_.left_lk9025_ecoder_zero" << "  " << need_data_form_hi_.left_lk9025_ecoder_zero << std::endl;
 
     // std::cout << "need_data_form_hi_.right_lk9025_pos" << "  " << need_data_form_hi_.right_lk9025_pos << std::endl;
     // std::cout << "need_data_form_hi_.right_lk9025_ecoder_zero" << "  " << need_data_form_hi_.right_lk9025_ecoder_zero << std::endl;
+
+    // std::cout << "left a" << "  " << need_data_form_hi_.left_leg_dis_dot << std::endl;
+    // std::cout << "right a" << "  " << need_data_form_hi_.right_leg_dis_dot << std::endl;
+
+    // std::cout << "q0" << "  " << need_data_form_hi_.lf_go1_pos << std::endl;
+    // std::cout << "180 - q4" << "  " << need_data_form_hi_.lb_go1_pos << std::endl;
+
+    // std::cout << "q0_dot" << "  " << need_data_form_hi_.lf_go1_vel << std::endl;
+    // std::cout << "(180 - q4)_dot" << "  " << need_data_form_hi_.lb_go1_vel << std::endl;
+
+    std::cout << "fai1" << "  " << need_data_form_hi_.left_leg_fai1 << std::endl;
+    std::cout << "fai4" << "  " << need_data_form_hi_.left_leg_fai4 << std::endl;
 
 }
 //get remote date
