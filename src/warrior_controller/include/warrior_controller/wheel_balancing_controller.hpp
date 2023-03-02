@@ -31,7 +31,7 @@
 #define GO1_PLOT
 #define LEFT_CONTROLLER_INDEX 0
 #define RIGHT_CONTROLLER_INDEX 1
-#define DRIVER_RADIUS 6.75
+#define DRIVER_RADIUS 0.0775f
 namespace warrior_controller
 {
     using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -99,7 +99,7 @@ namespace warrior_controller
                 double left_lk9025_ecoder_zero;
                 uint16_t left_lk9025_ecoder_last;
                 int32_t left_lk9025_circle_cnt;
-                int32_t left_lk9025_total_dis;
+                double left_lk9025_total_dis;
                 uint8_t left_init_flag;
 
                 double right_lk9025_pos;
@@ -108,7 +108,7 @@ namespace warrior_controller
                 double right_lk9025_ecoder_zero;
                 uint16_t right_lk9025_ecoder_last;
                 int32_t right_lk9025_circle_cnt;
-                int32_t right_lk9025_total_dis;
+                double right_lk9025_total_dis;
                 uint8_t right_init_flag;
 
                 double lf_go1_pos;
