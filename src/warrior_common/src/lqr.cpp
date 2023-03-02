@@ -1,11 +1,9 @@
-
 #include "warrior_common/lqr.hpp"
 
 VectorXd LQR::control(const VectorXd &x)
 {
     return -K * x;
 }
-
 
 void LQR::computeGain()
 {
@@ -39,8 +37,6 @@ MatrixXd LQR::care(void)
       V = eigvec.block(dim_x,0,dim_x,dim_x);
 
       return (V * U.inverse()).real();
-
-      
 }
 
 Eigen::MatrixXd LQR::calcGainK()

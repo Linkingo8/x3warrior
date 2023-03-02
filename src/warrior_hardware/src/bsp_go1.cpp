@@ -391,7 +391,7 @@ void Go1DataProcess::give_id_to_go1_processor(void)
     // id_temp_ = 1;
     id_temp_++;
     if(id_temp_> 3) id_temp_ = 0;
-    RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "id_temp_ %d",id_temp_);
+    // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "id_temp_ %d",id_temp_);
     // std::cout << id_temp_ << std::endl;
 
 }

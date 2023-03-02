@@ -24,6 +24,9 @@ add_library(
   SHARED
   src/limiter.cpp
   src/lqr.cpp
+  src/five_bar_linkage.cpp
+  src/vmc.cpp
+  src/pid.cpp
 )
 
 target_link_libraries (${PROJECT_NAME} Eigen3::Eigen)

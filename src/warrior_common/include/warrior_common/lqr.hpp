@@ -1,3 +1,5 @@
+#ifndef __LQR_HPP__
+#define __LQR_HPP__
 #include <iostream>
 #include <Eigen/Dense>
 
@@ -54,3 +56,4 @@ public:
 
 //     return 0;
 // }
+#endif

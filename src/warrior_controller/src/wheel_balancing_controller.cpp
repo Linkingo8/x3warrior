@@ -23,7 +23,10 @@ WheelBalancingController::WheelBalancingController()
     , R_(2, 2)
     , K_(2, 6)
     , P_(2, 2)
-    , lqr_(nullptr)
+    , left_lqr_(nullptr)
+    , left_five_bar_(nullptr)
+    , left_vmc_(nullptr)
+    , left_Fy_pid_(nullptr)
     , left_destination_()
     , left_set_feedback_()
     , leg_balance_controller_()
@@ -136,7 +139,7 @@ controller_interface::return_type WheelBalancingController::update()
     // u = k(x_d - x)
     // u = [tau_W,tau_B]
 
-    // k = lqr_ - > k       [*]
+    // k = left_lqr_ - > k       [*]
 
     // x_d [x,  theta,  fai,    x_dot,  theta_dot,    fai_dot]_des  [*]
     // x_d [0,  theta,  0,      0,      0,                  0]_des  [*]
@@ -163,19 +166,27 @@ controller_interface::return_type WheelBalancingController::update()
     //update the remote date.
     WheelBalancingController::updatingRemoteData();
     /// calculate the lqr k.
-    lqr_->K = lqr_->calcGainK();
+    left_lqr_->K = left_lqr_->calcGainK();
+    // std::cout << left_Fy_pid_->getOutput(10.0,left_five_bar_->exportBarLength()->L0) << std::endl;
     /// set the x_d to struct
     WheelBalancingController::updateXdes(0);
     /// get the feedback struct
-    WheelBalancingController::updateX(0);
+    WheelBalancingController::updateX(0); 
     /// give k to controller
-    WheelBalancingController::setLegLQRGain(lqr_->K,0);
+    WheelBalancingController::setLegLQRGain(left_lqr_->K,0);
     /// set the x_d to controller
     WheelBalancingController::setLegLQRXd(0);
     /// set the X to controller
     WheelBalancingController::setLegLQRX(0);
-    /// calculate the input of system.
+    /// calculate the input of system. tau_W tau_Tp
     WheelBalancingController::calclegLQRU(0);
+    /// calc the Fy
+    left_Fy_pid_->getOutput(10.0,left_five_bar_->exportBarLength()->L0);
+    /// calculate the L0 and theata
+    left_five_bar_->virtualLegCalc(1.00,2.00);
+    left_vmc_->getDataOfLeg(left_five_bar_->exportBarLength(),left_five_bar_->exportLinkageParam());
+    /// calc the vmc output jacobian matrix
+    left_vmc_->VMCControllerCalc();
 
     /// set the line input to track the root of system
     if(rc_commmonds_.sw_l == 1) { //protection mode
@@ -309,9 +320,12 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
         command_ptr_.writeFromNonRT(rc);
     });
 
-    lqr_ = std::make_shared<LQR>();
+    left_lqr_ = std::make_shared<LQR>();
+    /// real leg data L1 L2 L3 L4 L5
+    left_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(1.0,2.0,3.0,4.0,5.0);
+    left_vmc_ = std::make_shared<VMC>();
+    left_Fy_pid_ = std::make_shared<MiniPID>(1,0,0);
     WheelBalancingController::initLQRParam();
-
 #ifdef IMU_PLOT
     // initialize transform publisher and message
     imu_data_publisher_ = get_node()->create_publisher<warrior_interface::msg::ImuData>("/imu_feedback", 
@@ -429,7 +443,7 @@ void WheelBalancingController::init9025EncoderZeros(void)
         need_data_form_hi_.left_lk9025_pos = LK_L_handles_->get_position();
         need_data_form_hi_.left_lk9025_ecoder_zero = need_data_form_hi_.left_lk9025_pos;
         need_data_form_hi_.left_lk9025_total_dis = need_data_form_hi_.left_lk9025_ecoder_zero;
-        need_data_form_hi_.left_init_flag = 1;
+        need_data_form_hi_.left_init_flag = 1;//zero point initilized flag
     }
     if(need_data_form_hi_.right_init_flag==0)
     {
@@ -464,12 +478,10 @@ void WheelBalancingController::update9025TotalDis(void)
     if(uint16_t(need_data_form_hi_.left_lk9025_pos) != need_data_form_hi_.left_lk9025_ecoder_last && l_dir != 0)
         need_data_form_hi_.left_lk9025_total_dis = need_data_form_hi_.left_lk9025_circle_cnt * 65535 
                     + (need_data_form_hi_.left_lk9025_pos);
-    std::cout << need_data_form_hi_.left_lk9025_total_dis << std::endl;
+    // std::cout << need_data_form_hi_.left_lk9025_total_dis << std::endl;
         /// right
     if(r_dir == 1)
     {
-        /// get circle cnt
-            //overflow judge
         if(need_data_form_hi_.right_lk9025_ecoder_last - need_data_form_hi_.right_lk9025_pos > 0x7FFF)//forward rotate down overflow last(65534)-now(1) > 
             need_data_form_hi_.right_lk9025_circle_cnt++;
     }
@@ -478,15 +490,16 @@ void WheelBalancingController::update9025TotalDis(void)
         if(need_data_form_hi_.right_lk9025_pos - need_data_form_hi_.right_lk9025_ecoder_last > 0x7FFF)//back rotate up overflow now(65535) - last(0) > 
             need_data_form_hi_.right_lk9025_circle_cnt--;
     }
-    /// total dis = circle_cnt * 65535 + pos
     if(uint16_t(need_data_form_hi_.right_lk9025_pos) != need_data_form_hi_.right_lk9025_ecoder_last && r_dir != 0)
         need_data_form_hi_.right_lk9025_total_dis = need_data_form_hi_.right_lk9025_circle_cnt * 65535 
                     + (need_data_form_hi_.right_lk9025_pos);    
     need_data_form_hi_.right_lk9025_ecoder_last = need_data_form_hi_.right_lk9025_pos;
     need_data_form_hi_.left_lk9025_ecoder_last = need_data_form_hi_.left_lk9025_pos;
-    std::cout << need_data_form_hi_.right_lk9025_total_dis << std::endl;
+    // std::cout << need_data_form_hi_.right_lk9025_total_dis << std::endl;
 }
-
+/// @brief pass the k to controller
+/// @param K the value of K
+/// @param index the controller index
 void WheelBalancingController::setLegLQRGain(MatrixXd K,uint8_t index)
 {
     leg_balance_controller_[index].K = K;
@@ -544,9 +557,9 @@ void WheelBalancingController::updateX(uint8_t index)
     if(index == 0)
     {
         left_set_feedback_.x = need_data_form_hi_.left_lk9025_pos;
-        left_set_feedback_.x_dot = need_data_form_hi_.left_lk9025_vel;
-        left_set_feedback_.theta = 0.0f;
-        left_set_feedback_.theta_dot = 0.0f;
+        left_set_feedback_.x_dot = need_data_form_hi_.left_lk9025_total_dis;
+        left_set_feedback_.theta = pitch_now_;
+        left_set_feedback_.theta_dot = pitch_now_ - pitch_last_;
         left_set_feedback_.fai = pitch_now_;
         left_set_feedback_.fai_dot = pitch_now_ - pitch_last_;
     }
@@ -622,11 +635,11 @@ void WheelBalancingController::updateDataFromInterface(void)
     need_data_form_hi_.roll = imu_handles_->get_roll();
 
 
-    std::cout << "need_data_form_hi_.left_lk9025_pos" << "  " << need_data_form_hi_.left_lk9025_pos << std::endl;
-    std::cout << "need_data_form_hi_.left_lk9025_ecoder_zero" << "  " << need_data_form_hi_.left_lk9025_ecoder_zero << std::endl;
+    // std::cout << "need_data_form_hi_.left_lk9025_pos" << "  " << need_data_form_hi_.left_lk9025_pos << std::endl;
+    // std::cout << "need_data_form_hi_.left_lk9025_ecoder_zero" << "  " << need_data_form_hi_.left_lk9025_ecoder_zero << std::endl;
 
-    std::cout << "need_data_form_hi_.right_lk9025_pos" << "  " << need_data_form_hi_.right_lk9025_pos << std::endl;
-    std::cout << "need_data_form_hi_.right_lk9025_ecoder_zero" << "  " << need_data_form_hi_.right_lk9025_ecoder_zero << std::endl;
+    // std::cout << "need_data_form_hi_.right_lk9025_pos" << "  " << need_data_form_hi_.right_lk9025_pos << std::endl;
+    // std::cout << "need_data_form_hi_.right_lk9025_ecoder_zero" << "  " << need_data_form_hi_.right_lk9025_ecoder_zero << std::endl;
 
 }
 //get remote date
@@ -651,13 +664,13 @@ controller_interface::return_type WheelBalancingController::updatingRemoteData(v
 
 void WheelBalancingController::initLQRParam(void)
 {
-        lqr_ -> A = A_;
-        lqr_ -> B = B_;
-        lqr_ -> Q = Q_;
-        lqr_ -> R = R_;
-        lqr_ -> K = K_;
-        lqr_ -> P = P_;
-        // std::cout <<  lqr_ -> A << std::endl;
+        left_lqr_ -> A = A_;
+        left_lqr_ -> B = B_;
+        left_lqr_ -> Q = Q_;
+        left_lqr_ -> R = R_;
+        left_lqr_ -> K = K_;
+        left_lqr_ -> P = P_;
+        // std::cout <<  left_lqr_ -> A << std::endl;
 }
 
 std::shared_ptr<ImuHandle> WheelBalancingController::get_angle(const std::string & joint_name)

@@ -14,7 +14,12 @@
 #include <cmath>
 #include "std_msgs/msg/string.hpp"
 #include "warrior_controller/warrior_controller_compiler.h"
+///common
 #include "warrior_common/lqr.hpp"
+#include "warrior_common/vmc.hpp"
+#include "warrior_common/pid.hpp"
+#include "warrior_common/five_bar_linkage.hpp"
+///hardware
 #include "warrior_interface/msg/dbus_data.hpp"
 #include "warrior_interface/msg/imu_data.hpp"
 #include "warrior_interface/msg/lk9025_feedback.hpp"
@@ -24,6 +29,9 @@
 #define IMU_PLOT
 #define LK_PLOT
 #define GO1_PLOT
+#define LEFT_CONTROLLER_INDEX 0
+#define RIGHT_CONTROLLER_INDEX 1
+#define DRIVER_RADIUS 6.75
 namespace warrior_controller
 {
     using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -111,9 +119,15 @@ namespace warrior_controller
                 double rf_go1_vel;
                 double rf_go1_tor;
 
+                double left_fai1_;
+                double left_fai4_;
+
                 double rb_go1_pos;
                 double rb_go1_vel;
                 double rb_go1_tor;
+                
+                double right_fai1_;
+                double right_fai4_;
 
                 double lb_go1_pos;
                 double lb_go1_vel;
@@ -122,17 +136,20 @@ namespace warrior_controller
                 double pitch;
                 double yaw;
                 double roll;
-                data_used_from_interface():left_lk9025_pos(0.0), left_lk9025_vel(0.0), left_lk9025_tor(0.0)
-                                        ,right_lk9025_pos(0.0), right_lk9025_vel(0.0), right_lk9025_tor(0.0)
-                                        ,lf_go1_pos(0.0),rf_go1_vel(0.0),rf_go1_tor(0.0)
-                                        ,rf_go1_pos(0.0),lf_go1_vel(0.0),lf_go1_tor(0.0)
-                                        ,rb_go1_pos(0.0),rb_go1_vel(0.0),rb_go1_tor(0.0)
-                                        ,lb_go1_pos(0.0),lb_go1_vel(0.0),lb_go1_tor(0.0) 
-                                        ,left_lk9025_ecoder_zero(0.0),right_lk9025_ecoder_zero(0.0)
-                                        ,left_init_flag(0),right_init_flag(0)
-                                        ,left_lk9025_circle_cnt(0),right_lk9025_circle_cnt(0)
-                                        ,left_lk9025_ecoder_last(0),right_lk9025_ecoder_last(0)
-                                        ,left_lk9025_total_dis(0),right_lk9025_total_dis(0){}
+                data_used_from_interface()
+                                        // :left_lk9025_pos(0.0), left_lk9025_vel(0.0), left_lk9025_tor(0.0)
+                                        // ,right_lk9025_pos(0.0), right_lk9025_vel(0.0), right_lk9025_tor(0.0)
+                                        // ,lf_go1_pos(0.0),rf_go1_vel(0.0),rf_go1_tor(0.0)
+                                        // ,rf_go1_pos(0.0),lf_go1_vel(0.0),lf_go1_tor(0.0)
+                                        // ,rb_go1_pos(0.0),rb_go1_vel(0.0),rb_go1_tor(0.0)
+                                        // ,lb_go1_pos(0.0),lb_go1_vel(0.0),lb_go1_tor(0.0) 
+                                        // ,left_lk9025_ecoder_zero(0.0),right_lk9025_ecoder_zero(0.0)
+                                        // ,left_init_flag(0),right_init_flag(0)
+                                        // ,left_lk9025_circle_cnt(0),right_lk9025_circle_cnt(0)
+                                        // ,left_lk9025_ecoder_last(0),right_lk9025_ecoder_last(0)
+                                        // ,left_lk9025_total_dis(0),right_lk9025_total_dis(0)
+                                        // ,left_fai1_(0.0),left_fai4_(0.0),right_fai1_(0.0),right_fai4_(0.0)
+                {memset(this,0,sizeof(data_used_from_interface));}
             };
             data_used_from_interface need_data_form_hi_;
             /// update the data at first of time
@@ -193,7 +210,10 @@ namespace warrior_controller
             MatrixXd R_;
             MatrixXd K_;
             MatrixXd P_;
-            std::shared_ptr<LQR> lqr_;
+            std::shared_ptr<LQR> left_lqr_;
+            std::shared_ptr<five_bar_linkage::FiveBar> left_five_bar_;
+            std::shared_ptr<VMC> left_vmc_;
+            std::shared_ptr<MiniPID> left_Fy_pid_;
             void initLQRParam(void);
             /// remote data suscription.
             rclcpp::Subscription<warrior_interface::msg::DbusData>::SharedPtr command_subsciption_;
