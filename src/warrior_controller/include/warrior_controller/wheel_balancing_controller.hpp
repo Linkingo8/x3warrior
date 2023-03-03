@@ -24,11 +24,13 @@
 #include "warrior_interface/msg/imu_data.hpp"
 #include "warrior_interface/msg/lk9025_feedback.hpp"
 #include "warrior_interface/msg/go1_feedback.hpp"
+#include "warrior_interface/msg/vmc_debug_data.hpp"
 #include "warrior_controller/warrior_handle.hpp"
 
 //#define IMU_PLOT
 //#define LK_PLOT
 //#define GO1_PLOT
+#define VMC_DEBUG
 #define LEFT_CONTROLLER_INDEX 0
 #define RIGHT_CONTROLLER_INDEX 1
 #define DRIVER_RADIUS 0.0775f
@@ -234,8 +236,8 @@ namespace warrior_controller
             std::shared_ptr<rclcpp::Publisher<warrior_interface::msg::Go1Feedback>> Go1_data_publisher_ = nullptr;
             std::shared_ptr<realtime_tools::RealtimePublisher<warrior_interface::msg::Go1Feedback>>realtime_Go1_data_publisher_ = nullptr;
             ///VMC controller data publisher 
-            // std::shared_ptr<rclcpp::Publisher<warrior_interface::msg::Go1Feedback>> Go1_data_publisher_ = nullptr;
-            // std::shared_ptr<realtime_tools::RealtimePublisher<warrior_interface::msg::Go1Feedback>>realtime_Go1_data_publisher_ = nullptr;
+            std::shared_ptr<rclcpp::Publisher<warrior_interface::msg::VMCDebugData>> VMC_debug_data_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<warrior_interface::msg::VMCDebugData>>realtime_VMC_debug_data_publisher_ = nullptr;
     };
 }
 

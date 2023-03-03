@@ -16,6 +16,8 @@ WheelBalancingController::WheelBalancingController()
     , realtime_LK9025_data_publisher_(nullptr)
     , Go1_data_publisher_(nullptr)
     , realtime_Go1_data_publisher_(nullptr)
+    ,VMC_debug_data_publisher_(nullptr)
+    ,realtime_VMC_debug_data_publisher_(nullptr)
     , rc_commmonds_()
     , A_(6, 6)
     , B_(6, 2)
@@ -110,7 +112,12 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
     if (ret != controller_interface::return_type::OK) {
         return ret;
     }
-
+    left_lqr_ = std::make_shared<LQR>();
+    /// real leg data L1 L2 L3 L4 L5
+    left_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(0.1478,0.285,0.285,0.1478,0.18);
+    left_vmc_ = std::make_shared<VMC>();
+    left_Fy_pid_ = std::make_shared<MiniPID>(0,0,0);
+    WheelBalancingController::initLQRParam();
     try {
         auto node = get_node();
         auto_declare("joint1_name", "");
@@ -120,6 +127,9 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
         auto_declare("joint_Go_LB_name", "");
         auto_declare("joint_Go_RF_name", "");
         auto_declare("joint_Go_RB_name", "");
+        auto_declare("fy_pid_p",0.0);
+        auto_declare("fy_pid_i",0.0);
+        auto_declare("fy_pid_d",0.0);
     }
     catch (const std::exception & e) {
         fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
@@ -135,18 +145,12 @@ controller_interface::return_type WheelBalancingController::update()
     /// x[x x_dot theta theta_dot fai fai_dot]
     /// x[驱动轮位移 驱动轮加速度 虚拟杆位移 虚拟杆加速度 陀螺仪 陀螺仪加速度]
     /// define state-vector A;
-
     // u = k(x_d - x)
     // u = [tau_W,tau_B]
-
     // k = left_lqr_ - > k       [*]
-
     // x_d [x,  theta,  fai,    x_dot,  theta_dot,    fai_dot]_des  [*]
     // x_d [0,  theta,  0,      0,      0,                  0]_des  [*]
-
     // x[lk_pos,theta_cal,imu_pitch,lk_velocities,theta_cal_dot,imu_pitch_dot]
-    
-
     ///Right-handed coordinate systgem
     /// for go1     id:0    id: 1 id: 2 id :3
     /// torque      + f     + b   + b   + f
@@ -169,7 +173,7 @@ controller_interface::return_type WheelBalancingController::update()
     left_vmc_->getDataOfLeg(left_five_bar_->exportBarLength(),left_five_bar_->exportLinkageParam());
     /// calc the Fy /// give the Fy to vmc
     double Fy_output = 0.0f;
-    Fy_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,0.27);
+    Fy_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,0.27)-12.82f;
     left_vmc_->setFTp(0.0f,-Fy_output);
     /// calc the vmc output jacobian matrix
     left_vmc_->VMCControllerCalc();
@@ -182,7 +186,7 @@ controller_interface::return_type WheelBalancingController::update()
     // std::cout << "Fy :" << Fy_output << std::endl;
     // // std::cout << "target length :" << rc_commmonds_.ch_r_y << std::endl;
     std::cout << "target length :" << 0.27 << std::endl;
-    std::cout << "now length :" << left_five_bar_->exportBarLsength()->L0 << std::endl;
+    std::cout << "now length :" << left_five_bar_->exportBarLength()->L0 << std::endl;
     std::cout << "T1 :" << send_data_.T1 << std::endl;
     std::cout << "T2 :" << send_data_.T2 << std::endl;
     // /// adjust the T to correct sign and convert to rotor
@@ -228,6 +232,39 @@ controller_interface::return_type WheelBalancingController::update()
         Go1_RB_handles_->set_torque(0.0f);
     }
 /// publish sensor feedback.
+#ifdef VMC_DEBUG
+    if (realtime_VMC_debug_data_publisher_->trylock())
+    {
+        auto & vmc_debug_data_message = realtime_VMC_debug_data_publisher_->msg_;
+        vmc_debug_data_message.left_t_one = send_data_.T1;
+        vmc_debug_data_message.left_t_two = send_data_.T2;
+        vmc_debug_data_message.left_tp = 0.0f;
+        vmc_debug_data_message.left_f = Fy_output;
+        vmc_debug_data_message.left_fai_one = need_data_form_hi_.left_leg_fai1;
+        vmc_debug_data_message.left_fai_four = need_data_form_hi_.left_leg_fai4;
+        vmc_debug_data_message.left_target_l = 0.27f;
+        vmc_debug_data_message.left_actual_l = left_five_bar_->exportBarLength()->L0;
+        vmc_debug_data_message.left_pid_fy = Fy_output;
+        vmc_debug_data_message.left_p_out = 0.0f;
+        vmc_debug_data_message.left_i_out = 0.0f;
+        vmc_debug_data_message.left_d_out = 0.0f;
+
+        vmc_debug_data_message.right_t_one = 0.0f;
+        vmc_debug_data_message.right_t_two = 0.0f;
+        vmc_debug_data_message.right_tp = 0.0f;
+        vmc_debug_data_message.right_f = 0.0f;
+        vmc_debug_data_message.right_fai_one = 0.0f;
+        vmc_debug_data_message.right_fai_four = 0.0f;
+        vmc_debug_data_message.right_target_l = 0.0f;
+        vmc_debug_data_message.right_actual_l = 0.0f;
+        vmc_debug_data_message.right_pid_fy = 0.0f;
+        vmc_debug_data_message.right_p_out = 0.0f;
+        vmc_debug_data_message.right_i_out = 0.0f;
+        vmc_debug_data_message.right_d_out = 0.0f;
+        realtime_VMC_debug_data_publisher_->unlockAndPublish();
+    }
+#endif
+
 #ifdef IMU_PLOT
     if (realtime_imu_data_publisher_->trylock())
     {
@@ -291,6 +328,10 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
     auto joint_Go_RF_name_ = get_node()->get_parameter("joint_Go_RF_name").as_string();
     auto joint_Go_RB_name_ = get_node()->get_parameter("joint_Go_RB_name").as_string();
 
+    get_node()->get_parameter("fy_pid_p",left_Fy_pid_->P);
+    get_node()->get_parameter("fy_pid_i",left_Fy_pid_->I);
+    get_node()->get_parameter("fy_pid_d",left_Fy_pid_->D);
+
     if (joint1_name_.empty()) {
         RCLCPP_ERROR(get_node()->get_logger(), "'joint1_name' parameter was empty");
         return CallbackReturn::ERROR;
@@ -338,12 +379,40 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
         command_ptr_.writeFromNonRT(rc);
     });
 
-    left_lqr_ = std::make_shared<LQR>();
-    /// real leg data L1 L2 L3 L4 L5
-    left_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(0.1478,0.285,0.285,0.1478,0.18);
-    left_vmc_ = std::make_shared<VMC>();
-    left_Fy_pid_ = std::make_shared<MiniPID>(100,0,0);
-    WheelBalancingController::initLQRParam();
+
+#ifdef VMC_DEBUG
+    VMC_debug_data_publisher_ = get_node()->create_publisher<warrior_interface::msg::VMCDebugData>("/vmc_debug_feedback", 
+        rclcpp::SystemDefaultsQoS());
+    realtime_VMC_debug_data_publisher_ = 
+        std::make_shared<realtime_tools::RealtimePublisher<warrior_interface::msg::VMCDebugData>>(
+            VMC_debug_data_publisher_);
+    auto & vmc_debug_data_message = realtime_VMC_debug_data_publisher_->msg_;
+    vmc_debug_data_message.left_t_one = 0.0f;
+    vmc_debug_data_message.left_t_two = 0.0f;
+    vmc_debug_data_message.left_tp = 0.0f;
+    vmc_debug_data_message.left_f = 0.0f;
+    vmc_debug_data_message.left_fai_one = 0.0f;
+    vmc_debug_data_message.left_fai_four = 0.0f;
+    vmc_debug_data_message.left_target_l = 0.0f;
+    vmc_debug_data_message.left_actual_l = 0.0f;
+    vmc_debug_data_message.left_pid_fy = 0.0f;
+    vmc_debug_data_message.left_p_out = 0.0f;
+    vmc_debug_data_message.left_i_out = 0.0f;
+    vmc_debug_data_message.left_d_out = 0.0f;
+
+    vmc_debug_data_message.right_t_one = 0.0f;
+    vmc_debug_data_message.right_t_two = 0.0f;
+    vmc_debug_data_message.right_tp = 0.0f;
+    vmc_debug_data_message.right_f = 0.0f;
+    vmc_debug_data_message.right_fai_one = 0.0f;
+    vmc_debug_data_message.right_fai_four = 0.0f;
+    vmc_debug_data_message.right_target_l = 0.0f;
+    vmc_debug_data_message.right_actual_l = 0.0f;
+    vmc_debug_data_message.right_pid_fy = 0.0f;
+    vmc_debug_data_message.right_p_out = 0.0f;
+    vmc_debug_data_message.right_i_out = 0.0f;
+    vmc_debug_data_message.right_d_out = 0.0f;
+#endif
 #ifdef IMU_PLOT
     // initialize transform publisher and message
     imu_data_publisher_ = get_node()->create_publisher<warrior_interface::msg::ImuData>("/imu_feedback", 

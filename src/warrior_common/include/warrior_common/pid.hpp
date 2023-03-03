@@ -23,26 +23,29 @@ public:
 	double getOutput();
 	double getOutput(double);
 	double getOutput(double, double);
+	double P;
+	double I;
+	double D;
+	double F;
 
 private:
 	double clamp(double, double, double);
 	bool bounded(double, double, double);
 	void checkSigns();
 	void init();
-	double P;
-	double I;
-	double D;
-	double F;
+
 
 	double maxIOutput;
 	double maxError;
 	double errorSum;
-
+	double error_now;
+	double error_last;
 	double maxOutput; 
 	double minOutput;
 
+	double setpoint_now;
 	double setpoint;
-
+	double actual_now;
 	double lastActual;
 
 	bool firstRun;

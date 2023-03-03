@@ -20,3 +20,6 @@ wheel_balance_controller:
       joint_Go_LB_name: Go1_LB
       joint_Go_RF_name: Go1_RF
       joint_Go_RB_name: Go1_RB
+      fy_pid_p: 50.0
+      fy_pid_i: 0.0
+      fy_pid_d: 2.0

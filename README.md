@@ -6,11 +6,12 @@ warrior ros2 project for x3pi
 ## use gui in wsl2
 export DISPLAY=<wsl ipv4>:0
 source /etc/profile
-
+# compile
+colcon build --symlink-install --parallel-workers 1
 # run
 source /opt/ros/foxy/setup.bash
 source install/setup.bash
-ros2 launch waarior_bringup warrior.py
+ros2 launch warrior_bringup warrior.py
 
 # ssh x3
 ssh sunrise@192.168.189.253
