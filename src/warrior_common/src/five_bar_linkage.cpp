@@ -54,8 +54,8 @@ void FiveBar::virtualLegCalc(double q1, double q4)
     linkage_param_.q0 = atan2(linkage_param_.yc - linkage_param_.ym, linkage_param_.xc - linkage_param_.xm);
     bar_length_.L0 = linkage_param_.L0;
     bar_length_.q0 = linkage_param_.q0;
-    std::cout << "bar_length_.L0 :" << bar_length_.L0 << std::endl;
-    std::cout << "bar_length_.q0 :" << bar_length_.q0 << std::endl;
+    // std::cout << "bar_length_.L0 :" << bar_length_.L0 << std::endl;
+    // std::cout << "bar_length_.q0 :" << bar_length_.q0 << std::endl;
 }
 
 bar_length* FiveBar::exportBarLength(void)

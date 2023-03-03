@@ -26,7 +26,10 @@ public:
     ~VMC();
     void getDataOfLeg(five_bar_linkage::bar_length* real_leg_data, five_bar_linkage::five_bar_linkage_param* bar_length_calc_date);
     void VMCControllerCalc(void);
-
+    void setFTp(double F,double Tp);
+    void calcT(void);
+    double exportT1(void);
+    double exportT2(void);
 };
 #endif
 

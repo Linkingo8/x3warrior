@@ -8,6 +8,7 @@ export DISPLAY=<wsl ipv4>:0
 source /etc/profile
 
 # run
+source /opt/ros/foxy/setup.bash
 source install/setup.bash
 ros2 launch waarior_bringup warrior.py
 

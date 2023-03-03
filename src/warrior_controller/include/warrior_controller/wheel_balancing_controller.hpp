@@ -26,9 +26,9 @@
 #include "warrior_interface/msg/go1_feedback.hpp"
 #include "warrior_controller/warrior_handle.hpp"
 
-#define IMU_PLOT
-#define LK_PLOT
-#define GO1_PLOT
+//#define IMU_PLOT
+//#define LK_PLOT
+//#define GO1_PLOT
 #define LEFT_CONTROLLER_INDEX 0
 #define RIGHT_CONTROLLER_INDEX 1
 #define DRIVER_RADIUS 0.0775f
@@ -149,6 +149,13 @@ namespace warrior_controller
                 double roll;
                 data_used_from_interface() {memset(this,0,sizeof(data_used_from_interface));}
             };
+            struct send_data
+            {
+                double T1,T2;
+                double T_W;
+                send_data() {memset(this,0,sizeof(send_data));}
+            };
+            send_data send_data_;
             data_used_from_interface need_data_form_hi_;
             /// update the data at first of time
             void updateDataFromInterface(void);
@@ -174,7 +181,7 @@ namespace warrior_controller
             struct state_variables
             {
                 double x;       //^
-                double x_dot;   //差单位
+                double x_dot;   //^
                 double theta;   
                 double theta_dot;
                 double fai;
@@ -226,6 +233,9 @@ namespace warrior_controller
             ///Go1 data publisher 
             std::shared_ptr<rclcpp::Publisher<warrior_interface::msg::Go1Feedback>> Go1_data_publisher_ = nullptr;
             std::shared_ptr<realtime_tools::RealtimePublisher<warrior_interface::msg::Go1Feedback>>realtime_Go1_data_publisher_ = nullptr;
+            ///VMC controller data publisher 
+            // std::shared_ptr<rclcpp::Publisher<warrior_interface::msg::Go1Feedback>> Go1_data_publisher_ = nullptr;
+            // std::shared_ptr<realtime_tools::RealtimePublisher<warrior_interface::msg::Go1Feedback>>realtime_Go1_data_publisher_ = nullptr;
     };
 }
 

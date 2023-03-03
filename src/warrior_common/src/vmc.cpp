@@ -28,3 +28,25 @@ void VMC::VMCControllerCalc(void)
     vmc_output_.vmc_Jacobian(1,0) = J_array_[2];    
     vmc_output_.vmc_Jacobian(1,1) = J_array_[3];
 }
+
+void VMC::setFTp(double Tp,double F)
+{
+    vmc_output_.vmc_F(0,0) = Tp;
+    vmc_output_.vmc_F(1,0) = F;
+    // std::cout <<"vmc_F:    \n"<< vmc_output_.vmc_F << std::endl;
+}
+
+void VMC::calcT(void)
+{
+    vmc_output_.vmc_T = vmc_output_.vmc_Jacobian  * vmc_output_.vmc_F;
+    // std::cout <<"vmc_T:    \n"<< vmc_output_.vmc_T << std::endl;
+}
+
+double VMC::exportT1(void)
+{
+    return vmc_output_.vmc_T(0,0);
+}
+double VMC::exportT2(void)
+{
+    return vmc_output_.vmc_T(1,0);
+}
