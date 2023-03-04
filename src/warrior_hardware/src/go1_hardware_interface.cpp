@@ -193,7 +193,7 @@ return_type Go1HardwareInterface::start()
   }
   /* initilize the buff to 0 */
   Go1_data_process_->Go1_buff_zero();
-  if(Go1_port_config_->open("/dev/ttyUSB1") !=  0)
+  if(Go1_port_config_->open("/dev/ttyUSB0") !=  0)
   {
     RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "Go1Port hardware failed been open!");
     // init transmission.

@@ -117,6 +117,10 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
     left_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(0.1478,0.285,0.285,0.1478,0.18);
     left_vmc_ = std::make_shared<VMC>();
     left_Fy_pid_ = std::make_shared<MiniPID>(0,0,0);
+
+    right_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(0.1478,0.285,0.285,0.1478,0.18);
+    right_vmc_ = std::make_shared<VMC>();
+    right_Fy_pid_ = std::make_shared<MiniPID>(0,0,0);
     WheelBalancingController::initLQRParam();
     try {
         auto node = get_node();
@@ -168,27 +172,39 @@ controller_interface::return_type WheelBalancingController::update()
     WheelBalancingController::update9025TotalDis();
     /// use these data
     /// get theta
-    left_five_bar_->virtualLegCalc(need_data_form_hi_.left_leg_fai1,need_data_form_hi_.left_leg_fai4);
+    left_five_bar_->virtualLegCalc(need_data_form_hi_.left_leg_fai1, need_data_form_hi_.left_leg_fai4);
+    right_five_bar_->virtualLegCalc(need_data_form_hi_.right_leg_fai1, need_data_form_hi_.right_leg_fai4);
     /// give the L0 , theata and five bar linkage to vmc
     left_vmc_->getDataOfLeg(left_five_bar_->exportBarLength(),left_five_bar_->exportLinkageParam());
+    right_vmc_->getDataOfLeg(right_five_bar_->exportBarLength(),right_five_bar_->exportLinkageParam());
     /// calc the Fy /// give the Fy to vmc
-    double Fy_output = 0.0f;
-    Fy_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,0.27)-12.82f;
-    left_vmc_->setFTp(0.0f,-Fy_output);
+    double Fy_left_output = 0.0f;
+    double Fy_right_output = 0.0f;
+
+    Fy_left_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,0.27)-12.82f;
+    Fy_right_output = right_Fy_pid_->getOutput(right_five_bar_->exportBarLength()->L0,0.27)-12.82f;
+
+    left_vmc_->setFTp(0.0f,-Fy_left_output);
+    right_vmc_->setFTp(0.0f,-Fy_right_output);
     /// calc the vmc output jacobian matrix
     left_vmc_->VMCControllerCalc();
+    right_vmc_->VMCControllerCalc();
     /// calc the vmc output 
     left_vmc_->calcT();
+    right_vmc_->calcT();
     /// give to send data
-    send_data_.T1 = left_vmc_->exportT1() / G01_REDUCTION_RATIO;
-    send_data_.T2 = left_vmc_->exportT2() / G01_REDUCTION_RATIO;
+    send_data_.left_T1 = left_vmc_->exportT1() / G01_REDUCTION_RATIO;
+    send_data_.left_T2 = left_vmc_->exportT2() / G01_REDUCTION_RATIO;
+
+    send_data_.right_T1 = right_vmc_->exportT1() / G01_REDUCTION_RATIO;
+    send_data_.right_T2 = right_vmc_->exportT2() / G01_REDUCTION_RATIO;
     /// debug
-    // std::cout << "Fy :" << Fy_output << std::endl;
+    std::cout << "Fy :" << Fy_left_output << std::endl;
     // // std::cout << "target length :" << rc_commmonds_.ch_r_y << std::endl;
-    std::cout << "target length :" << 0.27 << std::endl;
-    std::cout << "now length :" << left_five_bar_->exportBarLength()->L0 << std::endl;
-    std::cout << "T1 :" << send_data_.T1 << std::endl;
-    std::cout << "T2 :" << send_data_.T2 << std::endl;
+    // std::cout << "target length :" << 0.27 << std::endl;
+    // std::cout << "now length :" << left_five_bar_->exportBarLength()->L0 << std::endl;
+    // std::cout << "T1 :" << send_data_.left_T1 << std::endl;
+    // std::cout << "T2 :" << send_data_.left_T2 << std::endl;
     // /// adjust the T to correct sign and convert to rotor
     // /// calculate the lqr k.
     // left_lqr_->K = left_lqr_->calcGainK();
@@ -223,10 +239,10 @@ controller_interface::return_type WheelBalancingController::update()
         // Go1_LF_handles_->set_torque(-0.1f);
         // Go1_LB_handles_->set_torque(0.1f);
 
-        // Go1_LF_handles_->set_torque(0.0f);
-        // Go1_LB_handles_->set_torque(0.0f);
-        Go1_LF_handles_->set_torque(send_data_.T1);
-        Go1_LB_handles_->set_torque(send_data_.T2);
+        Go1_LF_handles_->set_torque(0.0f);
+        Go1_LB_handles_->set_torque(0.0f);
+        // Go1_LF_handles_->set_torque(send_data_.left_T1);
+        // Go1_LB_handles_->set_torque(send_data_.left_T2);
         /// right leg
         Go1_RF_handles_->set_torque(0.0f);
         Go1_RB_handles_->set_torque(0.0f);
@@ -236,28 +252,28 @@ controller_interface::return_type WheelBalancingController::update()
     if (realtime_VMC_debug_data_publisher_->trylock())
     {
         auto & vmc_debug_data_message = realtime_VMC_debug_data_publisher_->msg_;
-        vmc_debug_data_message.left_t_one = send_data_.T1;
-        vmc_debug_data_message.left_t_two = send_data_.T2;
+        vmc_debug_data_message.left_t_one = send_data_.left_T1;
+        vmc_debug_data_message.left_t_two = send_data_.left_T2;
         vmc_debug_data_message.left_tp = 0.0f;
-        vmc_debug_data_message.left_f = Fy_output;
+        vmc_debug_data_message.left_f = Fy_left_output;
         vmc_debug_data_message.left_fai_one = need_data_form_hi_.left_leg_fai1;
         vmc_debug_data_message.left_fai_four = need_data_form_hi_.left_leg_fai4;
         vmc_debug_data_message.left_target_l = 0.27f;
         vmc_debug_data_message.left_actual_l = left_five_bar_->exportBarLength()->L0;
-        vmc_debug_data_message.left_pid_fy = Fy_output;
+        vmc_debug_data_message.left_pid_fy = Fy_left_output;
         vmc_debug_data_message.left_p_out = 0.0f;
         vmc_debug_data_message.left_i_out = 0.0f;
         vmc_debug_data_message.left_d_out = 0.0f;
 
-        vmc_debug_data_message.right_t_one = 0.0f;
-        vmc_debug_data_message.right_t_two = 0.0f;
+        vmc_debug_data_message.right_t_one = send_data_.right_T1;
+        vmc_debug_data_message.right_t_two = send_data_.right_T1;
         vmc_debug_data_message.right_tp = 0.0f;
-        vmc_debug_data_message.right_f = 0.0f;
-        vmc_debug_data_message.right_fai_one = 0.0f;
-        vmc_debug_data_message.right_fai_four = 0.0f;
-        vmc_debug_data_message.right_target_l = 0.0f;
-        vmc_debug_data_message.right_actual_l = 0.0f;
-        vmc_debug_data_message.right_pid_fy = 0.0f;
+        vmc_debug_data_message.right_f = Fy_right_output;
+        vmc_debug_data_message.right_fai_one = need_data_form_hi_.right_leg_fai1;
+        vmc_debug_data_message.right_fai_four = need_data_form_hi_.right_leg_fai4;
+        vmc_debug_data_message.right_target_l = 0.27f;
+        vmc_debug_data_message.right_actual_l = right_five_bar_->exportBarLength()->L0;
+        vmc_debug_data_message.right_pid_fy = Fy_right_output;
         vmc_debug_data_message.right_p_out = 0.0f;
         vmc_debug_data_message.right_i_out = 0.0f;
         vmc_debug_data_message.right_d_out = 0.0f;
@@ -312,6 +328,7 @@ controller_interface::return_type WheelBalancingController::update()
       realtime_Go1_data_publisher_->unlockAndPublish();
     }
 #endif
+
      return controller_interface::return_type::OK;
 }
 
@@ -520,6 +537,7 @@ CallbackReturn WheelBalancingController::on_shutdown(const rclcpp_lifecycle::Sta
 {
     return CallbackReturn::SUCCESS;
 }
+/******************************************************************************************/
 /// banlance controller
 /// 0 left 1 right 
 /// get the value of all i will need in the controller.
@@ -741,9 +759,13 @@ void WheelBalancingController::updateDataFromInterface(void)
     need_data_form_hi_.yaw = imu_handles_->get_yaw();
     need_data_form_hi_.roll = imu_handles_->get_roll();
 
-    
+    /// left leg param    
     need_data_form_hi_.left_leg_fai4 = PI - (LEFT_LEG_FAI_ZERO - (need_data_form_hi_.lf_go1_pos / G01_REDUCTION_RATIO - GO1_0_ZEROS));
     need_data_form_hi_.left_leg_fai1 = (LEFT_LEG_FAI_ZERO + (need_data_form_hi_.lb_go1_pos / G01_REDUCTION_RATIO - GO1_3_ZEROS));
+    /// right leg param
+    need_data_form_hi_.right_leg_fai4 = PI - (RIGHT_LEG_FAI_ZERO - (need_data_form_hi_.rf_go1_pos / G01_REDUCTION_RATIO - GO1_1_ZEROS));
+    need_data_form_hi_.right_leg_fai1 = (RIGHT_LEG_FAI_ZERO + (need_data_form_hi_.rb_go1_pos / G01_REDUCTION_RATIO - GO1_2_ZEROS));
+
     // need_data_form_hi_.left_leg_fai1 =  (need_data_form_hi_.lb_go1_pos / G01_REDUCTION_RATIO);
     // need_data_form_hi_.left_leg_fai4 = need_data_form_hi_.lf_go1_pos / G01_REDUCTION_RATIO;
     // need_data_form_hi_.left_leg_fai1 = LEFT_LEG_FAI_ZERO - (need_data_form_hi_.lf_go1_pos / G01_REDUCTION_RATIO - GO1_0_ZEROS);
@@ -759,14 +781,14 @@ void WheelBalancingController::updateDataFromInterface(void)
     // std::cout << "left a" << "  " << need_data_form_hi_.left_leg_dis_dot << std::endl;
     // std::cout << "right a" << "  " << need_data_form_hi_.right_leg_dis_dot << std::endl;
 
-    std::cout << "q0" << "  " << need_data_form_hi_.lf_go1_pos << std::endl;
+    // std::cout << "q0" << "  " << need_data_form_hi_.lf_go1_pos << std::endl;
     // std::cout << "180 - q4" << "  " << need_data_form_hi_.lb_go1_pos << std::endl;
 
     // std::cout << "q0_dot" << "  " << need_data_form_hi_.lf_go1_vel << std::endl;
     // std::cout << "(180 - q4)_dot" << "  " << need_data_form_hi_.lb_go1_vel << std::endl;
 
-    std::cout << "fai1" << "  " << need_data_form_hi_.left_leg_fai1 << std::endl;
-    std::cout << "fai4" << "  " << need_data_form_hi_.left_leg_fai4 << std::endl;
+    // std::cout << "fai1" << "  " << need_data_form_hi_.left_leg_fai1 << std::endl;
+    // std::cout << "fai4" << "  " << need_data_form_hi_.left_leg_fai4 << std::endl;
 
 }
 //get remote date

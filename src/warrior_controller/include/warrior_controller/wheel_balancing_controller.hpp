@@ -29,15 +29,22 @@
 
 //#define IMU_PLOT
 //#define LK_PLOT
-//#define GO1_PLOT
+#define GO1_PLOT
 #define VMC_DEBUG
 #define LEFT_CONTROLLER_INDEX 0
 #define RIGHT_CONTROLLER_INDEX 1
 #define DRIVER_RADIUS 0.0775f
 #define G01_REDUCTION_RATIO 6.33f
+/// left leg go1 param
 #define GO1_0_ZEROS  0.0874224f
 #define GO1_3_ZEROS -0.812973f
+/// right leg go1 param
+#define GO1_1_ZEROS  0.0874224f
+#define GO1_2_ZEROS -0.812973f
+
 #define LEFT_LEG_FAI_ZERO 1.5662f
+#define RIGHT_LEG_FAI_ZERO 1.5662f
+
 namespace warrior_controller
 {
 
@@ -122,6 +129,8 @@ namespace warrior_controller
                 double left_leg_dis_dot;
                 double left_leg_fai1;
                 double left_leg_fai4;
+                double right_leg_fai1;
+                double right_leg_fai4;
 
                 double lf_go1_pos;
                 double lf_go1_vel;
@@ -153,7 +162,8 @@ namespace warrior_controller
             };
             struct send_data
             {
-                double T1,T2;
+                double left_T1,left_T2;
+                double right_T1,right_T2;
                 double T_W;
                 send_data() {memset(this,0,sizeof(send_data));}
             };
@@ -219,8 +229,11 @@ namespace warrior_controller
             MatrixXd P_;
             std::shared_ptr<LQR> left_lqr_;
             std::shared_ptr<five_bar_linkage::FiveBar> left_five_bar_;
+            std::shared_ptr<five_bar_linkage::FiveBar> right_five_bar_;
             std::shared_ptr<VMC> left_vmc_;
+            std::shared_ptr<VMC> right_vmc_;
             std::shared_ptr<MiniPID> left_Fy_pid_;
+            std::shared_ptr<MiniPID> right_Fy_pid_;
             void initLQRParam(void);
             /// remote data suscription.
             rclcpp::Subscription<warrior_interface::msg::DbusData>::SharedPtr command_subsciption_;
