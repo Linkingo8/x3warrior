@@ -58,6 +58,9 @@
         <state_interface name="pitch"/> 
         <state_interface name="yaw"/>
         <state_interface name="roll"/>
+        <state_interface name="wx"/>
+        <state_interface name="wy"/>
+        <state_interface name="wz"/>
       </sensor>
       <joint name="left_9025">
         <command_interface name="position">
@@ -92,6 +95,7 @@
         <state_interface name="position"/>
         <state_interface name="velocity"/>
         <state_interface name="torque"/>
+
       </joint>
 
     </ros2_control>

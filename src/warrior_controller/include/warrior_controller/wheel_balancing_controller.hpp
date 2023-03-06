@@ -26,8 +26,9 @@
 #include "warrior_interface/msg/go1_feedback.hpp"
 #include "warrior_interface/msg/vmc_debug_data.hpp"
 #include "warrior_controller/warrior_handle.hpp"
-
-//#define IMU_PLOT
+// max leg length 0.41853056293485247
+// min leg length 0.11914338936606465
+#define IMU_PLOT
 //#define LK_PLOT
 #define GO1_PLOT
 #define VMC_DEBUG
@@ -36,14 +37,15 @@
 #define DRIVER_RADIUS 0.0775f
 #define G01_REDUCTION_RATIO 6.33f
 /// left leg go1 param
-#define GO1_0_ZEROS  0.0874224f
-#define GO1_3_ZEROS -0.812973f
+#define GO1_0_ZEROS  0.06588484235597634f
+#define GO1_3_ZEROS -0.8927320524668526f
 /// right leg go1 param
-#define GO1_1_ZEROS  0.0874224f
-#define GO1_2_ZEROS -0.812973f
+#define GO1_1_ZEROS  0.8610467125655707f
+#define GO1_2_ZEROS  0.9150571466365428
 
 #define LEFT_LEG_FAI_ZERO 1.5662f
 #define RIGHT_LEG_FAI_ZERO 1.5662f
+#define BODY_Mg  5.3 * 9.82f
 
 namespace warrior_controller
 {

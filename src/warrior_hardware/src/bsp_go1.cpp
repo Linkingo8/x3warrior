@@ -216,8 +216,8 @@ void Go1DataProcess::Go1_data_rec(uint8_t id,uint8_t *buff_temp)
                 go1_export_data_[id_temp].position = float(go1_feedback_data_[id_temp].fbk.pos /32768.00) * float(2 * PI);
                 go1_export_data_[id_temp].torque = (go1_feedback_data_[id_temp].fbk.torque /256.00);
                 // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_export_data_[%d].velocity: %f",id_temp,go1_export_data_[id_temp].velocity);
-                if(id_temp == 0)
-                    RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_export_data_[%d].position: %f",id_temp,go1_export_data_[id_temp].position);
+                // if(id_temp == 0)
+                //     RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_export_data_[%d].position: %f",id_temp,go1_export_data_[id_temp].position);
                 // RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_export_data_[%d].torque: %.3f",id_temp,go1_export_data_[id_temp].torque);
             }
         }

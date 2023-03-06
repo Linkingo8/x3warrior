@@ -10,17 +10,27 @@ namespace warrior_controller
             ImuHandle(
                     std::reference_wrapper<const hardware_interface::LoanedStateInterface> pitch,
                     std::reference_wrapper<const hardware_interface::LoanedStateInterface> yaw,
-                    std::reference_wrapper<const hardware_interface::LoanedStateInterface> roll
+                    std::reference_wrapper<const hardware_interface::LoanedStateInterface> roll,
+                    std::reference_wrapper<const hardware_interface::LoanedStateInterface> wx,
+                    std::reference_wrapper<const hardware_interface::LoanedStateInterface> wy,
+                    std::reference_wrapper<const hardware_interface::LoanedStateInterface> wz
                 );
 
             double get_pitch(){ return pitch_.get().get_value(); };
             double get_yaw(){ return yaw_.get().get_value(); };
             double get_roll(){ return roll_.get().get_value(); };
 
+            double get_wx(){ return wx_.get().get_value(); };
+            double get_wy(){ return wy_.get().get_value(); };
+            double get_wz(){ return wz_.get().get_value(); };
+
         private:
                 std::reference_wrapper<const hardware_interface::LoanedStateInterface> pitch_;
                 std::reference_wrapper<const hardware_interface::LoanedStateInterface> yaw_;
                 std::reference_wrapper<const hardware_interface::LoanedStateInterface> roll_;
+                std::reference_wrapper<const hardware_interface::LoanedStateInterface> wx_;
+                std::reference_wrapper<const hardware_interface::LoanedStateInterface> wy_;
+                std::reference_wrapper<const hardware_interface::LoanedStateInterface> wz_;
 
     };
 

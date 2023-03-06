@@ -5,8 +5,11 @@ using namespace warrior_controller;
 ImuHandle::ImuHandle(
     std::reference_wrapper<const hardware_interface::LoanedStateInterface> pitch,
     std::reference_wrapper<const hardware_interface::LoanedStateInterface> yaw,
-    std::reference_wrapper<const hardware_interface::LoanedStateInterface> roll
-    ): pitch_(pitch),yaw_(yaw),roll_(roll)
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface> roll,
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface> wx,
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface> wy,
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface> wz
+    ): pitch_(pitch),yaw_(yaw),roll_(roll),wx_(wx),wy_(wy),wz_(wz)
 {
 }
 

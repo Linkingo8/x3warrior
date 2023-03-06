@@ -89,6 +89,9 @@ controller_interface::InterfaceConfiguration WheelBalancingController::state_int
         state_interfaces_config.names.push_back(joint + "/" + "pitch");
         state_interfaces_config.names.push_back(joint + "/" + "yaw");
         state_interfaces_config.names.push_back(joint + "/" + "roll");
+        state_interfaces_config.names.push_back(joint + "/" + "wx");
+        state_interfaces_config.names.push_back(joint + "/" + "wy");
+        state_interfaces_config.names.push_back(joint + "/" + "wz");
     }
 
     for(std::string joint : wheel_joint_name_)
@@ -131,9 +134,13 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
         auto_declare("joint_Go_LB_name", "");
         auto_declare("joint_Go_RF_name", "");
         auto_declare("joint_Go_RB_name", "");
-        auto_declare("fy_pid_p",0.0);
-        auto_declare("fy_pid_i",0.0);
-        auto_declare("fy_pid_d",0.0);
+        auto_declare("fy_left_pid_p",0.0);
+        auto_declare("fy_left_pid_i",0.0);
+        auto_declare("fy_left_pid_d",0.0);
+
+        auto_declare("fy_right_pid_p",0.0);
+        auto_declare("fy_right_pid_i",0.0);
+        auto_declare("fy_right_pid_d",0.0);
     }
     catch (const std::exception & e) {
         fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
@@ -181,11 +188,11 @@ controller_interface::return_type WheelBalancingController::update()
     double Fy_left_output = 0.0f;
     double Fy_right_output = 0.0f;
 
-    Fy_left_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,0.27)-12.82f;
-    Fy_right_output = right_Fy_pid_->getOutput(right_five_bar_->exportBarLength()->L0,0.27)-12.82f;
+    Fy_left_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,0.27) + BODY_Mg/2;
+    Fy_right_output = right_Fy_pid_->getOutput(right_five_bar_->exportBarLength()->L0,0.27) + BODY_Mg/2;
 
     left_vmc_->setFTp(0.0f,-Fy_left_output);
-    right_vmc_->setFTp(0.0f,-Fy_right_output);
+    right_vmc_->setFTp(0.0f,Fy_right_output);
     /// calc the vmc output jacobian matrix
     left_vmc_->VMCControllerCalc();
     right_vmc_->VMCControllerCalc();
@@ -199,7 +206,14 @@ controller_interface::return_type WheelBalancingController::update()
     send_data_.right_T1 = right_vmc_->exportT1() / G01_REDUCTION_RATIO;
     send_data_.right_T2 = right_vmc_->exportT2() / G01_REDUCTION_RATIO;
     /// debug
-    std::cout << "Fy :" << Fy_left_output << std::endl;
+    // std::cout << "wx :" << imu_handles_->get_wx() << std::endl;
+    // std::cout << "wy :" << imu_handles_->get_wy() << std::endl;
+    // std::cout << "wz :" << imu_handles_->get_wz() << std::endl;
+
+    // std::cout << "yaw :" << imu_handles_->get_yaw() << std::endl;
+    // std::cout << "pitch :" << imu_handles_->get_pitch() << std::endl;
+    // std::cout << "roll :" << imu_handles_->get_roll() << std::endl;
+    // std::cout << "Fy :" << Fy_left_output << std::endl;
     // // std::cout << "target length :" << rc_commmonds_.ch_r_y << std::endl;
     // std::cout << "target length :" << 0.27 << std::endl;
     // std::cout << "now length :" << left_five_bar_->exportBarLength()->L0 << std::endl;
@@ -230,22 +244,28 @@ controller_interface::return_type WheelBalancingController::update()
         Go1_LF_handles_->set_torque(0.0f);
         Go1_LB_handles_->set_torque(0.0f);
         /// right leg //    - + up       + - down
+        // Go1_RF_handles_->set_torque(0.0f);
+        // Go1_RB_handles_->set_torque(0.0f);
         Go1_RF_handles_->set_torque(0.0f);
         Go1_RB_handles_->set_torque(0.0f);
-    } else {//other modes
-        LK_L_handles_->set_torque(0.0f);
-        LK_R_handles_->set_torque(0.0f);
-        /// left leg
-        // Go1_LF_handles_->set_torque(-0.1f);
-        // Go1_LB_handles_->set_torque(0.1f);
 
+    } else {//other modes
+        LK_L_handles_->set_torque(-0.0f);
+        LK_R_handles_->set_torque(0.0f);
+        // Go1_LF_handles_->set_torque(0.0f);
+        // Go1_LB_handles_->set_torque(0.0f);
+        // // /// right leg //    - + up       + - down
         Go1_LF_handles_->set_torque(0.0f);
-        Go1_LB_handles_->set_torque(0.0f);
+        Go1_LB_handles_->set_torque(-0.0f);
+        // // /// left leg
+        // Go1_RF_handles_->set_torque(0.0f);
+        // Go1_RB_handles_->set_torque(0.0f);
+        // /// left leg
         // Go1_LF_handles_->set_torque(send_data_.left_T1);
         // Go1_LB_handles_->set_torque(send_data_.left_T2);
-        /// right leg
-        Go1_RF_handles_->set_torque(0.0f);
-        Go1_RB_handles_->set_torque(0.0f);
+        // right leg
+        Go1_RF_handles_->set_torque(send_data_.right_T1);
+        Go1_RB_handles_->set_torque(send_data_.right_T2);
     }
 /// publish sensor feedback.
 #ifdef VMC_DEBUG
@@ -266,7 +286,7 @@ controller_interface::return_type WheelBalancingController::update()
         vmc_debug_data_message.left_d_out = 0.0f;
 
         vmc_debug_data_message.right_t_one = send_data_.right_T1;
-        vmc_debug_data_message.right_t_two = send_data_.right_T1;
+        vmc_debug_data_message.right_t_two = send_data_.right_T2;
         vmc_debug_data_message.right_tp = 0.0f;
         vmc_debug_data_message.right_f = Fy_right_output;
         vmc_debug_data_message.right_fai_one = need_data_form_hi_.right_leg_fai1;
@@ -310,19 +330,19 @@ controller_interface::return_type WheelBalancingController::update()
     if (realtime_Go1_data_publisher_->trylock())
     {
       auto & Go1_data_message = realtime_Go1_data_publisher_->msg_;
-      Go1_data_message.lfpositions = Go1_LF_handles_->get_position();
+      Go1_data_message.lfpositions = Go1_LF_handles_->get_position() / G01_REDUCTION_RATIO;
       Go1_data_message.lfvelocities = Go1_LF_handles_->get_velocity();
       Go1_data_message.lftorques = Go1_LF_handles_->get_acceleration();
 
-      Go1_data_message.rfpositions = Go1_RF_handles_->get_position();
+      Go1_data_message.rfpositions = Go1_RF_handles_->get_position() / G01_REDUCTION_RATIO;
       Go1_data_message.rfvelocities = Go1_RF_handles_->get_velocity();
       Go1_data_message.rftorques = Go1_RF_handles_->get_acceleration();
 
-      Go1_data_message.rbpositions = Go1_RB_handles_->get_position();
+      Go1_data_message.rbpositions = Go1_RB_handles_->get_position() / G01_REDUCTION_RATIO;
       Go1_data_message.rbvelocities = Go1_RB_handles_->get_velocity();
       Go1_data_message.rbtorques = Go1_RB_handles_->get_acceleration();
       
-      Go1_data_message.lbpositions = Go1_LB_handles_->get_position();
+      Go1_data_message.lbpositions = Go1_LB_handles_->get_position() / G01_REDUCTION_RATIO;
       Go1_data_message.lbvelocities = Go1_LB_handles_->get_velocity();
       Go1_data_message.lbtorques = Go1_LB_handles_->get_acceleration();
       realtime_Go1_data_publisher_->unlockAndPublish();
@@ -345,9 +365,14 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
     auto joint_Go_RF_name_ = get_node()->get_parameter("joint_Go_RF_name").as_string();
     auto joint_Go_RB_name_ = get_node()->get_parameter("joint_Go_RB_name").as_string();
 
-    get_node()->get_parameter("fy_pid_p",left_Fy_pid_->P);
-    get_node()->get_parameter("fy_pid_i",left_Fy_pid_->I);
-    get_node()->get_parameter("fy_pid_d",left_Fy_pid_->D);
+    get_node()->get_parameter("fy_left_pid_p",left_Fy_pid_->P);
+    get_node()->get_parameter("fy_left_pid_i",left_Fy_pid_->I);
+    get_node()->get_parameter("fy_left_pid_d",left_Fy_pid_->D);
+
+    get_node()->get_parameter("fy_right_pid_p",right_Fy_pid_->P);
+    get_node()->get_parameter("fy_right_pid_i",right_Fy_pid_->I);
+    get_node()->get_parameter("fy_right_pid_d",right_Fy_pid_->D);
+    
 
     if (joint1_name_.empty()) {
         RCLCPP_ERROR(get_node()->get_logger(), "'joint1_name' parameter was empty");
@@ -763,8 +788,8 @@ void WheelBalancingController::updateDataFromInterface(void)
     need_data_form_hi_.left_leg_fai4 = PI - (LEFT_LEG_FAI_ZERO - (need_data_form_hi_.lf_go1_pos / G01_REDUCTION_RATIO - GO1_0_ZEROS));
     need_data_form_hi_.left_leg_fai1 = (LEFT_LEG_FAI_ZERO + (need_data_form_hi_.lb_go1_pos / G01_REDUCTION_RATIO - GO1_3_ZEROS));
     /// right leg param
-    need_data_form_hi_.right_leg_fai4 = PI - (RIGHT_LEG_FAI_ZERO - (need_data_form_hi_.rf_go1_pos / G01_REDUCTION_RATIO - GO1_1_ZEROS));
-    need_data_form_hi_.right_leg_fai1 = (RIGHT_LEG_FAI_ZERO + (need_data_form_hi_.rb_go1_pos / G01_REDUCTION_RATIO - GO1_2_ZEROS));
+    need_data_form_hi_.right_leg_fai4 = PI - (RIGHT_LEG_FAI_ZERO - (need_data_form_hi_.rb_go1_pos / G01_REDUCTION_RATIO - GO1_2_ZEROS));
+    need_data_form_hi_.right_leg_fai1 = (RIGHT_LEG_FAI_ZERO + (need_data_form_hi_.rf_go1_pos / G01_REDUCTION_RATIO - GO1_1_ZEROS));
 
     // need_data_form_hi_.left_leg_fai1 =  (need_data_form_hi_.lb_go1_pos / G01_REDUCTION_RATIO);
     // need_data_form_hi_.left_leg_fai4 = need_data_form_hi_.lf_go1_pos / G01_REDUCTION_RATIO;
@@ -837,7 +862,6 @@ std::shared_ptr<ImuHandle> WheelBalancingController::get_angle(const std::string
         RCLCPP_ERROR(get_node()->get_logger(), "%s position state interface not found", joint_name.c_str());
         return nullptr;
     }
-
     // Lookup the yaw state interface
     const auto yaw_state = std::find_if(state_interfaces_.cbegin(), state_interfaces_.cend(), [&joint_name](const hardware_interface::LoanedStateInterface & interface)
     {
@@ -847,7 +871,6 @@ std::shared_ptr<ImuHandle> WheelBalancingController::get_angle(const std::string
         RCLCPP_ERROR(get_node()->get_logger(), "%s velocity state interface not found", joint_name.c_str());
         return nullptr;
     }
-
     // Lookup the roll state interface
     const auto roll_state = std::find_if(state_interfaces_.cbegin(), state_interfaces_.cend(), [&joint_name](const hardware_interface::LoanedStateInterface & interface)
     {
@@ -857,11 +880,41 @@ std::shared_ptr<ImuHandle> WheelBalancingController::get_angle(const std::string
         RCLCPP_ERROR(get_node()->get_logger(), "%s accelration state interface not found", joint_name.c_str());
         return nullptr;
     }
+    // Lookup the wx state interface
+    const auto wx_state = std::find_if(state_interfaces_.cbegin(), state_interfaces_.cend(), [&joint_name](const hardware_interface::LoanedStateInterface & interface)
+    {
+        return interface.get_name() == joint_name && interface.get_interface_name() == "wx";
+    });
+    if (wx_state == state_interfaces_.cend()) {
+        RCLCPP_ERROR(get_node()->get_logger(), "%s position state interface not found", joint_name.c_str());
+        return nullptr;
+    }
+    // Lookup the wy state interface
+    const auto wy_state = std::find_if(state_interfaces_.cbegin(), state_interfaces_.cend(), [&joint_name](const hardware_interface::LoanedStateInterface & interface)
+    {
+        return interface.get_name() == joint_name && interface.get_interface_name() == "wy";
+    });
+    if (wy_state == state_interfaces_.cend()) {
+        RCLCPP_ERROR(get_node()->get_logger(), "%s position state interface not found", joint_name.c_str());
+        return nullptr;
+    }
+    // Lookup the wy state interface
+    const auto wz_state = std::find_if(state_interfaces_.cbegin(), state_interfaces_.cend(), [&joint_name](const hardware_interface::LoanedStateInterface & interface)
+    {
+        return interface.get_name() == joint_name && interface.get_interface_name() == "wz";
+    });
+    if (wz_state == state_interfaces_.cend()) {
+        RCLCPP_ERROR(get_node()->get_logger(), "%s position state interface not found", joint_name.c_str());
+        return nullptr;
+    }
     // Create the ImuHandle instance
 
     return std::make_shared<ImuHandle>(std::ref(*pitch_state),
                                         std::ref(*yaw_state),
-                                        std::ref(*roll_state));
+                                        std::ref(*roll_state),
+                                        std::ref(*wx_state),
+                                        std::ref(*wy_state),
+                                        std::ref(*wz_state));
 }
 
 std::shared_ptr<LK9025Handle> WheelBalancingController::get_LK_handle(const std::string & joint_name)

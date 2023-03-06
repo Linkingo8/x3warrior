@@ -19,7 +19,7 @@
 #include "warrior_hardware/can_driver.hpp"
 #include "warrior_hardware/bsp_LK_MF9025.hpp"
 
-#define ANGLE_NUM       3
+#define ANGLE_NUM       6
 #define LK_COMMOND_NUM  3
 #define LK_STATE_NUM    3
 #define RM_IMU_USE
@@ -65,6 +65,12 @@ private:
     double pitch = 0.0;
     double yaw   = 0.0;
     double roll  = 0.0;
+    double wx  = 0.0;
+    double wy  = 0.0;
+    double wz  = 0.0;
+    double ax  = 0.0;
+    double ay  = 0.0;
+    double az  = 0.0;
   };
   typedef struct
   {

@@ -7,12 +7,18 @@ warrior ros2 project for x3pi
 export DISPLAY=<wsl ipv4>:0
 source /etc/profile
 # compile
+vim ./src/warrior_controller/src/wheel_balancing_controller.cpp
+vim ./src/warrior_controller/include/warrior_controller/wheel_balancing_controller.hpp
+vim ./src/warrior_description/config/robot_controller_config.yaml
+vim ./src/warrior_hardware/src/go1_hardware_interface.cpp
+vim ./src/warrior_description/config/robot_controller_config.yaml
 colcon build --symlink-install --parallel-workers 1
 # run
 source /opt/ros/foxy/setup.bash
-source install/setup.bash
+source install/setup.bash \
 ros2 launch warrior_bringup warrior.py
 
+ros2 topic echo /vm
 # ssh x3
 ssh sunrise@192.168.189.253
 scp -r ../x3warrior sunrise@192.168.189.253:/home/sunrise
