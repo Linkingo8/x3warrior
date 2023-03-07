@@ -6,10 +6,17 @@ ImuHandle::ImuHandle(
     std::reference_wrapper<const hardware_interface::LoanedStateInterface> pitch,
     std::reference_wrapper<const hardware_interface::LoanedStateInterface> yaw,
     std::reference_wrapper<const hardware_interface::LoanedStateInterface> roll,
+    
     std::reference_wrapper<const hardware_interface::LoanedStateInterface> wx,
     std::reference_wrapper<const hardware_interface::LoanedStateInterface> wy,
-    std::reference_wrapper<const hardware_interface::LoanedStateInterface> wz
-    ): pitch_(pitch),yaw_(yaw),roll_(roll),wx_(wx),wy_(wy),wz_(wz)
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface> wz,
+
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface> ax,
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface> ay,
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface> az
+    ): pitch_(pitch),yaw_(yaw),roll_(roll),
+        wx_(wx),wy_(wy),wz_(wz),
+        ax_(ax),ay_(ay),az_(az)
 {
 }
 

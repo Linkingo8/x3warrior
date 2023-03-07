@@ -61,6 +61,9 @@
         <state_interface name="wx"/>
         <state_interface name="wy"/>
         <state_interface name="wz"/>
+        <state_interface name="ax"/>
+        <state_interface name="ay"/>
+        <state_interface name="az"/>
       </sensor>
       <joint name="left_9025">
         <command_interface name="position">

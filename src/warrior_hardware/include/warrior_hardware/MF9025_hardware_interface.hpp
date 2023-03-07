@@ -19,7 +19,7 @@
 #include "warrior_hardware/can_driver.hpp"
 #include "warrior_hardware/bsp_LK_MF9025.hpp"
 
-#define ANGLE_NUM       6
+#define ANGLE_NUM       9
 #define LK_COMMOND_NUM  3
 #define LK_STATE_NUM    3
 #define RM_IMU_USE

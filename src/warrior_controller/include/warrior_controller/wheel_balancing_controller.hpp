@@ -37,14 +37,21 @@
 #define DRIVER_RADIUS 0.0775f
 #define G01_REDUCTION_RATIO 6.33f
 /// left leg go1 param
-#define GO1_0_ZEROS  0.06588484235597634f
-#define GO1_3_ZEROS -0.8927320524668526f
+#define GO1_0_ZEROS  0.11120149631954027f
+#define GO1_3_ZEROS  0.0668541805587236f
 /// right leg go1 param
-#define GO1_1_ZEROS  0.8610467125655707f
-#define GO1_2_ZEROS  0.9150571466365428
+#define GO1_1_ZEROS   0.685959638935585f
+#define GO1_2_ZEROS  0.9034856721355043
+/// leg common range
+/// real
+// #define MAX_L0 0.41853056293485247f
+// #define MIN_L0 0.11914338936606465f
+/// debug
+#define MAX_L0 0.23853056293485247f
+#define MIN_L0 0.16914338936606465f
 
-#define LEFT_LEG_FAI_ZERO 1.5662f
-#define RIGHT_LEG_FAI_ZERO 1.5662f
+#define LEFT_LEG_FAI_ZERO 3.48716784548467f
+#define RIGHT_LEG_FAI_ZERO 3.48716784548467f
 #define BODY_Mg  5.3 * 9.82f
 
 namespace warrior_controller
@@ -160,6 +167,14 @@ namespace warrior_controller
                 double pitch;
                 double yaw;
                 double roll;
+
+                double wx;
+                double wy;
+                double wz;
+
+                double ax;
+                double ay;
+                double az;
                 data_used_from_interface() {memset(this,0,sizeof(data_used_from_interface));}
             };
             struct send_data
@@ -236,6 +251,7 @@ namespace warrior_controller
             std::shared_ptr<VMC> right_vmc_;
             std::shared_ptr<MiniPID> left_Fy_pid_;
             std::shared_ptr<MiniPID> right_Fy_pid_;
+            double body_mg_;
             void initLQRParam(void);
             /// remote data suscription.
             rclcpp::Subscription<warrior_interface::msg::DbusData>::SharedPtr command_subsciption_;

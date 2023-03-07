@@ -13,7 +13,10 @@ namespace warrior_controller
                     std::reference_wrapper<const hardware_interface::LoanedStateInterface> roll,
                     std::reference_wrapper<const hardware_interface::LoanedStateInterface> wx,
                     std::reference_wrapper<const hardware_interface::LoanedStateInterface> wy,
-                    std::reference_wrapper<const hardware_interface::LoanedStateInterface> wz
+                    std::reference_wrapper<const hardware_interface::LoanedStateInterface> wz,
+                    std::reference_wrapper<const hardware_interface::LoanedStateInterface> ax,
+                    std::reference_wrapper<const hardware_interface::LoanedStateInterface> ay,
+                    std::reference_wrapper<const hardware_interface::LoanedStateInterface> az
                 );
 
             double get_pitch(){ return pitch_.get().get_value(); };
@@ -24,13 +27,22 @@ namespace warrior_controller
             double get_wy(){ return wy_.get().get_value(); };
             double get_wz(){ return wz_.get().get_value(); };
 
+            double get_ax(){ return ax_.get().get_value(); };
+            double get_ay(){ return ay_.get().get_value(); };
+            double get_az(){ return az_.get().get_value(); };
+
         private:
                 std::reference_wrapper<const hardware_interface::LoanedStateInterface> pitch_;
                 std::reference_wrapper<const hardware_interface::LoanedStateInterface> yaw_;
                 std::reference_wrapper<const hardware_interface::LoanedStateInterface> roll_;
+
                 std::reference_wrapper<const hardware_interface::LoanedStateInterface> wx_;
                 std::reference_wrapper<const hardware_interface::LoanedStateInterface> wy_;
                 std::reference_wrapper<const hardware_interface::LoanedStateInterface> wz_;
+                
+                std::reference_wrapper<const hardware_interface::LoanedStateInterface> ax_;
+                std::reference_wrapper<const hardware_interface::LoanedStateInterface> ay_;
+                std::reference_wrapper<const hardware_interface::LoanedStateInterface> az_;
 
     };
 

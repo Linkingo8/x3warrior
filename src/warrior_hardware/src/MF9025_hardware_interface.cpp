@@ -47,11 +47,11 @@ return_type MF9025HardwareInterface::configure(const hardware_interface::Hardwar
     {
         RCLCPP_FATAL(
         rclcpp::get_logger("MF9025HardwareInterface"),
-        "Sensor '%s' has %d state interfaces. 6 expected.", info_.sensors[0].name.c_str());
+        "Sensor '%s' has %d state interfaces. 9 expected.", info_.sensors[0].name.c_str());
       return return_type::ERROR;
     }
 
-    for (const auto & imu_key : {"pitch", "yaw", "roll","wx","wy","wz"})
+    for (const auto & imu_key : {"pitch", "yaw", "roll","wx","wy","wz","ax","ay","az"})
     {
       if (
         std::find_if(
@@ -130,6 +130,12 @@ MF9025HardwareInterface::export_state_interfaces()
       hardware_interface::StateInterface(sensor_name, "wy", &RM_imu_date_.wy));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(sensor_name, "wz", &RM_imu_date_.wz));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(sensor_name, "ax", &RM_imu_date_.ax));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(sensor_name, "ay", &RM_imu_date_.ay));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(sensor_name, "az", &RM_imu_date_.az));
    #endif
 
   #ifdef T_IMU_USE
@@ -192,6 +198,19 @@ return_type MF9025HardwareInterface::start()
   if (std::isnan(RM_imu_date_.wz))
   {
     RM_imu_date_.wz = 0;
+  }
+
+  if (std::isnan(RM_imu_date_.ax))
+  {
+    RM_imu_date_.ax = 0;
+  }
+  if (std::isnan(RM_imu_date_.ay))
+  {
+    RM_imu_date_.ay = 0;
+  }
+  if (std::isnan(RM_imu_date_.az))
+  {
+    RM_imu_date_.az = 0;
   }
   #endif
 
@@ -430,6 +449,7 @@ return_type MF9025HardwareInterface::read()
         RM_imu_date_.pitch = asinf(2*(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[2]-rm_imu_data.quat_fp32[1]*rm_imu_data.quat_fp32[3]));
         RM_imu_date_.roll  = atan2f(rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[1]+rm_imu_data.quat_fp32[2]*rm_imu_data.quat_fp32[3],
                                 rm_imu_data.quat_fp32[0]*rm_imu_data.quat_fp32[0]+rm_imu_data.quat_fp32[3]*rm_imu_data.quat_fp32[3]-0.5f);
+                                
         RM_imu_date_.wx = rm_imu_data.gyro_fp32[0];
         RM_imu_date_.wy = rm_imu_data.gyro_fp32[1];
         RM_imu_date_.wz = rm_imu_data.gyro_fp32[2];
@@ -438,6 +458,7 @@ return_type MF9025HardwareInterface::read()
         RM_imu_date_.ax = rm_imu_data.accel_fp32[0];
         RM_imu_date_.ay = rm_imu_data.accel_fp32[1];
         RM_imu_date_.az = rm_imu_data.accel_fp32[2];
+
 			}
       // RCLCPP_INFO(
       //   rclcpp::get_logger("ImuHardwareInterface"), "Get pitch %.5f,yaw %.5f,roll %.5f",RM_imu_date_.pitch,RM_imu_date_.yaw,RM_imu_date_.roll);
