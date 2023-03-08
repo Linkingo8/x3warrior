@@ -183,6 +183,22 @@ controller_interface::return_type WheelBalancingController::update()
     /// get x  
     WheelBalancingController::init9025EncoderZeros();
     WheelBalancingController::update9025TotalDis();
+    /// calculate the lqr k.
+    left_lqr_->K = left_lqr_->calcGainK();
+    // // std::cout << left_Fy_pid_->getOutput(10.0,left_five_bar_->exportBarLength()->L0) << std::endl;
+    /// set the x_d to struct
+    WheelBalancingController::updateXdes(0);
+    // get the feedback 
+    WheelBalancingController::updateX(0); 
+    /// give k to controller
+    WheelBalancingController::setLegLQRGain(left_lqr_->K,0);
+    /// set the x_d to controller
+    WheelBalancingController::setLegLQRXd(0);
+    /// set the X to controller
+    WheelBalancingController::setLegLQRX(0);
+    /// calculate the input of system. tau_W tau_Tp
+    WheelBalancingController::calclegLQRU(0);
+
     /// use these data
     /// get theta
     left_five_bar_->virtualLegCalc(need_data_form_hi_.left_leg_fai1, need_data_form_hi_.left_leg_fai4);
@@ -227,21 +243,7 @@ controller_interface::return_type WheelBalancingController::update()
     // std::cout << "T1 :" << send_data_.left_T1 << std::endl;
     // std::cout << "T2 :" << send_data_.left_T2 << std::endl;
     // /// adjust the T to correct sign and convert to rotor
-    // /// calculate the lqr k.
-    // left_lqr_->K = left_lqr_->calcGainK();
-    // // std::cout << left_Fy_pid_->getOutput(10.0,left_five_bar_->exportBarLength()->L0) << std::endl;
-    // /// set the x_d to struct
-    // WheelBalancingController::updateXdes(0);
-    // get the feedback 
-    WheelBalancingController::updateX(0); 
-    // /// give k to controller
-    // WheelBalancingController::setLegLQRGain(left_lqr_->K,0);
-    // /// set the x_d to controller
-    // WheelBalancingController::setLegLQRXd(0);
-    // /// set the X to controller
-    // WheelBalancingController::setLegLQRX(0);
-    // /// calculate the input of system. tau_W tau_Tp
-    // WheelBalancingController::calclegLQRU(0);
+
     
     /// set the line input to track the root of system
     if(rc_commmonds_.sw_l == 1) { //protection mode
@@ -752,10 +754,10 @@ void WheelBalancingController::update9025TotalDis(void)
                         * 2 * PI * DRIVER_RADIUS;    
     need_data_form_hi_.right_lk9025_ecoder_last = need_data_form_hi_.right_lk9025_pos;
     need_data_form_hi_.left_lk9025_ecoder_last = need_data_form_hi_.left_lk9025_pos;
-    std::cout << "right totla dis:" << need_data_form_hi_.right_leg_total_dis << std::endl;
-    std::cout << "right velocity:" << need_data_form_hi_.right_lk9025_vel << std::endl;
-    std::cout << "right dis:" << need_data_form_hi_.right_lk9025_pos << std::endl;
-    std::cout << "right cnt -----!" << need_data_form_hi_.right_lk9025_circle_cnt << std::endl;
+    // std::cout << "right totla dis:" << need_data_form_hi_.right_leg_total_dis << std::endl;
+    // std::cout << "right velocity:" << need_data_form_hi_.right_lk9025_vel << std::endl;
+    // std::cout << "right dis:" << need_data_form_hi_.right_lk9025_pos << std::endl;
+    // std::cout << "right cnt -----!" << need_data_form_hi_.right_lk9025_circle_cnt << std::endl;
     // std::cout << "left totla dis:" << need_data_form_hi_.left_leg_total_dis << std::endl;
     // std::cout << "left velocity:" << need_data_form_hi_.left_lk9025_vel << std::endl;
     // std::cout << "left dis:" << need_data_form_hi_.left_lk9025_pos << std::endl;
@@ -822,7 +824,7 @@ void WheelBalancingController::updateX(uint8_t index)
     pitch_now_ = need_data_form_hi_.pitch;
     if(index == 0)
     {
-        left_set_feedback_.x += (need_data_form_hi_.left_leg_dis_dot * 0.002f);//synthsis of velocities.        //m
+        left_set_feedback_.x = (need_data_form_hi_.left_leg_total_dis);//synthsis of velocities.        //m
         left_set_feedback_.x_dot = need_data_form_hi_.left_leg_dis_dot;//velocities of left lk9025              //m/s
         left_set_feedback_.theta_now = (PI/2) - left_five_bar_->exportBarLength()->q0 + pitch_now_;//           //rad
         left_set_feedback_.theta_dot = (left_set_feedback_.theta_now - left_set_feedback_.theta_last)/0.002f;  //rad/s
@@ -870,6 +872,7 @@ void WheelBalancingController::calclegLQRU(uint8_t index)
     {
         leg_balance_controller_[index].U = -leg_balance_controller_[index].K * 
                     (leg_balance_controller_[index].X_d.transpose() - leg_balance_controller_[index].X.transpose());
+        std::cout << leg_balance_controller_[index].U << std::endl;
     }
     if(index == 1)
     {
