@@ -39,7 +39,7 @@ void VMC::setFTp(double Tp,double F)
 void VMC::calcT(void)
 {
     vmc_output_.vmc_T = vmc_output_.vmc_Jacobian  * vmc_output_.vmc_F;
-    // std::cout <<"vmc_T:    \n"<< vmc_output_.vmc_T << std::endl;
+    std::cout <<"vmc_T:    \n"<< vmc_output_.vmc_T << std::endl;
 }
 
 double VMC::exportT1(void)

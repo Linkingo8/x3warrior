@@ -42,6 +42,6 @@ MatrixXd LQR::care(void)
 Eigen::MatrixXd LQR::calcGainK()
 {
     Eigen::MatrixXd  S = care();
-    std::cout << R.inverse() * (B.transpose() * S) << std::endl;
+    // std::cout << R.inverse() * (B.transpose() * S) << std::endl;
     return R.inverse() * (B.transpose() * S);
 }

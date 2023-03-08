@@ -182,6 +182,9 @@ namespace warrior_controller
                 double left_T1,left_T2;
                 double right_T1,right_T2;
                 double T_W;
+                double left_tau_w;
+                double right_tau_w;
+                double left_Tp;
                 send_data() {memset(this,0,sizeof(send_data));}
             };
             send_data send_data_;
@@ -220,6 +223,7 @@ namespace warrior_controller
                                     ,theta_dot(0),fai(0),fai_dot(0){}
             };
             state_variables left_destination_,left_set_feedback_;
+            state_variables right_destination_,right_set_feedback_;
 
             struct leg_balance_controller
             {
@@ -255,6 +259,7 @@ namespace warrior_controller
             leg_lqr_QR left_leg_lqr_QR, right_leg_lqr_QR;
             leg_lqr_param left_leg_lqr_param_,right_leg_lqr_param_;
             std::shared_ptr<LQR> left_lqr_;
+            std::shared_ptr<LQR> right_lqr_;
             std::shared_ptr<five_bar_linkage::FiveBar> left_five_bar_;
             std::shared_ptr<five_bar_linkage::FiveBar> right_five_bar_;
             std::shared_ptr<VMC> left_vmc_;

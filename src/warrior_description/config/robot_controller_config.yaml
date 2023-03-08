@@ -31,9 +31,9 @@ wheel_balance_controller:
       fy_right_pid_i: 0.0
       fy_right_pid_d: 90.0
 
-      left_x_q: 100.0
+      left_x_q: 1.0
       left_x_dot_q: 1.0
-      left_theta_q: 2.0
+      left_theta_q: 1.0
       left_theta_dot_q: 1.0
       left_fai_q: 1.0
       left_fai_dot_q: 1.0
@@ -41,12 +41,12 @@ wheel_balance_controller:
       left_r1: 1.0
       left_r2: 1.0
 
-      right_x_q: 90.0
-      right_x_dot_q: 90.0
-      right_theta_q: 90.0
-      right_theta_dot_q: 90.0
-      right_fai_q: 90.0
-      right_fai_dot_q: 90.0
+      right_x_q: 1.0
+      right_x_dot_q: 1.0
+      right_theta_q: 1.0
+      right_theta_dot_q: 1.0
+      right_fai_q: 1.0
+      right_fai_dot_q: 1.0
 
-      right_r1: 90.0
-      right_r2: 90.0
+      right_r1: 1.0
+      right_r2: 1.0
