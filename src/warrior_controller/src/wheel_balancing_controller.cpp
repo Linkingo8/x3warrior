@@ -333,19 +333,19 @@ controller_interface::return_type WheelBalancingController::update()
     if (realtime_Go1_data_publisher_->trylock())
     {
       auto & Go1_data_message = realtime_Go1_data_publisher_->msg_;
-      Go1_data_message.lfpositions = Go1_LF_handles_->get_position() / G01_REDUCTION_RATIO;
+      Go1_data_message.lfpositions = Go1_LF_handles_->get_position() / G01_REDUCTION_RATIO * (180.f/PI);
       Go1_data_message.lfvelocities = Go1_LF_handles_->get_velocity();
       Go1_data_message.lftorques = Go1_LF_handles_->get_acceleration();
 
-      Go1_data_message.rfpositions = Go1_RF_handles_->get_position() / G01_REDUCTION_RATIO;
+      Go1_data_message.rfpositions = Go1_RF_handles_->get_position() / G01_REDUCTION_RATIO *(180f/PI);
       Go1_data_message.rfvelocities = Go1_RF_handles_->get_velocity();
       Go1_data_message.rftorques = Go1_RF_handles_->get_acceleration();
 
-      Go1_data_message.rbpositions = Go1_RB_handles_->get_position() / G01_REDUCTION_RATIO;
+      Go1_data_message.rbpositions = Go1_RB_handles_->get_position() / G01_REDUCTION_RATIO* (180f/PI);
       Go1_data_message.rbvelocities = Go1_RB_handles_->get_velocity();
       Go1_data_message.rbtorques = Go1_RB_handles_->get_acceleration();
       
-      Go1_data_message.lbpositions = Go1_LB_handles_->get_position() / G01_REDUCTION_RATIO;
+      Go1_data_message.lbpositions = Go1_LB_handles_->get_position() / G01_REDUCTION_RATIO*(180/PI);
       Go1_data_message.lbvelocities = Go1_LB_handles_->get_velocity();
       Go1_data_message.lbtorques = Go1_LB_handles_->get_acceleration();
       realtime_Go1_data_publisher_->unlockAndPublish();
@@ -796,9 +796,9 @@ void WheelBalancingController::updateDataFromInterface(void)
     need_data_form_hi_.ax = imu_handles_->get_ax();
     need_data_form_hi_.ay = imu_handles_->get_ay();
     need_data_form_hi_.az = imu_handles_->get_az();
-    std::cout << "wx" << need_data_form_hi_.wx  << std::endl;
-    std::cout << "wy" << need_data_form_hi_.wy << std::endl;
-    std::cout << "wz" << need_data_form_hi_.wz << std::endl;
+    // std::cout << "wx" << need_data_form_hi_.wx  << std::endl;
+    // std::cout << "wy" << need_data_form_hi_.wy << std::endl;
+    // std::cout << "wz" << need_data_form_hi_.wz << std::endl;
 
     /// left leg param    
     need_data_form_hi_.left_leg_fai4 = PI - (LEFT_LEG_FAI_ZERO - (need_data_form_hi_.lf_go1_pos / G01_REDUCTION_RATIO - GO1_0_ZEROS));
