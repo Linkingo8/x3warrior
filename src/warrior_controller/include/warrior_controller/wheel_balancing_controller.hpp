@@ -29,12 +29,12 @@
 // max leg length 0.41853056293485247
 // min leg length 0.11914338936606465
 #define IMU_PLOT
-//#define LK_PLOT
+#define LK_PLOT
 #define GO1_PLOT
 #define VMC_DEBUG
 #define LEFT_CONTROLLER_INDEX 0
 #define RIGHT_CONTROLLER_INDEX 1
-#define DRIVER_RADIUS 0.0775f
+#define DRIVER_RADIUS 0.0875f
 #define G01_REDUCTION_RATIO 6.33f
 /// left leg go1 param
 #define GO1_0_ZEROS  0.11120149631954027f
@@ -211,11 +211,12 @@ namespace warrior_controller
             {
                 double x;       //^
                 double x_dot;   //^
-                double theta;   
+                double theta_now;   
+                double theta_last;
                 double theta_dot;
                 double fai;
                 double fai_dot;
-               state_variables()  : x(0),x_dot(0),theta(0)
+               state_variables()  : x(0),x_dot(0),theta_now(0),theta_last(0)
                                     ,theta_dot(0),fai(0),fai_dot(0){}
             };
             state_variables left_destination_,left_set_feedback_;

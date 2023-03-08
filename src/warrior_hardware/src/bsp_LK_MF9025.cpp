@@ -97,6 +97,11 @@ void MF9025DataProcess::MF9025_commond_send(uint16_t id)
 
 void MF9025DataProcess::MF9025_message_rec(VCI_CAN_OBJ *rec_,int16_t q1) 
 {
+    // RCLCPP_FATAL(rclcpp::get_logger("MF9025_speed_rec"),"speed 0: %d", rec_9025_[0].speed);
+    // RCLCPP_FATAL(rclcpp::get_logger("MF9025_speed_rec"),"speed 1: %d", rec_9025_[1].speed);
+
+    // RCLCPP_FATAL(rclcpp::get_logger("MF9025_temperature_rec"),"temperature 0: %d", rec_9025_[0].temperature);
+    // RCLCPP_FATAL(rclcpp::get_logger("MF9025_temperature_rec"),"temperature 1: %d", rec_9025_[1].temperature);
     switch (rec_[q1].ID)
     {
     case RIGHT_ID:
@@ -109,7 +114,7 @@ void MF9025DataProcess::MF9025_message_rec(VCI_CAN_OBJ *rec_,int16_t q1)
 
         rec_9025_[0].speed = (int16_t)rec_[q1].Data[4];//DATA[2] = *(uint8_t *)(&iq) 
         rec_9025_[0].speed = rec_9025_[0].speed | ((int16_t)rec_[q1].Data[5] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
-        // RCLCPP_FATAL(rclcpp::get_logger("MF9025_position_set"),"id: %d", rec_9025_[0].speed);
+        
 
 
         rec_9025_[0].encoder = (uint16_t)rec_[q1].Data[6];//DATA[2] = *(uint8_t *)(&iq) 
