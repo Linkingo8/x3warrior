@@ -239,12 +239,21 @@ namespace warrior_controller
             void updateX(uint8_t index);
             // void InitXdes(uint8_t index);
             /*lqr controller*/
-            MatrixXd A_;
-            MatrixXd B_;
-            MatrixXd Q_;
-            MatrixXd R_;
-            MatrixXd K_;
-            MatrixXd P_;
+            struct leg_lqr_param{
+                MatrixXd A_;
+                MatrixXd B_;
+                MatrixXd Q_;
+                MatrixXd R_;
+                MatrixXd K_;
+                MatrixXd P_;
+                leg_lqr_param() : A_(6,6),B_(6,2),Q_(6, 6), R_(2, 2) , K_(2, 6), P_(2, 2){}
+            };
+            struct leg_lqr_QR{
+                double x_q,x_dot_q,theta_q,theta_dot_q,fai_q,fai_dot_q;
+                double r1,r2;
+            };
+            leg_lqr_QR left_leg_lqr_QR, right_leg_lqr_QR;
+            leg_lqr_param left_leg_lqr_param_,right_leg_lqr_param_;
             std::shared_ptr<LQR> left_lqr_;
             std::shared_ptr<five_bar_linkage::FiveBar> left_five_bar_;
             std::shared_ptr<five_bar_linkage::FiveBar> right_five_bar_;

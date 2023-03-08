@@ -19,12 +19,12 @@ WheelBalancingController::WheelBalancingController()
     ,VMC_debug_data_publisher_(nullptr)
     ,realtime_VMC_debug_data_publisher_(nullptr)
     , rc_commmonds_()
-    , A_(6, 6)
-    , B_(6, 2)
-    , Q_(6, 6)
-    , R_(2, 2)
-    , K_(2, 6)
-    , P_(2, 2)
+    // , A_(6, 6)
+    // , B_(6, 2)
+    // , Q_(6, 6)
+    // , R_(2, 2)
+    // , K_(2, 6)
+    // , P_(2, 2)
     , left_lqr_(nullptr)
     , left_five_bar_(nullptr)
     , left_vmc_(nullptr)
@@ -36,25 +36,25 @@ WheelBalancingController::WheelBalancingController()
     , pitch_last_(0.0)
 
 { 
-        A_ <<   0,              0,          0,          0,          4.900,          -4.900,
+        left_leg_lqr_param_.A_ <<   0,              0,          0,          0,          4.900,          -4.900,
                 0,              0,          0,          0,          -40.6842,       -40.6842,
                 0,              0,          0,          0,          -197.900,       -197.900,
                 1.0000,         0,          0,          0,          0,               0 ,
                 0,              1.0000,     0,          0,          0,               0,
                 0,              0,          1.0000,     0,          0,               0;
-        B_ <<   -1.9887,     -2.7600,
+        left_leg_lqr_param_.B_ <<   -1.9887,     -2.7600,
                 16.5121,     -34.7769,  
                 -22.6242,    -169.1604, 
                 0,           0, 
                 0,           0, 
                 0,           0;
-        Q_ <<   1,              0,          0,          0,          0,               0,
+        left_leg_lqr_param_.Q_ <<   1,              0,          0,          0,          0,               0,
                 0,              1,          0,          0,          0,               0,
                 0,              0,          1,          0,          0,               0,
                 0,              0,          0,          1,          0,               0,
                 0,              0,          0,          0,          1,               0,
                 0,              0,          0,          0,          0,               1; 
-        R_ <<   100,    0,
+        left_leg_lqr_param_.R_ <<   1,    0,
                 0,      1; 
 
 }
@@ -127,7 +127,7 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
     right_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(0.1478,0.285,0.285,0.1478,0.18);
     right_vmc_ = std::make_shared<VMC>();
     right_Fy_pid_ = std::make_shared<MiniPID>(0,0,0);
-    WheelBalancingController::initLQRParam();
+   
     try {
         auto node = get_node();
         auto_declare("joint1_name", "");
@@ -147,6 +147,26 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
         auto_declare("fy_right_pid_p",0.0);
         auto_declare("fy_right_pid_i",0.0);
         auto_declare("fy_right_pid_d",0.0);
+
+        auto_declare("left_x_q",0.0);
+        auto_declare("left_x_dot_q",0.0);
+        auto_declare("left_theta_q",0.0);
+        auto_declare("left_theta_dot_q",0.0);
+        auto_declare("left_fai_q",0.0);
+        auto_declare("left_fai_dot_q",0.0);
+
+        auto_declare("left_r1",0.0);
+        auto_declare("left_r2",0.0);
+
+        auto_declare("right_x_q",0.0);
+        auto_declare("right_x_dot_q",0.0);
+        auto_declare("right_theta_q",0.0);
+        auto_declare("right_theta_dot_q",0.0);
+        auto_declare("right_fai_q",0.0);
+        auto_declare("right_fai_dot_q",0.0);
+
+        auto_declare("right_r1",0.0);
+        auto_declare("right_r2",0.0);
     }
     catch (const std::exception & e) {
         fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
@@ -379,7 +399,28 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
     get_node()->get_parameter("fy_right_pid_p",right_Fy_pid_->P);
     get_node()->get_parameter("fy_right_pid_i",right_Fy_pid_->I);
     get_node()->get_parameter("fy_right_pid_d",right_Fy_pid_->D);
-    
+
+    get_node()->get_parameter("left_x_q",left_leg_lqr_param_.Q_(0,0));
+    get_node()->get_parameter("left_x_dot_q",left_leg_lqr_param_.Q_(1,1));
+    get_node()->get_parameter("left_theta_q",left_leg_lqr_param_.Q_(2,2));
+    get_node()->get_parameter("left_theta_dot_q",left_leg_lqr_param_.Q_(3,3));
+    get_node()->get_parameter("left_fai_q",left_leg_lqr_param_.Q_(4,4));
+    get_node()->get_parameter("left_fai_dot_q",left_leg_lqr_param_.Q_(5,5));
+
+    get_node()->get_parameter("left_r1",left_leg_lqr_param_.R_(0,0));
+    get_node()->get_parameter("left_r2",left_leg_lqr_param_.R_(1,1));
+    std::cout << left_leg_lqr_param_.R_(0,0) << std::endl;
+    get_node()->get_parameter("right_x_q",right_leg_lqr_param_.Q_(0,0));
+    get_node()->get_parameter("right_x_dot_q",right_leg_lqr_param_.Q_(1,1));
+    get_node()->get_parameter("right_theta_q",right_leg_lqr_param_.Q_(2,2));
+    get_node()->get_parameter("right_theta_dot_q",right_leg_lqr_param_.Q_(3,3));
+    get_node()->get_parameter("right_fai_q",right_leg_lqr_param_.Q_(4,4));
+    get_node()->get_parameter("right_fai_dot_q",right_leg_lqr_param_.Q_(5,5));
+
+    get_node()->get_parameter("right_r1",right_leg_lqr_param_.R_(0,0));
+    get_node()->get_parameter("right_r2",right_leg_lqr_param_.R_(1,1));
+
+    WheelBalancingController::initLQRParam();
 
     if (joint1_name_.empty()) {
         RCLCPP_ERROR(get_node()->get_logger(), "'joint1_name' parameter was empty");
@@ -881,12 +922,12 @@ void WheelBalancingController::calclegLQRU(uint8_t index)
 
 void WheelBalancingController::initLQRParam(void)
 {
-        left_lqr_ -> A = A_;
-        left_lqr_ -> B = B_;
-        left_lqr_ -> Q = Q_;
-        left_lqr_ -> R = R_;
-        left_lqr_ -> K = K_;
-        left_lqr_ -> P = P_;
+        left_lqr_ -> A = left_leg_lqr_param_.A_;
+        left_lqr_ -> B = left_leg_lqr_param_.B_;
+        left_lqr_ -> Q = left_leg_lqr_param_.Q_;
+        left_lqr_ -> R = left_leg_lqr_param_.R_;
+        left_lqr_ -> K = left_leg_lqr_param_.K_;
+        left_lqr_ -> P = left_leg_lqr_param_.P_;
         // std::cout <<  left_lqr_ -> A << std::endl;
 }
 
