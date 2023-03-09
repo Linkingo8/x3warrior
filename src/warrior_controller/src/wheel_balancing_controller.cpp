@@ -18,6 +18,8 @@ WheelBalancingController::WheelBalancingController()
     , realtime_Go1_data_publisher_(nullptr)
     , VMC_debug_data_publisher_(nullptr)
     , realtime_VMC_debug_data_publisher_(nullptr)
+    , LQR_debug_data_publisher_(nullptr)
+    , realtime_LQR_debug_data_publisher_(nullptr)
     , rc_commmonds_()
     , left_lqr_(nullptr)
     , right_lqr_(nullptr)
@@ -277,7 +279,6 @@ controller_interface::return_type WheelBalancingController::update()
     /// give to send data
     send_data_.left_T1 = -left_vmc_->exportT1() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
     send_data_.left_T2 = -left_vmc_->exportT2() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
-    send_data_.left_T2 = -left_vmc_->exportT2() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
 
     send_data_.right_T1 = right_vmc_->exportT1() / G01_REDUCTION_RATIO;
     send_data_.right_T2 = right_vmc_->exportT2() / G01_REDUCTION_RATIO;
@@ -327,6 +328,52 @@ controller_interface::return_type WheelBalancingController::update()
         // Go1_RB_handles_->set_torque(send_data_.right_T2);
     }
 /// publish sensor feedback.
+#ifdef LQR_DEBUG
+    if (realtime_LQR_debug_data_publisher_->trylock())
+    {
+     auto & lqr_debug_data_message = realtime_LQR_debug_data_publisher_->msg_;
+     // left
+     lqr_debug_data_message.left_x_now =left_set_feedback_.x;
+     lqr_debug_data_message.left_x_dot_now= left_set_feedback_.x_dot;
+     lqr_debug_data_message.left_theta_now= left_set_feedback_.theta_now;
+     lqr_debug_data_message.left_theta_dot_now= left_set_feedback_.theta_dot;
+     lqr_debug_data_message.left_fai_now= left_set_feedback_.fai;
+     lqr_debug_data_message.left_fai_dot_now= left_set_feedback_.fai_dot;
+
+     lqr_debug_data_message.left_x_des= 0.0f;
+     lqr_debug_data_message.left_x_dot_des= 0.0f;
+     lqr_debug_data_message.left_theta_des= 0.0f;
+     lqr_debug_data_message.left_theta_dot_des= 0.0f;
+     lqr_debug_data_message.left_fai_des= 0.0f;
+     lqr_debug_data_message.left_fai_dot_des= 0.0f;
+
+     lqr_debug_data_message.left_tauw_out = -leg_balance_controller_[0].U(0,0);
+     lqr_debug_data_message.left_tp_out =-leg_balance_controller_[0].U(1,0);
+     lqr_debug_data_message.left_t1_out = send_data_.left_T1;
+     lqr_debug_data_message.left_t2_out = send_data_.left_T2;
+
+     lqr_debug_data_message.right_x_now= right_set_feedback_.x;
+     lqr_debug_data_message.right_x_dot_now= right_set_feedback_.x_dot;
+     lqr_debug_data_message.right_theta_now= right_set_feedback_.theta_now;
+     lqr_debug_data_message.right_theta_dot_now= right_set_feedback_.theta_dot;
+     lqr_debug_data_message.right_fai_now= right_set_feedback_.fai;
+     lqr_debug_data_message.right_fai_dot_now= right_set_feedback_.fai_dot;
+
+     lqr_debug_data_message.right_x_des= 0.0f;
+     lqr_debug_data_message.right_x_dot_des= 0.0f;
+     lqr_debug_data_message.right_theta_des= 0.0f;
+     lqr_debug_data_message.right_theta_dot_des= 0.0f;
+     lqr_debug_data_message.right_fai_des= 0.0f;
+     lqr_debug_data_message.right_fai_dot_des= 0.0f;
+
+     lqr_debug_data_message.right_tauw_out=  -leg_balance_controller_[1].U(0,0);
+     lqr_debug_data_message.right_tp_out= -leg_balance_controller_[1].U(1,0);
+     lqr_debug_data_message.right_t1_out= send_data_.right_T1;
+     lqr_debug_data_message.right_t2_out= send_data_.right_T2;
+     realtime_LQR_debug_data_publisher_->unlockAndPublish();
+    }
+#endif
+
 #ifdef VMC_DEBUG
     if (realtime_VMC_debug_data_publisher_->trylock())
     {
@@ -502,7 +549,50 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
     {
         command_ptr_.writeFromNonRT(rc);
     });
+#ifdef LQR_DEBUG
+    LQR_debug_data_publisher_ =  get_node()->create_publisher<warrior_interface::msg::LQRDebugData>("/lqr_debug_feedback", 
+        rclcpp::SystemDefaultsQoS());
+    realtime_LQR_debug_data_publisher_ = 
+    std::make_shared<realtime_tools::RealtimePublisher<warrior_interface::msg::LQRDebugData>>(
+        LQR_debug_data_publisher_);
+     auto & lqr_debug_data_message = realtime_LQR_debug_data_publisher_->msg_;
+     // left
+     lqr_debug_data_message.left_x_now = 0.0f;
+     lqr_debug_data_message.left_x_dot_now= 0.0f;
+     lqr_debug_data_message.left_theta_now= 0.0f;
+     lqr_debug_data_message.left_theta_dot_now= 0.0f;
+     lqr_debug_data_message.left_fai_now= 0.0f;
+     lqr_debug_data_message.left_fai_dot_now= 0.0f;
+     lqr_debug_data_message.left_x_des= 0.0f;
+     lqr_debug_data_message.left_x_dot_des= 0.0f;
+     lqr_debug_data_message.left_theta_des= 0.0f;
+     lqr_debug_data_message.left_theta_dot_des= 0.0f;
+     lqr_debug_data_message.left_fai_des= 0.0f;
+     lqr_debug_data_message.left_fai_dot_des= 0.0f;
 
+     lqr_debug_data_message.left_tauw_out= 0.0f;
+     lqr_debug_data_message.left_tp_out= 0.0f;
+     lqr_debug_data_message.left_t1_out= 0.0f;
+     lqr_debug_data_message.left_t2_out= 0.0f;
+
+     lqr_debug_data_message.right_x_now= 0.0f;
+     lqr_debug_data_message.right_x_dot_now= 0.0f;
+     lqr_debug_data_message.right_theta_now= 0.0f;
+     lqr_debug_data_message.right_theta_dot_now= 0.0f;
+     lqr_debug_data_message.right_fai_now= 0.0f;
+     lqr_debug_data_message.right_fai_dot_now= 0.0f;
+     lqr_debug_data_message.right_x_des= 0.0f;
+     lqr_debug_data_message.right_x_dot_des= 0.0f;
+     lqr_debug_data_message.right_theta_des= 0.0f;
+     lqr_debug_data_message.right_theta_dot_des= 0.0f;
+     lqr_debug_data_message.right_fai_des= 0.0f;
+     lqr_debug_data_message.right_fai_dot_des= 0.0f;
+
+     lqr_debug_data_message.right_tauw_out= 0.0f;
+     lqr_debug_data_message.right_tp_out= 0.0f;
+     lqr_debug_data_message.right_t1_out= 0.0f;
+     lqr_debug_data_message.right_t2_out= 0.0f;
+#endif
 
 #ifdef VMC_DEBUG
     VMC_debug_data_publisher_ = get_node()->create_publisher<warrior_interface::msg::VMCDebugData>("/vmc_debug_feedback", 
@@ -947,11 +1037,11 @@ void WheelBalancingController::setLegLQRX(uint8_t index)
     }    
 }
 
-void WheelBalancingController::calclegLQRU(uint8_t index)
-{
-    if(index == 0)
+void WheelBalancingController::calclegLQRU(uint8_t index){
+    
+if(index == 0)
     {
-        leg_balance_controller_[index].U = -leg_balance_controller_[index].K * 
+    leg_balance_controller_[index].U = -leg_balance_controller_[index].K * 
                     (leg_balance_controller_[index].X_d.transpose() - leg_balance_controller_[index].X.transpose());
 
         send_data_.left_tau_w = -leg_balance_controller_[index].U(0,0); // adjust motor rotation dirextion.
