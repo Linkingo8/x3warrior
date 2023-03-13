@@ -50,3 +50,13 @@ wheel_balance_controller:
 
       right_r1: 1.0
       right_r2: 1.0
+
+      x_q: 1.0
+      x_dot_q: 1.0
+      theta_q: 1.0
+      theta_dot_q: 1.0
+      fai_q: 1.0
+      fai_dot_q: 1.0
+
+      r1: 1.0
+      r2: 1.0

@@ -39,11 +39,11 @@
 #define DRIVER_RADIUS 0.0875f
 #define G01_REDUCTION_RATIO 6.33f
 /// left leg go1 param
-#define GO1_0_ZEROS  0.11120149631954027f
+#define GO1_0_ZEROS  0.7106166481971741f
 #define GO1_3_ZEROS  0.0668541805587236f
 /// right leg go1 param
-#define GO1_1_ZEROS   0.685959638935585f
-#define GO1_2_ZEROS  0.9034856721355043
+#define GO1_1_ZEROS  4.24088191986084f
+#define GO1_2_ZEROS  5.711969375610352f
 /// leg common range
 /// real
 // #define MAX_L0 0.41853056293485247f
@@ -224,8 +224,8 @@ namespace warrior_controller
                state_variables()  : x(0),x_dot(0),theta_now(0),theta_last(0)
                                     ,theta_dot(0),fai(0),fai_dot(0){}
             };
-            state_variables left_destination_,left_set_feedback_;
-            state_variables right_destination_,right_set_feedback_;
+            state_variables left_destination_,left_set_feedback_,state_var_tar_;
+            state_variables right_destination_,right_set_feedback_,state_var_now_;
 
             struct leg_balance_controller
             {
@@ -236,13 +236,20 @@ namespace warrior_controller
                 leg_balance_controller() : K(2,6), X_d(1,6),X(1,6),U(2,1){}
             };
             leg_balance_controller leg_balance_controller_[2];
+            leg_balance_controller balance_controller_;
             double pitch_now_,pitch_last_;//use and update in updateX
             void setLegLQRGain(MatrixXd K,uint8_t index);
+            void setLegLQRGain(MatrixXd K);
             void setLegLQRXd(uint8_t index);
+            void setLegLQRXd(void);
             void setLegLQRX(uint8_t index);
+            void setLegLQRX(void);
             void calclegLQRU(uint8_t index);
+            void calclegLQRU(void);
             void updateXdes(uint8_t index);
+            void updateXdes(void);
             void updateX(uint8_t index);
+            void updateX(void);
             // void InitXdes(uint8_t index);
             /*lqr controller*/
             struct leg_lqr_param{
@@ -254,14 +261,11 @@ namespace warrior_controller
                 MatrixXd P_;
                 leg_lqr_param() : A_(6,6),B_(6,2),Q_(6, 6), R_(2, 2) , K_(2, 6), P_(2, 2){}
             };
-            struct leg_lqr_QR{
-                double x_q,x_dot_q,theta_q,theta_dot_q,fai_q,fai_dot_q;
-                double r1,r2;
-            };
-            leg_lqr_QR left_leg_lqr_QR, right_leg_lqr_QR;
             leg_lqr_param left_leg_lqr_param_,right_leg_lqr_param_;
+            leg_lqr_param leg_lqr_param_;
             std::shared_ptr<LQR> left_lqr_;
             std::shared_ptr<LQR> right_lqr_;
+            std::shared_ptr<LQR> lqr_;
             std::shared_ptr<five_bar_linkage::FiveBar> left_five_bar_;
             std::shared_ptr<five_bar_linkage::FiveBar> right_five_bar_;
             std::shared_ptr<VMC> left_vmc_;

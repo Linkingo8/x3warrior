@@ -11,14 +11,17 @@ source /etc/profile
 Set-VMSwitch WSL -NetAdapterName WLAN 
 #### wsl2
 sudo ip addr del $(ip addr show eth0 | grep 'inet\b' | awk '{print $2}' | head -n 1) dev eth0
-sudo ip addr add <ip_new>/24 broadcast <gateway.255> dev eth0  **sudo ip addr add 192.168.78.10/24 broadcast 192.168.78.255 dev eth0**
-sudo ip route add 0.0.0.0/0 via <gateway> dev eth0 **sudo ip route add 0.0.0.0/0 via 192.168.78.162 dev eth0**
-sudo vim /etc/resolv.conf  **nameserver 192.168.78.162**
+sudo ip addr add <ip_new>/24 broadcast <gateway.255> dev eth0  
+**sudo ip addr add 192.168.78.10/24 broadcast 192.168.78.255 dev eth0**
+sudo ip route add 0.0.0.0/0 via <gateway> dev eth0 
+**sudo ip route add 0.0.0.0/0 via 192.168.78.162 dev eth0**
+sudo vim /etc/resolv.conf  
 nameserver <gateway>
+**nameserver 192.168.78.162**
 
 # compile
 vim ./src/warrior_controller/src/wheel_balancing_controller.cpp
-vim ./src/warrior_controller/include/warrior_controller/wheel_balancing_controller.hpp
+vim ./src/warrior_controller/include/warrior_controller/wheel_balanci·ng_controller.hpp
 vim ./src/warrior_hardware/src/go1_hardware_interface.cpp
 vim ./src/warrior_description/config/robot_controller_config.yaml
 vim +36 ./src/warrior_hardware/CMakeLists.txt

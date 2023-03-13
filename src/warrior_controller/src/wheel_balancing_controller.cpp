@@ -23,11 +23,14 @@ WheelBalancingController::WheelBalancingController()
     , rc_commmonds_()
     , left_lqr_(nullptr)
     , right_lqr_(nullptr)
+    , lqr_(nullptr)
     , left_five_bar_(nullptr)
     , left_vmc_(nullptr)
     , left_Fy_pid_(nullptr)
     , left_destination_()
     , left_set_feedback_()
+    , state_var_tar_()
+    , state_var_now_()
     , leg_balance_controller_()
     , pitch_now_(0.0)
     , pitch_last_(0.0)
@@ -73,6 +76,27 @@ WheelBalancingController::WheelBalancingController()
                 0,              0,          0,          0,          1,               0,
                 0,              0,          0,          0,          0,               1; 
         right_leg_lqr_param_.R_ <<   1,    0,
+                0,      1; 
+
+        leg_lqr_param_.A_ <<   0,              0,          0,          0,          4.900,          -4.900,
+                0,              0,          0,          0,          -40.6842,       -40.6842,
+                0,              0,          0,          0,          -197.900,       -197.900,
+                1.0000,         0,          0,          0,          0,               0 ,
+                0,              1.0000,     0,          0,          0,               0,
+                0,              0,          1.0000,     0,          0,               0;
+        leg_lqr_param_.B_ <<   -1.9887,     -2.7600,
+                16.5121,     -34.7769,  
+                -22.6242,    -169.1604, 
+                0,           0, 
+                0,           0, 
+                0,           0;
+        leg_lqr_param_.Q_ <<   1,              0,          0,          0,          0,               0,
+                0,              1,          0,          0,          0,               0,
+                0,              0,          1,          0,          0,               0,
+                0,              0,          0,          1,          0,               0,
+                0,              0,          0,          0,          1,               0,
+                0,              0,          0,          0,          0,               1; 
+        leg_lqr_param_.R_ <<   1,    0,
                 0,      1; 
 
 }
@@ -138,6 +162,7 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
     }
     left_lqr_ = std::make_shared<LQR>();
     right_lqr_ = std::make_shared<LQR>();
+    lqr_ = std::make_shared<LQR>();
     /// real leg data L1 L2 L3 L4 L5
     left_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(0.1478,0.285,0.285,0.1478,0.18);
     left_vmc_ = std::make_shared<VMC>();
@@ -212,6 +237,8 @@ controller_interface::return_type WheelBalancingController::update()
     /// torque      + f     + b   + b   + f
     /// for lk9025  id:1  id: 2
     /// torque
+    /////////////////////// data prehandle ///////////////////////////
+
     //update the remote date.
     WheelBalancingController::updatingRemoteData();
     //feadback of LK and G01.
@@ -222,34 +249,24 @@ controller_interface::return_type WheelBalancingController::update()
     /// get x  
     WheelBalancingController::init9025EncoderZeros();
     WheelBalancingController::update9025TotalDis();
+    //////////////////////  lqr /////////////////////
     /// calculate the lqr k.
-    left_lqr_->K = left_lqr_->calcGainK();
-    right_lqr_->K = right_lqr_->calcGainK();
-    // // std::cout << left_Fy_pid_->getOutput(10.0,left_five_bar_->exportBarLength()->L0) << std::endl;
+    lqr_->K = lqr_->calcGainK();
     /// set the x_d to struct
-    WheelBalancingController::updateXdes(0);
-    WheelBalancingController::updateXdes(1);
+    WheelBalancingController::updateXdes();
     // get the feedback 
-    WheelBalancingController::updateX(0); 
-    WheelBalancingController::updateX(1); 
+    WheelBalancingController::updateX(); 
     /// give k to controller
-    WheelBalancingController::setLegLQRGain(left_lqr_->K,0);
-    WheelBalancingController::setLegLQRGain(right_lqr_->K,1);
+    WheelBalancingController::setLegLQRGain(lqr_->K);
     /// set the x_d to controller
-    WheelBalancingController::setLegLQRXd(0);
-    WheelBalancingController::setLegLQRXd(1);
+    WheelBalancingController::setLegLQRXd();
     /// set the X to controller
-    WheelBalancingController::setLegLQRX(0);
-    WheelBalancingController::setLegLQRX(1);
+    WheelBalancingController::setLegLQRX();
     /// calculate the input of system. tau_W tau_Tp
-    std::cout << "left-------left---" << std::endl;
-    WheelBalancingController::calclegLQRU(0);
-    std::cout << "right-------right---"<< std::endl;
-    WheelBalancingController::calclegLQRU(1);
-    double left_Tp = 0.0;
-    double right_Tp = 0.0;
-    left_Tp = -leg_balance_controller_[0].U(1,0);   //adjust motor rotation dirextion.
-    right_Tp = -leg_balance_controller_[1].U(1,0);   //adjust motor rotation dirextion.
+    WheelBalancingController::calclegLQRU();
+    double Tp = 0.0;
+    Tp = balance_controller_.U(1,0);   //adjust motor rotation dirextion.
+    ///////////////////// vmc ////////////////////////////
     /// use these data
     /// get theta
     left_five_bar_->virtualLegCalc(need_data_form_hi_.left_leg_fai1, need_data_form_hi_.left_leg_fai4);
@@ -260,21 +277,17 @@ controller_interface::return_type WheelBalancingController::update()
     /// calc the Fy /// give the Fy to vmc
     double Fy_left_output = 0.0f;
     double Fy_right_output = 0.0f;
-
     Fy_left_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,rc_commmonds_.ch_r_y) + body_mg_ / 2.0f;
     Fy_right_output = right_Fy_pid_->getOutput(right_five_bar_->exportBarLength()->L0,rc_commmonds_.ch_r_y) + body_mg_ / 2.0f;
-
-    left_vmc_->setFTp(left_Tp,0.0f);
-    right_vmc_->setFTp(right_Tp,0.0f);
-    // left_vmc_->setFTp(0.0f,Fy_left_output);
-    // right_vmc_->setFTp(0.0f,Fy_right_output);
+    // left_vmc_->setFTp(left_Tp,0.0f);
+    // right_vmc_->setFTp(right_Tp,0.0f);
+    left_vmc_->setFTp(0.0f,Fy_left_output);
+    right_vmc_->setFTp(0.0f,Fy_right_output);
     /// calc the vmc output jacobian matrix
     left_vmc_->VMCControllerCalc();
     right_vmc_->VMCControllerCalc();
     /// calc the vmc output 
-    std::cout << "left-------left---"<< std::endl;
     left_vmc_->calcT();
-    std::cout << "right-------right---"<< std::endl;
     right_vmc_->calcT();
     /// give to send data
     send_data_.left_T1 = -left_vmc_->exportT1() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
@@ -299,9 +312,10 @@ controller_interface::return_type WheelBalancingController::update()
     // std::cout << "T2 :" << send_data_.left_T2 << std::endl;
     // /// adjust the T to correct sign and convert to rotor
 
-    
+    ///////////////////// remoter data handle ////////////////////////////
+
     /// set the line input to track the root of system
-    if(rc_commmonds_.sw_l == 1) { //protection mode
+    if(rc_commmonds_.sw_l == 1 || rc_commmonds_.sw_l == 0) { //protection mode
         LK_L_handles_->set_torque(0.0f); // >0 forward
         LK_R_handles_->set_torque(0.0f);
         /// left leg //     + - down       - + up
@@ -314,20 +328,21 @@ controller_interface::return_type WheelBalancingController::update()
     } else {//other modes
         LK_L_handles_->set_torque(0.0f); // >0 forward
         LK_R_handles_->set_torque(0.0f);
-        // // /// right leg //    - + up       + - down
-        Go1_LF_handles_->set_torque(0.0f);
-        Go1_LB_handles_->set_torque(-0.0f);
-        // // /// left leg
-        Go1_RF_handles_->set_torque(0.0f);
-        Go1_RB_handles_->set_torque(0.0f);
-        // /// left leg
-        // Go1_LF_handles_->set_torque(send_data_.left_T1);
-        // Go1_LB_handles_->set_torque(send_data_.left_T2);
-        // /// right leg
-        // Go1_RF_handles_->set_torque(send_data_.right_T1);
-        // Go1_RB_handles_->set_torque(send_data_.right_T2);
+        // // // /// right leg //    - + up       + - down
+        // Go1_LF_handles_->set_torque(0.0f);
+        // Go1_LB_handles_->set_torque(-0.0f);
+        // // // /// left leg
+        // Go1_RF_handles_->set_torque(0.0f);
+        // Go1_RB_handles_->set_torque(0.0f);
+        /// left leg
+        Go1_LF_handles_->set_torque(send_data_.left_T1);
+        Go1_LB_handles_->set_torque(send_data_.left_T2);
+        /// right leg
+        Go1_RF_handles_->set_torque(send_data_.right_T1);
+        Go1_RB_handles_->set_torque(send_data_.right_T2);
     }
-/// publish sensor feedback.
+///////////////////// publish topic ////////////////////////////
+
 #ifdef LQR_DEBUG
     if (realtime_LQR_debug_data_publisher_->trylock())
     {
@@ -500,6 +515,16 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
 
     get_node()->get_parameter("right_r1",right_leg_lqr_param_.R_(0,0));
     get_node()->get_parameter("right_r2",right_leg_lqr_param_.R_(1,1));
+
+    get_node()->get_parameter("x_q",leg_lqr_param_.Q_(0,0));
+    get_node()->get_parameter("x_dot_q",leg_lqr_param_.Q_(1,1));
+    get_node()->get_parameter("theta_q",leg_lqr_param_.Q_(2,2));
+    get_node()->get_parameter("theta_dot_q",leg_lqr_param_.Q_(3,3));
+    get_node()->get_parameter("fai_q",leg_lqr_param_.Q_(4,4));
+    get_node()->get_parameter("fai_dot_q",leg_lqr_param_.Q_(5,5));
+
+    get_node()->get_parameter("r1",leg_lqr_param_.R_(0,0));
+    get_node()->get_parameter("r2",leg_lqr_param_.R_(1,1));
 
     WheelBalancingController::initLQRParam();
 
@@ -805,11 +830,11 @@ void WheelBalancingController::updateDataFromInterface(void)
     // std::cout << "wz" << need_data_form_hi_.wz << std::endl;
 
     /// left leg param    
-    need_data_form_hi_.left_leg_fai4 = PI - (LEFT_LEG_FAI_ZERO - (need_data_form_hi_.lf_go1_pos / G01_REDUCTION_RATIO - GO1_0_ZEROS));
-    need_data_form_hi_.left_leg_fai1 = (LEFT_LEG_FAI_ZERO + (need_data_form_hi_.lb_go1_pos / G01_REDUCTION_RATIO - GO1_3_ZEROS));
+    need_data_form_hi_.left_leg_fai4 = PI - (LEFT_LEG_FAI_ZERO - (need_data_form_hi_.lf_go1_pos  - GO1_0_ZEROS) / G01_REDUCTION_RATIO);
+    need_data_form_hi_.left_leg_fai1 = (LEFT_LEG_FAI_ZERO + (need_data_form_hi_.lb_go1_pos  - GO1_3_ZEROS) / G01_REDUCTION_RATIO);
     /// right leg param
-    need_data_form_hi_.right_leg_fai4 = PI - (RIGHT_LEG_FAI_ZERO - (need_data_form_hi_.rb_go1_pos / G01_REDUCTION_RATIO - GO1_2_ZEROS));
-    need_data_form_hi_.right_leg_fai1 = (RIGHT_LEG_FAI_ZERO + (need_data_form_hi_.rf_go1_pos / G01_REDUCTION_RATIO - GO1_1_ZEROS));
+    need_data_form_hi_.right_leg_fai4 = PI - (RIGHT_LEG_FAI_ZERO - (need_data_form_hi_.rb_go1_pos - GO1_2_ZEROS) / G01_REDUCTION_RATIO);
+    need_data_form_hi_.right_leg_fai1 = (RIGHT_LEG_FAI_ZERO - (need_data_form_hi_.rf_go1_pos  - GO1_1_ZEROS) / G01_REDUCTION_RATIO);
 
     // need_data_form_hi_.left_leg_fai1 =  (need_data_form_hi_.lb_go1_pos / g01_reduction_ratio);
     // need_data_form_hi_.left_leg_fai4 = need_data_form_hi_.lf_go1_pos / g01_reduction_ratio;
@@ -935,7 +960,13 @@ void WheelBalancingController::update9025TotalDis(void)
 void WheelBalancingController::setLegLQRGain(MatrixXd K,uint8_t index)
 {
     leg_balance_controller_[index].K = K;
+    
     // std::cout << leg_balance_controller_[index].K << std::endl;
+}
+
+void WheelBalancingController::setLegLQRGain(MatrixXd K)
+{
+    balance_controller_.K = K;
 }
 
 void WheelBalancingController::updateXdes(uint8_t index)
@@ -960,6 +991,16 @@ void WheelBalancingController::updateXdes(uint8_t index)
     }
 }
 
+void WheelBalancingController::updateXdes(void)
+{
+        state_var_tar_.x = 0.0f;
+        state_var_tar_.x_dot = 0.0f;
+        state_var_tar_.theta_now = 0.0f;
+        state_var_tar_.theta_dot = 0.0f;
+        state_var_tar_.fai = 0.0f;
+        state_var_tar_.fai_dot = 0.0f;
+}
+
 void WheelBalancingController::setLegLQRXd(uint8_t index)
 {
     if(index == 0)
@@ -981,6 +1022,16 @@ void WheelBalancingController::setLegLQRXd(uint8_t index)
         ,right_destination_.fai
         ,right_destination_.fai_dot;
     }
+}
+
+void WheelBalancingController::setLegLQRXd(void)
+{
+        balance_controller_.X_d << state_var_tar_.x
+        ,state_var_tar_.x_dot
+        ,state_var_tar_.theta_now
+        ,state_var_tar_.theta_dot
+        ,state_var_tar_.fai
+        ,state_var_tar_.fai_dot;
 }
 
 void WheelBalancingController::updateX(uint8_t index)
@@ -1014,6 +1065,21 @@ void WheelBalancingController::updateX(uint8_t index)
     pitch_last_ = pitch_now_;
 }
 
+void WheelBalancingController::updateX(void)
+{
+    pitch_now_ = need_data_form_hi_.pitch;
+
+    state_var_now_.x = (need_data_form_hi_.right_leg_total_dis);//synthsis of velocities.        //m
+    state_var_now_.x_dot = need_data_form_hi_.right_leg_dis_dot;//velocities of left lk9025              //m/s
+    state_var_now_.theta_now = (PI/2) - right_five_bar_->exportBarLength()->q0 + pitch_now_;//           //rad
+    state_var_now_.theta_dot = (state_var_now_.theta_now - state_var_now_.theta_last)/0.002f;  //rad/s
+    state_var_now_.fai = pitch_now_;                                                                    //rad
+    state_var_now_.fai_dot = need_data_form_hi_.wy;  
+
+    state_var_now_.theta_last = state_var_now_.theta_now;
+    pitch_last_ = pitch_now_; 
+}
+
 void WheelBalancingController::setLegLQRX(uint8_t index)
 {
     if(index == 0)
@@ -1037,15 +1103,26 @@ void WheelBalancingController::setLegLQRX(uint8_t index)
     }    
 }
 
-void WheelBalancingController::calclegLQRU(uint8_t index){
-    
-if(index == 0)
+void WheelBalancingController::setLegLQRX(void)
+{
+        balance_controller_.X << state_var_now_.x
+        ,state_var_now_.x_dot
+        ,state_var_now_.theta_now
+        ,state_var_now_.theta_dot
+        ,state_var_now_.fai
+        ,state_var_now_.fai_dot;
+        // std::cout << leg_balance_controller_[index].X << std::endl;
+}
+
+void WheelBalancingController::calclegLQRU(uint8_t index)
+{ 
+    if(index == 0)
     {
     leg_balance_controller_[index].U = -leg_balance_controller_[index].K * 
                     (leg_balance_controller_[index].X_d.transpose() - leg_balance_controller_[index].X.transpose());
 
         send_data_.left_tau_w = -leg_balance_controller_[index].U(0,0); // adjust motor rotation dirextion.
-        std::cout << "1 tau_w" << leg_balance_controller_[index].U(0,0) << std::endl;
+        // std::cout << "1 tau_w" << leg_balance_controller_[index].U(0,0) << std::endl;
         // std::cout << "2 tau_Tp" << leg_balance_controller_[index].U(1,0) << std::endl;
     }
     if(index == 1)
@@ -1053,8 +1130,15 @@ if(index == 0)
         leg_balance_controller_[index].U = -leg_balance_controller_[index].K * 
             (leg_balance_controller_[index].X_d.transpose() - leg_balance_controller_[index].X.transpose());
         send_data_.right_tau_w = -leg_balance_controller_[index].U(0,0); // adjust motor rotation dirextion.
-        std::cout << "1 tau_w" << leg_balance_controller_[index].U(0,0) << std::endl;
+        // std::cout << "1 tau_w" << leg_balance_controller_[index].U(0,0) << std::endl;
     }        
+}
+
+void WheelBalancingController::calclegLQRU(void)
+{
+    balance_controller_.U = balance_controller_.K * 
+                    (balance_controller_.X_d.transpose() - balance_controller_.X.transpose());
+        send_data_.left_tau_w = balance_controller_.U(0,0); // adjust motor rotation dirextion.
 }
 
 void WheelBalancingController::initLQRParam(void)
@@ -1072,6 +1156,13 @@ void WheelBalancingController::initLQRParam(void)
         right_lqr_ -> R = right_leg_lqr_param_.R_;
         right_lqr_ -> K = right_leg_lqr_param_.K_;
         right_lqr_ -> P = right_leg_lqr_param_.P_;
+
+        lqr_ -> A = leg_lqr_param_.A_;
+        lqr_ -> B = leg_lqr_param_.B_;
+        lqr_ -> Q = leg_lqr_param_.Q_;
+        lqr_ -> R = leg_lqr_param_.R_;
+        lqr_ -> K = leg_lqr_param_.K_;
+        lqr_ -> P = leg_lqr_param_.P_;
         // std::cout <<  left_lqr_ -> A << std::endl;
 }
 
