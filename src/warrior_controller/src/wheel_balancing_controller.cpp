@@ -3,7 +3,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include "warrior_controller/wheel_balancing_controller.hpp"
 
-
 using namespace warrior_controller;
 /*?*/
 WheelBalancingController::WheelBalancingController()
@@ -16,10 +15,12 @@ WheelBalancingController::WheelBalancingController()
     , realtime_LK9025_data_publisher_(nullptr)
     , Go1_data_publisher_(nullptr)
     , realtime_Go1_data_publisher_(nullptr)
-    , VMC_debug_data_publisher_(nullptr)
+    , VMC_debug_data_publisher_(nullptr) 
     , realtime_VMC_debug_data_publisher_(nullptr)
     , LQR_debug_data_publisher_(nullptr)
     , realtime_LQR_debug_data_publisher_(nullptr)
+    , Simulation_data_publisher_(nullptr)
+    , realtime_Simulation_data_publisher_(nullptr)
     , rc_commmonds_()
     , left_lqr_(nullptr)
     , right_lqr_(nullptr)
@@ -34,8 +35,7 @@ WheelBalancingController::WheelBalancingController()
     , leg_balance_controller_()
     , pitch_now_(0.0)
     , pitch_last_(0.0)
-
-{ 
+{    
         left_leg_lqr_param_.A_ <<   0,              0,          0,          0,          4.900,          -4.900,
                 0,              0,          0,          0,          -40.6842,       -40.6842,
                 0,              0,          0,          0,          -197.900,       -197.900,
@@ -470,11 +470,63 @@ controller_interface::return_type WheelBalancingController::update()
     }
 #endif
 
+#ifdef SIMULATION
+if (realtime_Simulation_data_publisher_->trylock())
+{
+    auto & simulation_data_message = realtime_Simulation_data_publisher_->msg_;
+    simulation_data_message.torque_lb = 0.00;
+    simulation_data_message.torque_lf = 0.00;
+    simulation_data_message.torque_rb = 0.00;
+    simulation_data_message.torque_rf = 0.00;
+
+    simulation_data_message.torque_wl = 1.00;
+    simulation_data_message.torque_wr = 1.00;
+    realtime_Simulation_data_publisher_->unlockAndPublish();
+}
+if (realtime_torque_lb_publisher_->trylock())
+{
+    auto & torque_lb_message = realtime_torque_lb_publisher_->msg_;
+    torque_lb_message.data = send_data_.left_T2;
+    realtime_torque_lb_publisher_->unlockAndPublish();
+}
+
+if (realtime_torque_lf_publisher_->trylock())
+{
+    auto & torque_lf_message = realtime_torque_lf_publisher_->msg_;
+    torque_lf_message.data = send_data_.left_T1;
+    realtime_torque_lf_publisher_->unlockAndPublish();
+}
+if (realtime_torque_rb_publisher_->trylock())
+{
+    auto & torque_rb_message = realtime_torque_rb_publisher_->msg_;
+    torque_rb_message.data = send_data_.right_T2;
+    realtime_torque_rb_publisher_->unlockAndPublish();
+}
+if (realtime_torque_rf_publisher_->trylock())
+{
+    auto & torque_rf_message = realtime_torque_rf_publisher_->msg_;
+    torque_rf_message.data = send_data_.right_T1;
+    realtime_torque_rf_publisher_->unlockAndPublish();
+}
+if (realtime_torque_wl_publisher_->trylock())
+{
+    auto & torque_wl_message = realtime_torque_wl_publisher_->msg_;
+    torque_wl_message.data = send_data_.left_tau_w;
+    realtime_torque_wl_publisher_->unlockAndPublish();
+}
+if (realtime_torque_wr_publisher_->trylock())
+{
+    auto & torque_wr_message = realtime_torque_wr_publisher_->msg_;
+    torque_wr_message.data = send_data_.right_tau_w;;
+    realtime_torque_wr_publisher_->unlockAndPublish();
+}
+#endif
      return controller_interface::return_type::OK;
 }
 
 CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::State &)
 {
+
     RCLCPP_INFO(get_node()->get_logger(), "Configure WheelBalancingController");
 
     auto joint1_name_ = get_node()->get_parameter("joint1_name").as_string();
@@ -569,7 +621,6 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
         return CallbackReturn::ERROR;
     }
     leg_joint_name_.push_back(joint_Go_RB_name_);
-
     command_subsciption_ = get_node()->create_subscription<warrior_interface::msg::DbusData>("/rc_msg", 10, [this](const std::shared_ptr<warrior_interface::msg::DbusData> rc)
     {
         command_ptr_.writeFromNonRT(rc);
@@ -582,6 +633,7 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
         LQR_debug_data_publisher_);
      auto & lqr_debug_data_message = realtime_LQR_debug_data_publisher_->msg_;
      // left
+     
      lqr_debug_data_message.left_x_now = 0.0f;
      lqr_debug_data_message.left_x_dot_now= 0.0f;
      lqr_debug_data_message.left_theta_now= 0.0f;
@@ -612,7 +664,6 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
      lqr_debug_data_message.right_theta_dot_des= 0.0f;
      lqr_debug_data_message.right_fai_des= 0.0f;
      lqr_debug_data_message.right_fai_dot_des= 0.0f;
-
      lqr_debug_data_message.right_tauw_out= 0.0f;
      lqr_debug_data_message.right_tp_out= 0.0f;
      lqr_debug_data_message.right_t1_out= 0.0f;
@@ -704,6 +755,71 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
     Go1_data_message.lbpositions = 0.00;
     Go1_data_message.lbvelocities = 0.00;
     Go1_data_message.lbtorques = 0.00;
+#endif
+
+#ifdef SIMULATION
+    Simulation_data_publisher_ = get_node()->create_publisher<warrior_interface::msg::SimulationData>("/simulation_data", 
+        rclcpp::SystemDefaultsQoS());
+    realtime_Simulation_data_publisher_ =
+        std::make_shared<realtime_tools::RealtimePublisher<warrior_interface::msg::SimulationData>>(
+            Simulation_data_publisher_);
+    auto & simulation_data_message = realtime_Simulation_data_publisher_->msg_;
+    simulation_data_message.torque_lb = 0.00;
+    simulation_data_message.torque_lf = 0.00;
+    simulation_data_message.torque_rb = 0.00;
+
+    simulation_data_message.torque_rf = 0.00;
+    simulation_data_message.torque_wl = 0.00;
+    simulation_data_message.torque_wr = 0.00;
+
+    torque_lb_publisher_ = get_node()->create_publisher<std_msgs::msg::Float64>("/torque_lb", 
+        rclcpp::SystemDefaultsQoS());
+    realtime_torque_lb_publisher_ =
+    std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>(
+        torque_lb_publisher_);
+    auto & torque_lb_message = realtime_torque_lb_publisher_->msg_;
+    torque_lb_message.data = 10.0f;
+
+        torque_lf_publisher_ = get_node()->create_publisher<std_msgs::msg::Float64>("/torque_lf", 
+        rclcpp::SystemDefaultsQoS());
+    realtime_torque_lf_publisher_ =
+    std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>(
+        torque_lf_publisher_);
+    auto & torque_lf_message = realtime_torque_lf_publisher_->msg_;
+    torque_lf_message.data = 10.0f;
+
+        torque_rb_publisher_ = get_node()->create_publisher<std_msgs::msg::Float64>("/torque_rb", 
+        rclcpp::SystemDefaultsQoS());
+    realtime_torque_rb_publisher_ =
+    std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>(
+        torque_rb_publisher_);
+    auto & torque_rb_message = realtime_torque_rb_publisher_->msg_;
+    torque_rb_message.data = 10.0f;
+
+        torque_rf_publisher_ = get_node()->create_publisher<std_msgs::msg::Float64>("/torque_rf", 
+        rclcpp::SystemDefaultsQoS());
+    realtime_torque_rf_publisher_ =
+    std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>(
+        torque_rf_publisher_);
+    auto & torque_rf_message = realtime_torque_rf_publisher_->msg_;
+    torque_rf_message.data = 10.0f;
+
+        torque_wl_publisher_ = get_node()->create_publisher<std_msgs::msg::Float64>("/torque_wl", 
+        rclcpp::SystemDefaultsQoS());
+    realtime_torque_wl_publisher_ =
+    std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>(
+        torque_wl_publisher_);
+    auto & torque_wl_message = realtime_torque_wl_publisher_->msg_;
+    torque_wl_message.data = 10.0f;
+
+        torque_wr_publisher_ = get_node()->create_publisher<std_msgs::msg::Float64>("/torque_wr", 
+        rclcpp::SystemDefaultsQoS());
+    realtime_torque_wr_publisher_ =
+    std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>(
+        torque_wr_publisher_);
+    auto & torque_wr_message = realtime_torque_wr_publisher_->msg_;
+    torque_wr_message.data = 10.0f;
+
 #endif
     return CallbackReturn::SUCCESS;
 }

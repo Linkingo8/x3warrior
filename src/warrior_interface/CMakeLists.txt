@@ -27,6 +27,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Go1Feedback.msg"
   "msg/VMCDebugData.msg"
   "msg/LQRDebugData.msg"
+  "msg/SimulationData.msg"
   DEPENDENCIES builtin_interfaces 
 )
 

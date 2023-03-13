@@ -13,6 +13,7 @@
 #include <iostream>
 #include <cmath>
 #include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/float64.hpp"
 #include "warrior_controller/warrior_controller_compiler.h"
 ///common
 #include "warrior_common/lqr.hpp"
@@ -26,6 +27,7 @@
 #include "warrior_interface/msg/go1_feedback.hpp"
 #include "warrior_interface/msg/vmc_debug_data.hpp"
 #include "warrior_interface/msg/lqr_debug_data.hpp"
+#include "warrior_interface/msg/simulation_data.hpp"
 #include "warrior_controller/warrior_handle.hpp"
 // max leg length 0.41853056293485247
 // min leg length 0.11914338936606465
@@ -34,6 +36,7 @@
 #define GO1_PLOT
 #define VMC_DEBUG
 #define LQR_DEBUG
+#define SIMULATION
 #define LEFT_CONTROLLER_INDEX 0
 #define RIGHT_CONTROLLER_INDEX 1
 #define DRIVER_RADIUS 0.0875f
@@ -293,7 +296,23 @@ namespace warrior_controller
             //LQR controller data publisher
             std::shared_ptr<rclcpp::Publisher<warrior_interface::msg::LQRDebugData>> LQR_debug_data_publisher_ = nullptr;
             std::shared_ptr<realtime_tools::RealtimePublisher<warrior_interface::msg::LQRDebugData>>realtime_LQR_debug_data_publisher_ = nullptr;
+            ////////////////////// Webots simulation data publisher ///////////////
+            std::shared_ptr<rclcpp::Publisher<warrior_interface::msg::SimulationData>> Simulation_data_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<warrior_interface::msg::SimulationData>>realtime_Simulation_data_publisher_ = nullptr;
+            std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> torque_lb_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>realtime_torque_lb_publisher_ = nullptr;
+            std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> torque_lf_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>realtime_torque_lf_publisher_ = nullptr;
+            std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> torque_rb_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>realtime_torque_rb_publisher_ = nullptr;
+            std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> torque_rf_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>realtime_torque_rf_publisher_ = nullptr;
+            std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> torque_wl_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>realtime_torque_wl_publisher_ = nullptr;
+            std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> torque_wr_publisher_ = nullptr;
+            std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>>realtime_torque_wr_publisher_ = nullptr;
     };
+
 }
 
 #endif // __WARRIOR_CONTROLLER__TEST_CONTROLLER_H__
