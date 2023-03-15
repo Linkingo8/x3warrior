@@ -23,13 +23,13 @@ wheel_balance_controller:
 
       body_mg: 52.43
       
-      fy_left_pid_p: 80.0
+      fy_left_pid_p: 90.0
       fy_left_pid_i: 0.0
-      fy_left_pid_d: 80.0
+      fy_left_pid_d: 100.0
 
-      fy_right_pid_p: 80.1
+      fy_right_pid_p: 90.1
       fy_right_pid_i: 0.0
-      fy_right_pid_d: 80.0
+      fy_right_pid_d: 100.0
 
       left_x_q: 1.0
       left_x_dot_q: 1.0
@@ -51,12 +51,12 @@ wheel_balance_controller:
       right_r1: 1.0
       right_r2: 1.0
 
-      x_q: 1.0
-      x_dot_q: 1.0
+      x_q: 100.0
+      x_dot_q: 1.1
       theta_q: 100.0
-      theta_dot_q: 1.0
-      fai_q: 1.0
-      fai_dot_q: 1.0
+      theta_dot_q: 1.1
+      fai_q: 100.0
+      fai_dot_q: 1.1
 
       r1: 1.0
       r2: 1.0
