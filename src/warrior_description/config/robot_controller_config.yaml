@@ -21,15 +21,15 @@ wheel_balance_controller:
       joint_Go_RF_name: Go1_RF
       joint_Go_RB_name: Go1_RB
 
-      body_mg: 75.01
+      body_mg: 52.43
       
-      fy_left_pid_p: 80.1
+      fy_left_pid_p: 80.0
       fy_left_pid_i: 0.0
-      fy_left_pid_d: 90.0
+      fy_left_pid_d: 80.0
 
       fy_right_pid_p: 80.1
       fy_right_pid_i: 0.0
-      fy_right_pid_d: 90.0
+      fy_right_pid_d: 80.0
 
       left_x_q: 1.0
       left_x_dot_q: 1.0
@@ -53,7 +53,7 @@ wheel_balance_controller:
 
       x_q: 1.0
       x_dot_q: 1.0
-      theta_q: 1.0
+      theta_q: 100.0
       theta_dot_q: 1.0
       fai_q: 1.0
       fai_dot_q: 1.0

@@ -35,7 +35,7 @@
 // min leg length 0.11914338936606465
 //#define IMU_PLOT
 //#define LK_PLOT
-//#define GO1_PLOT
+#define GO1_PLOT
 #define VMC_DEBUG
 #define LQR_DEBUG
 #define LEFT_CONTROLLER_INDEX 0
@@ -265,6 +265,7 @@ namespace warrior_controller
             leg_balance_controller leg_balance_controller_[2];
             leg_balance_controller balance_controller_;
             double body_mg_;
+            double temp_target_length_;
             double pitch_now_,pitch_last_;//use and update in updateX
             leg_lqr_param left_leg_lqr_param_,right_leg_lqr_param_;
             leg_lqr_param leg_lqr_param_;

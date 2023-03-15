@@ -39,3 +39,9 @@ scp -r ../x3warrior sunrise@192.168.189.253:/home/sunrise
 # debug
 RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_control_data_[position].tx.data.comd.k_spd %x",go1_control_data_[index].tx.data.comd.k_spd);    
 ros2 topic echo /vmc_debug_feedback
+
+# simulation
+source /opt/ros/noetic/setup.bash
+ros2 run ros1_bridge dynamic_bridge
+在仿真中要将go1的反馈和发送的减速比去掉。
+仿真中没有电机的编码器溢出，直接处理。
