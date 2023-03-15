@@ -7,6 +7,32 @@ using namespace warrior_controller;
 /*?*/
 WheelBalancingController::WheelBalancingController()
     : controller_interface::ControllerInterface()
+    , simu_leg_lb_p_subsciption_(nullptr)
+    , simu_leg_lb_v_subsciption_(nullptr)
+    , simu_leg_lf_p_subsciption_(nullptr)
+    , simu_leg_lf_v_subsciption_(nullptr)
+    , simu_leg_rb_p_subsciption_(nullptr)
+    , simu_leg_rb_v_subsciption_(nullptr)
+    , simu_leg_rf_p_subsciption_(nullptr)
+    , simu_leg_rf_v_subsciption_(nullptr)
+    , simu_wheelleft_p_subsciption_(nullptr)
+    , simu_wheelleft_v_subsciption_(nullptr)
+    , simu_wheelright_p_subsciption_(nullptr)
+    , simu_wheelright_v_subsciption_(nullptr)
+    , simu_imu_subsciption_(nullptr)
+    , simu_leg_lb_p_ptr_(nullptr)
+    , simu_leg_lb_v_ptr_(nullptr)
+    , simu_leg_lf_p_ptr_(nullptr)
+    , simu_leg_lf_v_ptr_(nullptr)
+    , simu_leg_rb_p_ptr_(nullptr)
+    , simu_leg_rb_v_ptr_(nullptr)
+    , simu_leg_rf_p_ptr_(nullptr)
+    , simu_leg_rf_v_ptr_(nullptr)
+    , simu_wheelleft_p_ptr_(nullptr)
+    , simu_wheelleft_v_ptr_(nullptr)
+    , simu_wheelright_p_ptr_(nullptr)
+    , simu_wheelright_v_ptr_(nullptr)
+    , simu_imu_ptr_(nullptr)
     , command_subsciption_(nullptr)
     , command_ptr_(nullptr)
     , imu_data_publisher_(nullptr)
@@ -91,7 +117,7 @@ WheelBalancingController::WheelBalancingController()
                 0,           0, 
                 0,           0;
         leg_lqr_param_.Q_ <<   1,              0,          0,          0,          0,               0,
-                0,              1,          0,          0,          0,               0,
+                0,              0.01,          0,          0,          0,               0,
                 0,              0,          1,          0,          0,               0,
                 0,              0,          0,          1,          0,               0,
                 0,              0,          0,          0,          1,               0,
@@ -238,24 +264,16 @@ controller_interface::return_type WheelBalancingController::update()
     /// for lk9025  id:1  id: 2
     /// torque
     /////////////////////// data prehandle ///////////////////////////
-
     //update the remote date.
     WheelBalancingController::updatingRemoteData();
-    //feadback of LK and G01.
-    //feadback of imu
-    /// give all data to controller /// /// get x_dot
+    // get the feedback 
     WheelBalancingController::updateDataFromInterface();
-    /// data pre-handle
-    /// get x  
-    WheelBalancingController::init9025EncoderZeros();
-    WheelBalancingController::update9025TotalDis();
+    ///////////  feedback data calc /////////
     //////////////////////  lqr /////////////////////
     /// calculate the lqr k.
     lqr_->K = lqr_->calcGainK();
     /// set the x_d to struct
     WheelBalancingController::updateXdes();
-    // get the feedback 
-    WheelBalancingController::updateX(); 
     /// give k to controller
     WheelBalancingController::setLegLQRGain(lqr_->K);
     /// set the x_d to controller
@@ -268,9 +286,6 @@ controller_interface::return_type WheelBalancingController::update()
     Tp = balance_controller_.U(1,0);   //adjust motor rotation dirextion.
     ///////////////////// vmc ////////////////////////////
     /// use these data
-    /// get theta
-    left_five_bar_->virtualLegCalc(need_data_form_hi_.left_leg_fai1, need_data_form_hi_.left_leg_fai4);
-    right_five_bar_->virtualLegCalc(need_data_form_hi_.right_leg_fai1, need_data_form_hi_.right_leg_fai4);
     /// give the L0 , theata and five bar linkage to vmc
     left_vmc_->getDataOfLeg(left_five_bar_->exportBarLength(),left_five_bar_->exportLinkageParam());
     right_vmc_->getDataOfLeg(right_five_bar_->exportBarLength(),right_five_bar_->exportLinkageParam());
@@ -281,20 +296,28 @@ controller_interface::return_type WheelBalancingController::update()
     Fy_right_output = right_Fy_pid_->getOutput(right_five_bar_->exportBarLength()->L0,rc_commmonds_.ch_r_y) + body_mg_ / 2.0f;
     // left_vmc_->setFTp(left_Tp,0.0f);
     // right_vmc_->setFTp(right_Tp,0.0f);
-    left_vmc_->setFTp(0.0f,Fy_left_output);
-    right_vmc_->setFTp(0.0f,Fy_right_output);
+    left_vmc_->setFTp(Tp,Fy_left_output);
+    right_vmc_->setFTp(Tp,Fy_right_output);
     /// calc the vmc output jacobian matrix
     left_vmc_->VMCControllerCalc();
     right_vmc_->VMCControllerCalc();
     /// calc the vmc output 
     left_vmc_->calcT();
     right_vmc_->calcT();
+    #ifdef NO_SIMULATION
     /// give to send data
-    send_data_.left_T1 = -left_vmc_->exportT1() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
-    send_data_.left_T2 = -left_vmc_->exportT2() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
+    send_data_.left_T1 = left_vmc_->exportT1() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
+    send_data_.left_T2 = left_vmc_->exportT2() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
 
     send_data_.right_T1 = right_vmc_->exportT1() / G01_REDUCTION_RATIO;
     send_data_.right_T2 = right_vmc_->exportT2() / G01_REDUCTION_RATIO;
+    #else
+    send_data_.left_T1 = left_vmc_->exportT1();  //adjust motor rotation dirextion.
+    send_data_.left_T2 = left_vmc_->exportT2();  //adjust motor rotation dirextion.
+
+    send_data_.right_T1 = right_vmc_->exportT1();
+    send_data_.right_T2 = right_vmc_->exportT2();
+    #endif
     /// debug
     // std::cout << "wx :" << imu_handles_->get_wx() << std::endl;
     // std::cout << "wy :" << imu_handles_->get_wy() << std::endl;
@@ -313,7 +336,6 @@ controller_interface::return_type WheelBalancingController::update()
     // /// adjust the T to correct sign and convert to rotor
 
     ///////////////////// remoter data handle ////////////////////////////
-
     /// set the line input to track the root of system
     if(rc_commmonds_.sw_l == 1 || rc_commmonds_.sw_l == 0) { //protection mode
         LK_L_handles_->set_torque(0.0f); // >0 forward
@@ -341,19 +363,19 @@ controller_interface::return_type WheelBalancingController::update()
         Go1_RF_handles_->set_torque(send_data_.right_T1);
         Go1_RB_handles_->set_torque(send_data_.right_T2);
     }
-///////////////////// publish topic ////////////////////////////
 
+///////////////////// publish topic ////////////////////////////
 #ifdef LQR_DEBUG
     if (realtime_LQR_debug_data_publisher_->trylock())
     {
      auto & lqr_debug_data_message = realtime_LQR_debug_data_publisher_->msg_;
      // left
-     lqr_debug_data_message.left_x_now =left_set_feedback_.x;
-     lqr_debug_data_message.left_x_dot_now= left_set_feedback_.x_dot;
-     lqr_debug_data_message.left_theta_now= left_set_feedback_.theta_now;
-     lqr_debug_data_message.left_theta_dot_now= left_set_feedback_.theta_dot;
-     lqr_debug_data_message.left_fai_now= left_set_feedback_.fai;
-     lqr_debug_data_message.left_fai_dot_now= left_set_feedback_.fai_dot;
+     lqr_debug_data_message.left_x_now =state_var_now_.x;
+     lqr_debug_data_message.left_x_dot_now= state_var_now_.x_dot;
+     lqr_debug_data_message.left_theta_now= state_var_now_.theta_now;
+     lqr_debug_data_message.left_theta_dot_now= state_var_now_.theta_dot;
+     lqr_debug_data_message.left_fai_now= state_var_now_.fai;
+     lqr_debug_data_message.left_fai_dot_now= state_var_now_.fai_dot;
 
      lqr_debug_data_message.left_x_des= 0.0f;
      lqr_debug_data_message.left_x_dot_des= 0.0f;
@@ -362,8 +384,8 @@ controller_interface::return_type WheelBalancingController::update()
      lqr_debug_data_message.left_fai_des= 0.0f;
      lqr_debug_data_message.left_fai_dot_des= 0.0f;
 
-     lqr_debug_data_message.left_tauw_out = -leg_balance_controller_[0].U(0,0);
-     lqr_debug_data_message.left_tp_out =-leg_balance_controller_[0].U(1,0);
+     lqr_debug_data_message.left_tauw_out = balance_controller_.U(0,0);
+     lqr_debug_data_message.left_tp_out =balance_controller_.U(1,0);
      lqr_debug_data_message.left_t1_out = send_data_.left_T1;
      lqr_debug_data_message.left_t2_out = send_data_.left_T2;
 
@@ -474,13 +496,13 @@ controller_interface::return_type WheelBalancingController::update()
 if (realtime_Simulation_data_publisher_->trylock())
 {
     auto & simulation_data_message = realtime_Simulation_data_publisher_->msg_;
-    simulation_data_message.torque_lb = 0.00;
-    simulation_data_message.torque_lf = 0.00;
-    simulation_data_message.torque_rb = 0.00;
-    simulation_data_message.torque_rf = 0.00;
+    simulation_data_message.torque_lb = 0.00f;
+    simulation_data_message.torque_lf = 0.00f;
+    simulation_data_message.torque_rb = 0.00f;
+    simulation_data_message.torque_rf = 0.00f;
 
-    simulation_data_message.torque_wl = 1.00;
-    simulation_data_message.torque_wr = 1.00;
+    simulation_data_message.torque_wl = 0.00f;
+    simulation_data_message.torque_wr = 0.00f;
     realtime_Simulation_data_publisher_->unlockAndPublish();
 }
 if (realtime_torque_lb_publisher_->trylock())
@@ -624,6 +646,59 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
     command_subsciption_ = get_node()->create_subscription<warrior_interface::msg::DbusData>("/rc_msg", 10, [this](const std::shared_ptr<warrior_interface::msg::DbusData> rc)
     {
         command_ptr_.writeFromNonRT(rc);
+    });
+
+    simu_imu_subsciption_ = get_node()->create_subscription<sensor_msgs::msg::Imu>("/imu", 10, [this](const std::shared_ptr<sensor_msgs::msg::Imu> simu_imu_fdb)
+    {
+        simu_imu_ptr_.writeFromNonRT(simu_imu_fdb);
+    });
+    simu_leg_lb_p_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/leg_lb_p", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_leg_lb_p_fdb)
+    {
+        simu_leg_lb_p_ptr_.writeFromNonRT(simu_leg_lb_p_fdb);
+    });
+        simu_leg_lb_v_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/leg_lb_v", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_leg_lb_v_fdb)
+    {
+        simu_leg_lb_v_ptr_.writeFromNonRT(simu_leg_lb_v_fdb);
+    });
+        simu_leg_lf_p_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/leg_lf_p", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_leg_lf_p_fdb)
+    {
+        simu_leg_lf_p_ptr_.writeFromNonRT(simu_leg_lf_p_fdb);
+    });
+        simu_leg_lf_v_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/leg_lf_v", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_leg_lf_v_fdb)
+    {
+        simu_leg_lf_v_ptr_.writeFromNonRT(simu_leg_lf_v_fdb);
+    });
+        simu_leg_rb_p_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/leg_rb_p", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_leg_rb_p_fdb)
+    {
+        simu_leg_rb_p_ptr_.writeFromNonRT(simu_leg_rb_p_fdb);
+    });
+        simu_leg_rb_v_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/leg_rb_v", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_leg_rb_v_fdb)
+    {
+        simu_leg_rb_v_ptr_.writeFromNonRT(simu_leg_rb_v_fdb);
+    });
+        simu_leg_rf_p_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/leg_rf_p", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_leg_rf_p_fdb)
+    {
+        simu_leg_rf_p_ptr_.writeFromNonRT(simu_leg_rf_p_fdb);
+    });
+        simu_leg_rf_v_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/leg_rf_v", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_leg_rf_v_fdb)
+    {
+        simu_leg_rf_v_ptr_.writeFromNonRT(simu_leg_rf_v_fdb);
+    });
+        simu_wheelleft_p_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/wheelleft_p", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_wheelleft_p_fdb)
+    {
+        simu_wheelleft_p_ptr_.writeFromNonRT(simu_wheelleft_p_fdb);
+    });
+        simu_wheelleft_v_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/wheelleft_v", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_wheelleft_v_fdb)
+    {
+        simu_wheelleft_v_ptr_.writeFromNonRT(simu_wheelleft_v_fdb);
+    });
+        simu_wheelright_p_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/wheelright_p", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_wheelright_p_fdb)
+    {
+        simu_wheelright_p_ptr_.writeFromNonRT(simu_wheelright_p_fdb);
+    });
+        simu_wheelright_v_subsciption_ = get_node()->create_subscription<std_msgs::msg::Float64>("/wheelright_v", 10, [this](const std::shared_ptr<std_msgs::msg::Float64> simu_wheelright_v_fdb)
+    {
+        simu_wheelright_v_ptr_.writeFromNonRT(simu_wheelright_v_fdb);
     });
 #ifdef LQR_DEBUG
     LQR_debug_data_publisher_ =  get_node()->create_publisher<warrior_interface::msg::LQRDebugData>("/lqr_debug_feedback", 
@@ -900,8 +975,180 @@ controller_interface::return_type WheelBalancingController::updatingRemoteData(v
     return controller_interface::return_type::OK;
 }
 
+controller_interface::return_type WheelBalancingController::updatingSimuImuData(void)
+{
+    // look the subcription
+    auto command = simu_imu_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    }
+    const auto simu_imu_data = (*command);
+    double x(0.0),y(0.0),z(0.0),w(0.0);
+    x = simu_imu_data->orientation.x;
+    y = simu_imu_data->orientation.y;
+    z = simu_imu_data->orientation.z;
+    w = simu_imu_data->orientation.w;
+    need_data_form_hi_.yaw   = atan2f(y*x+z*w,
+                                        y*y+z*z-0.5f);
+
+    need_data_form_hi_.pitch = asinf(2*(y*w-z*x));
+
+    need_data_form_hi_.roll  = atan2f(y*z+w*x,
+                                        y*y+x*x-0.5f);
+    need_data_form_hi_.wx = simu_imu_data->angular_velocity.x;
+    need_data_form_hi_.wy = simu_imu_data->angular_velocity.y;
+    need_data_form_hi_.wz = simu_imu_data->angular_velocity.z;
+
+    need_data_form_hi_.ax = simu_imu_data->linear_acceleration.x;
+    need_data_form_hi_.ay = simu_imu_data->linear_acceleration.y;
+    need_data_form_hi_.az = simu_imu_data->linear_acceleration.z;
+
+    return controller_interface::return_type::OK;
+}
+
+controller_interface::return_type WheelBalancingController::updatingSimuMotorData(void)
+{
+    // look the subcription
+    auto command = simu_leg_lb_p_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    }
+    auto motor_data = (*command);
+    need_data_form_hi_.lb_go1_pos = motor_data->data;
+    // std::cout << "lb_go1_pos" << need_data_form_hi_.lb_go1_pos << std::endl;
+    // look the subcription
+    command = simu_leg_lb_v_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    } 
+    motor_data = (*command);
+    need_data_form_hi_.lb_go1_vel = motor_data->data;
+    // std::cout << "lb_go1_vel" << need_data_form_hi_.lb_go1_vel << std::endl;
+
+    // look the subcription
+    command = simu_leg_lf_p_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    } 
+    motor_data = (*command);
+    need_data_form_hi_.lf_go1_pos = motor_data->data;
+    // std::cout << "lf_go1_pos" << need_data_form_hi_.lf_go1_pos << std::endl;
+    
+    // look the subcription
+    command = simu_leg_lf_v_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    } 
+    motor_data = (*command);
+    need_data_form_hi_.lf_go1_vel = motor_data->data;
+    // std::cout << "lf_go1_vel" << need_data_form_hi_.lf_go1_vel << std::endl;
+
+    // look the subcription
+    command = simu_leg_rb_p_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    } 
+    motor_data = (*command);
+    need_data_form_hi_.rb_go1_pos = motor_data->data;
+    // std::cout << "rb_go1_pos   " << need_data_form_hi_.rb_go1_pos << std::endl;
+
+    // look the subcription
+    command = simu_leg_rb_v_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    } 
+    motor_data = (*command);
+    need_data_form_hi_.rb_go1_vel = motor_data->data;
+    // std::cout << "rb_go1_vel   " << need_data_form_hi_.rb_go1_vel << std::endl;
+
+    // look the subcription
+    command = simu_leg_rf_p_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    } 
+    motor_data = (*command);
+    need_data_form_hi_.rf_go1_pos = motor_data->data;
+    // std::cout << "rf_go1_pos  " << need_data_form_hi_.rf_go1_pos << std::endl;
+    
+    // look the subcription
+    command = simu_leg_rf_v_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    } 
+    motor_data = (*command);
+    need_data_form_hi_.rf_go1_vel = motor_data->data;
+    // std::cout << "rf_go1_vel  " << need_data_form_hi_.rf_go1_vel << std::endl;
+
+    // look the subcription
+    command = simu_wheelleft_p_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    } 
+    motor_data = (*command);
+    need_data_form_hi_.left_lk9025_pos = motor_data->data;
+    // std::cout << "left_lk9025_pos  " << need_data_form_hi_.left_lk9025_pos << std::endl;
+
+    // look the subcription
+    command = simu_wheelleft_v_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    } 
+    motor_data = (*command);
+    need_data_form_hi_.left_lk9025_vel = motor_data->data;
+    // std::cout << "left_lk9025_vel  " << need_data_form_hi_.left_lk9025_vel << std::endl;
+
+    // look the subcription
+    command = simu_wheelright_p_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    } 
+    motor_data = (*command);
+    need_data_form_hi_.right_lk9025_pos = motor_data->data;
+    // std::cout << "right_lk9025_pos  " << need_data_form_hi_.right_lk9025_pos << std::endl;
+    
+    // look the subcription
+    command = simu_wheelright_v_ptr_.readFromRT();
+    if (!command || !(*command)) {
+        return controller_interface::return_type::OK;
+    } 
+    motor_data = (*command);
+    need_data_form_hi_.right_lk9025_vel = motor_data->data;
+    // std::cout << "right_lk9025_vel  " << need_data_form_hi_.right_lk9025_vel << std::endl;
+
+    return controller_interface::return_type::OK;    
+}
+
 void WheelBalancingController::updateDataFromInterface(void)
 {
+#ifdef SIMULATION
+    /// data pre-handle
+    WheelBalancingController::init9025EncoderZeros();
+    // motor
+    WheelBalancingController::updatingSimuMotorData();
+    need_data_form_hi_.left_leg_dis_dot =  ((need_data_form_hi_.left_lk9025_vel * (PI /180.0f)) * DRIVER_RADIUS);
+    need_data_form_hi_.right_leg_dis_dot = ((need_data_form_hi_.right_lk9025_vel * (PI /180.0f)) * DRIVER_RADIUS);
+    // imu
+    WheelBalancingController::updatingSimuImuData();
+    
+    /// left leg param    
+    need_data_form_hi_.left_leg_fai4 = PI - (LEFT_LEG_FAI_ZERO + (need_data_form_hi_.lf_go1_pos  - GO1_0_ZEROS) / G01_REDUCTION_RATIO);
+    need_data_form_hi_.left_leg_fai1 = (LEFT_LEG_FAI_ZERO + (need_data_form_hi_.lb_go1_pos  - GO1_3_ZEROS) / G01_REDUCTION_RATIO);
+    /// right leg param
+    need_data_form_hi_.right_leg_fai4 = PI - (RIGHT_LEG_FAI_ZERO + (need_data_form_hi_.rb_go1_pos - GO1_2_ZEROS) / G01_REDUCTION_RATIO);
+    need_data_form_hi_.right_leg_fai1 = (RIGHT_LEG_FAI_ZERO + (need_data_form_hi_.rf_go1_pos  - GO1_1_ZEROS) / G01_REDUCTION_RATIO);
+
+    WheelBalancingController::update9025TotalDis();
+    /// get x  
+    WheelBalancingController::updateX(); 
+    /// get theta
+    left_five_bar_->virtualLegCalc(need_data_form_hi_.left_leg_fai1, need_data_form_hi_.left_leg_fai4);
+    right_five_bar_->virtualLegCalc(need_data_form_hi_.right_leg_fai1, need_data_form_hi_.right_leg_fai4);
+#endif
+
+#ifdef NO_SIMULATION
+    /// data pre-handle
+    WheelBalancingController::init9025EncoderZeros();
+
     need_data_form_hi_.left_lk9025_pos = LK_L_handles_->get_position();
     need_data_form_hi_.left_lk9025_vel = LK_L_handles_->get_velocity();
     need_data_form_hi_.left_lk9025_tor = LK_L_handles_->get_acceleration();
@@ -976,6 +1223,14 @@ void WheelBalancingController::updateDataFromInterface(void)
 
     // std::cout << "fai1" << "  " << need_data_form_hi_.left_leg_fai1 << std::endl;
     // std::cout << "fai4" << "  " << need_data_form_hi_.left_leg_fai4 << std::endl;
+    WheelBalancingController::update9025TotalDis();
+    /// get x  
+    WheelBalancingController::updateX(); 
+    /// get theta
+    left_five_bar_->virtualLegCalc(need_data_form_hi_.left_leg_fai1, need_data_form_hi_.left_leg_fai4);
+    right_five_bar_->virtualLegCalc(need_data_form_hi_.right_leg_fai1, need_data_form_hi_.right_leg_fai4);
+#endif
+
 
 }
 
@@ -983,8 +1238,9 @@ void WheelBalancingController::updateDataFromInterface(void)
 /// banlance controller
 /// 0 left 1 right 
 /// get the value of all i will need in the controller.
-void WheelBalancingController::init9025EncoderZeros(void)
+controller_interface::return_type WheelBalancingController::init9025EncoderZeros(void)
 {
+    #ifdef NO_SIMULATION
     if(need_data_form_hi_.left_init_flag==0)
     {
         need_data_form_hi_.left_lk9025_pos = LK_L_handles_->get_position();
@@ -999,6 +1255,34 @@ void WheelBalancingController::init9025EncoderZeros(void)
         need_data_form_hi_.right_leg_total_dis = 0.0f;
         need_data_form_hi_.right_init_flag = 1;
     }
+    #else
+    if(need_data_form_hi_.left_init_flag==0)
+    {
+        // look the subcription
+        auto command = simu_wheelleft_p_ptr_.readFromRT();
+        if (!command || !(*command)) {
+            return controller_interface::return_type::OK;
+        } 
+        auto motor_data = (*command);
+        need_data_form_hi_.left_lk9025_pos = motor_data->data;
+        need_data_form_hi_.left_lk9025_ecoder_zero = need_data_form_hi_.left_lk9025_pos;
+        need_data_form_hi_.left_leg_total_dis = 0.0f;
+        need_data_form_hi_.left_init_flag = 1;//zero point initilized flag
+    }
+    if(need_data_form_hi_.right_init_flag==0)
+    {
+        // look the subcription
+        auto command = simu_wheelright_p_ptr_.readFromRT();
+        if (!command || !(*command)) {
+            return controller_interface::return_type::OK;
+        } 
+        auto motor_data = (*command);
+        need_data_form_hi_.right_lk9025_pos = motor_data->data;
+        need_data_form_hi_.right_lk9025_ecoder_zero = need_data_form_hi_.right_lk9025_pos;
+        need_data_form_hi_.right_leg_total_dis = 0.0f;
+        need_data_form_hi_.right_init_flag = 1;
+    }
+    #endif
 }
 
 void WheelBalancingController::update9025TotalDis(void)
@@ -1185,8 +1469,8 @@ void WheelBalancingController::updateX(void)
 {
     pitch_now_ = need_data_form_hi_.pitch;
 
-    state_var_now_.x = (need_data_form_hi_.right_leg_total_dis);//synthsis of velocities.        //m
-    state_var_now_.x_dot = need_data_form_hi_.right_leg_dis_dot;//velocities of left lk9025              //m/s
+    state_var_now_.x = (need_data_form_hi_.right_leg_total_dis + need_data_form_hi_.left_leg_total_dis);//synthsis of velocities.        //m
+    state_var_now_.x_dot = need_data_form_hi_.right_leg_dis_dot + need_data_form_hi_.left_leg_dis_dot;//velocities of left lk9025              //m/s
     state_var_now_.theta_now = (PI/2) - right_five_bar_->exportBarLength()->q0 + pitch_now_;//           //rad
     state_var_now_.theta_dot = (state_var_now_.theta_now - state_var_now_.theta_last)/0.002f;  //rad/s
     state_var_now_.fai = pitch_now_;                                                                    //rad
