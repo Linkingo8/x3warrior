@@ -192,7 +192,7 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
     right_lqr_ = std::make_shared<LQR>();
     lqr_ = std::make_shared<LQR>();
     /// real leg data L1 L2 L3 L4 L5
-    left_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(0.1478,0.285,0.285,0.1478,0.18);
+    left_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(0.136,0.2774,0.2774,0.136,0.200);
     left_vmc_ = std::make_shared<VMC>();
     left_Fy_pid_ = std::make_shared<MiniPID>(0,0,0);
 
@@ -275,8 +275,8 @@ controller_interface::return_type WheelBalancingController::update()
     /// calculate the lqr k.
     // lqr_->K = lqr_->calcGainK();
     lqr_->K  <<
-    1.5235,    1.3223,   -0.3527,    0.9733,    5.7682,   -1.1800,
-   -0.0812,   -0.2726 ,  -0.7921,   -0.0685,    0.3052,   -0.0931;
+    4.3741,    1.4480,   -0.3754,    0.0972,   10.3204,   -2.1473,
+   -0.5014,   -0.1122,   -0.2845,   -0.0112,    0.3149,   -0.2761;
     /// set the x_d to struct
     WheelBalancingController::updateXdes();
     /// give k to controller
@@ -287,23 +287,27 @@ controller_interface::return_type WheelBalancingController::update()
     WheelBalancingController::setLegLQRX();
     /// calculate the input of system. tau_W tau_Tp
     WheelBalancingController::calclegLQRU();
-    temp_target_length_ = 0.2f;
+    temp_target_length_ = 0.3f;
     double Tp = 0.0;
     Tp = balance_controller_.U(1,0);   //adjust motor rotation dirextion.
     ///////////////////// vmc ////////////////////////////
     /// use these data
     /// give the L0 , theata and five bar linkage to vmc
+
     left_vmc_->getDataOfLeg(left_five_bar_->exportBarLength(),left_five_bar_->exportLinkageParam());
     right_vmc_->getDataOfLeg(right_five_bar_->exportBarLength(),right_five_bar_->exportLinkageParam());
+    // std::cout<< "L0: " << left_five_bar_->exportBarLength()->L0 << std::endl;
+    // std::cout<< "q0: " << left_five_bar_->exportBarLength()->q0 << std::endl;
     /// calc the Fy /// give the Fy to vmc
     double Fy_left_output = 0.0f;
     double Fy_right_output = 0.0f;
-    Fy_left_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,temp_target_length_) + body_mg_ / 2.0f;
-    Fy_right_output = right_Fy_pid_->getOutput(right_five_bar_->exportBarLength()->L0,temp_target_length_) + body_mg_ / 2.0f;
+    Fy_left_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,temp_target_length_) ;
+    Fy_right_output = right_Fy_pid_->getOutput(right_five_bar_->exportBarLength()->L0,temp_target_length_) + 18.658f;
+    Fy_left_output = -Fy_left_output + body_mg_;
     // left_vmc_->setFTp(left_Tp,0.0f);
     // right_vmc_->setFTp(right_Tp,0.0f);
-    left_vmc_->setFTp(Tp/2,Fy_left_output);
-    right_vmc_->setFTp(Tp/2,Fy_right_output);
+    left_vmc_->setFTp(0.0f,Fy_left_output);
+    right_vmc_->setFTp(0.0f,0.0f);
     /// calc the vmc output jacobian matrix
     left_vmc_->VMCControllerCalc();
     right_vmc_->VMCControllerCalc();
@@ -318,11 +322,13 @@ controller_interface::return_type WheelBalancingController::update()
     send_data_.right_T1 = right_vmc_->exportT1() / G01_REDUCTION_RATIO;
     send_data_.right_T2 = right_vmc_->exportT2() / G01_REDUCTION_RATIO;
     #else
-    send_data_.left_T1 = -left_vmc_->exportT1();  //adjust motor rotation dirextion.
-    send_data_.left_T2 = left_vmc_->exportT2();  //adjust motor rotation dirextion.
+    send_data_.left_T1 = left_vmc_->exportT1();  //adjust motor rotation dirextion.
+    send_data_.left_T2 = -left_vmc_->exportT2();  //adjust motor rotation dirextion.
 
-    send_data_.right_T1 = -right_vmc_->exportT1();
+    send_data_.right_T1 = right_vmc_->exportT1();
     send_data_.right_T2 = right_vmc_->exportT2();
+    std::cout << "T1:" << send_data_.left_T1 << std::endl;
+    std::cout << "T2" <<  send_data_.left_T2 << std::endl;
     #endif
     /// debug
     // std::cout << "wx :" << imu_handles_->get_wx() << std::endl;
@@ -524,30 +530,30 @@ if (realtime_torque_lf_publisher_->trylock())
     torque_lf_message.data = send_data_.left_T1;
     realtime_torque_lf_publisher_->unlockAndPublish();
 }
-if (realtime_torque_rb_publisher_->trylock())
-{
-    auto & torque_rb_message = realtime_torque_rb_publisher_->msg_;
-    torque_rb_message.data = send_data_.right_T2;
-    realtime_torque_rb_publisher_->unlockAndPublish();
-}
-if (realtime_torque_rf_publisher_->trylock())
-{
-    auto & torque_rf_message = realtime_torque_rf_publisher_->msg_;
-    torque_rf_message.data = send_data_.right_T1;
-    realtime_torque_rf_publisher_->unlockAndPublish();
-}
-if (realtime_torque_wl_publisher_->trylock())
-{
-    auto & torque_wl_message = realtime_torque_wl_publisher_->msg_;
-    torque_wl_message.data = send_data_.left_tau_w;
-    realtime_torque_wl_publisher_->unlockAndPublish();
-}
-if (realtime_torque_wr_publisher_->trylock())
-{
-    auto & torque_wr_message = realtime_torque_wr_publisher_->msg_;
-    torque_wr_message.data = send_data_.right_tau_w;;
-    realtime_torque_wr_publisher_->unlockAndPublish();
-}
+// if (realtime_torque_rb_publisher_->trylock())
+// {
+//     auto & torque_rb_message = realtime_torque_rb_publisher_->msg_;
+//     torque_rb_message.data = send_data_.right_T2;
+//     realtime_torque_rb_publisher_->unlockAndPublish();
+// }
+// if (realtime_torque_rf_publisher_->trylock())
+// {
+//     auto & torque_rf_message = realtime_torque_rf_publisher_->msg_;
+//     torque_rf_message.data = send_data_.right_T1;
+//     realtime_torque_rf_publisher_->unlockAndPublish();
+// }
+// if (realtime_torque_wl_publisher_->trylock())
+// {
+//     auto & torque_wl_message = realtime_torque_wl_publisher_->msg_;
+//     torque_wl_message.data = send_data_.left_tau_w;
+//     realtime_torque_wl_publisher_->unlockAndPublish();
+// }
+// if (realtime_torque_wr_publisher_->trylock())
+// {
+//     auto & torque_wr_message = realtime_torque_wr_publisher_->msg_;
+//     torque_wr_message.data = send_data_.right_tau_w;;
+//     realtime_torque_wr_publisher_->unlockAndPublish();
+// }
 #endif
      return controller_interface::return_type::OK;
 }
@@ -1150,6 +1156,8 @@ void WheelBalancingController::updateDataFromInterface(void)
     WheelBalancingController::updateX();
     /// get theta
     left_five_bar_->virtualLegCalc(need_data_form_hi_.left_leg_fai1, need_data_form_hi_.left_leg_fai4);
+    std::cout << "left_fai1         " << need_data_form_hi_.left_leg_fai1 << std::endl;
+    std::cout << "left_fai4         " << need_data_form_hi_.left_leg_fai4 << std::endl;
     right_five_bar_->virtualLegCalc(need_data_form_hi_.right_leg_fai1, need_data_form_hi_.right_leg_fai4);
 #endif
 
@@ -1364,8 +1372,8 @@ void WheelBalancingController::update9025TotalDis(void)
 #else
     need_data_form_hi_.left_leg_total_dis = ((need_data_form_hi_.left_lk9025_pos)/(2 * PI)) * 2 * PI * DRIVER_RADIUS;
     need_data_form_hi_.right_leg_total_dis = ((need_data_form_hi_.right_lk9025_pos)/(2 * PI)) * 2 * PI * DRIVER_RADIUS;
-    std::cout << "left totla dis:      " << need_data_form_hi_.left_leg_total_dis << std::endl;
-    std::cout << "right totla dis:      " << need_data_form_hi_.right_leg_total_dis << std::endl;
+    // std::cout << "left totla dis:      " << need_data_form_hi_.left_leg_total_dis << std::endl;
+    // std::cout << "right totla dis:      " << need_data_form_hi_.right_leg_total_dis << std::endl;
 #endif
 
 

@@ -28,6 +28,7 @@ vim +36 ./src/warrior_hardware/CMakeLists.txt
 colcon build --symlink-install --parallel-workers 1
 
 # run
+colcon build --symlink-install
 source /opt/ros/foxy/setup.bash
 source install/setup.bash
 ros2 launch warrior_bringup warrior.py
@@ -43,5 +44,5 @@ ros2 topic echo /vmc_debug_feedback
 # simulation
 source /opt/ros/noetic/setup.bash
 ros2 run ros1_bridge dynamic_bridge
-在仿真中要将go1的反馈和发送的减速比去掉。
-仿真中没有电机的编码器溢出，直接处理。
+在仿真中要将go1的反馈和发送的减速比去 \
+仿真中没有电机的编码器溢出，直接处理。\
