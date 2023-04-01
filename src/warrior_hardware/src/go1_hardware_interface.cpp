@@ -257,7 +257,7 @@ return_type Go1HardwareInterface::write()
       /*write*/
       Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(Go1_data_process_->id_now()),17);
       // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "id %d",Go1_data_process_->id_now());
-    }
+  }
       // /*head*/
       // Go1_data_process_->Go1_head_set(0);
       // /*id*/

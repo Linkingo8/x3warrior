@@ -37,7 +37,7 @@
 // #define LK_PLOT
 #define GO1_PLOT
 #define VMC_DEBUG
-#define LQR_DEBUG
+//#define LQR_DEBUG
 #define LEFT_CONTROLLER_INDEX 0
 #define RIGHT_CONTROLLER_INDEX 1 
 #define DRIVER_RADIUS 0.0875f
@@ -53,8 +53,8 @@
 #define GO1_1_ZEROS  4.24088191986084f
 #define GO1_2_ZEROS  5.711969375610352f
 /// leg common range
-#define MAX_L0 0.23853056293485247f
-#define MIN_L0 0.16914338936606465f
+#define MAX_L0 0.40f
+#define MIN_L0 0.10f
 #define LEFT_LEG_FAI_ZERO 3.48716784548467f
 #define RIGHT_LEG_FAI_ZERO 3.48716784548467f
 #define BODY_Mg  5.3 * 9.82f

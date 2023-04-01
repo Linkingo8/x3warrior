@@ -283,8 +283,8 @@ WheelBalancingController::updateDataFromInterface();
     left_vmc_->getDataOfLeg(left_five_bar_->exportBarLength(),left_five_bar_->exportLinkageParam());
     /// calc the Fy /// give the Fy to vmc
     double Fy_left_output = 0.0f;
-    Fy_left_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,temp_target_length_) ;
-    Fy_left_output = -Fy_left_output + body_mg_;
+    // Fy_left_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,rc_commmonds_.ch_r_y) ;
+    Fy_left_output = Fy_left_output + body_mg_;
     left_vmc_->setFTp(0.0f,Fy_left_output);
     /// calc the vmc output jacobian matrix
     left_vmc_->VMCControllerCalc();
@@ -294,7 +294,7 @@ WheelBalancingController::updateDataFromInterface();
 
     #ifdef NO_SIMULATION  
     /// give to send data
-    send_data_.left_T1 = left_vmc_->exportT1() /  G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
+    send_data_.left_T1 = left_vmc_->exportT1() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
     send_data_.left_T2 = left_vmc_->exportT2() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
 
     // send_data_.right_T1 = right_vmc_->exportT1() / G01_REDUCTION_RATIO;
@@ -373,7 +373,7 @@ WheelBalancingController::updateDataFromInterface();
         vmc_debug_data_message.left_f = Fy_left_output;
         vmc_debug_data_message.left_fai_one = need_data_form_hi_.left_leg_fai1;
         vmc_debug_data_message.left_fai_four = need_data_form_hi_.left_leg_fai4;
-        vmc_debug_data_message.left_target_l =temp_target_length_;
+        vmc_debug_data_message.left_target_l =rc_commmonds_.ch_r_y;
         vmc_debug_data_message.left_actual_l = left_five_bar_->exportBarLength()->L0;
         vmc_debug_data_message.left_pid_fy = Fy_left_output;
         vmc_debug_data_message.left_p_out = 0.0f;
@@ -427,8 +427,8 @@ WheelBalancingController::updateDataFromInterface();
         {
         auto & Go1_data_message = realtime_Go1_data_publisher_->msg_;
         Go1_data_message.lfpositions = Go1_LF_handles_->get_position() / G01_REDUCTION_RATIO * (180.0f/PI);
-        Go1_data_message.lfvelocities = Go1_LF_handles_->get_velocity() * G01_REDUCTION_RATIO;
-        Go1_data_message.lftorques = Go1_LF_handles_->get_acceleration();
+        Go1_data_message.lfvelocities = Go1_LF_handles_->get_velocity();
+        Go1_data_message.lftorques = Go1_LF_handles_->get_acceleration() * G01_REDUCTION_RATIO;
 
         Go1_data_message.rfpositions = Go1_RF_handles_->get_position() / G01_REDUCTION_RATIO *(180.0f/PI);
         Go1_data_message.rfvelocities = Go1_RF_handles_->get_velocity();
@@ -902,7 +902,7 @@ controller_interface::return_type WheelBalancingController::updatingRemoteData(v
      rc_commmonds_.ch_l_y  = rc->ch_l_y   * 999;
      rc_commmonds_.ch_r_x  = rc->ch_r_x   * 999;
      /* L_-1 */
-     rc_commmonds_.ch_r_y  += (rc->ch_r_y * -1.001 * 0.001f);
+     rc_commmonds_.ch_r_y  += (rc->ch_r_y * -1.001 * 0.001);
      if(rc_commmonds_.ch_r_y<MIN_L0)rc_commmonds_.ch_r_y = MIN_L0;
      if(rc_commmonds_.ch_r_y>MAX_L0)rc_commmonds_.ch_r_y = MAX_L0;
      
