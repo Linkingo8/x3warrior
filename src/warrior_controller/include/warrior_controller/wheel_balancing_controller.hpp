@@ -33,8 +33,8 @@
 #include "warrior_controller/warrior_handle.hpp"
 // max leg length 0.41853056293485247
 // min leg length 0.11914338936606465
-//#define IMU_PLOT
-//#define LK_PLOT
+// #define IMU_PLOT
+// #define LK_PLOT
 #define GO1_PLOT
 #define VMC_DEBUG
 #define LQR_DEBUG
@@ -42,8 +42,8 @@
 #define RIGHT_CONTROLLER_INDEX 1 
 #define DRIVER_RADIUS 0.0875f
 #define G01_REDUCTION_RATIO 6.33f
-#define SIMULATION
-//#define NO_SIMULATION
+//#define SIMULATION
+#define NO_SIMULATION
 
 #ifdef NO_SIMULATION
 /// left leg go1 param

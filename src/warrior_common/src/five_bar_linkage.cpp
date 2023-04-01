@@ -61,7 +61,7 @@ void FiveBar::virtualLegCalc(double q1, double q4)
 bar_length* FiveBar::exportBarLength(void)
 {
     bar_length *bar = &bar_length_;
-    return bar;
+    return bar; 
 }
 
 five_bar_linkage_param* FiveBar::exportLinkageParam(void)

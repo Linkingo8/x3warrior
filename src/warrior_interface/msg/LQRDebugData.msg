@@ -1,39 +1,16 @@
-float64 left_x_now
-float64 left_x_dot_now
-float64 left_theta_now
-float64 left_theta_dot_now
-float64 left_fai_now
-float64 left_fai_dot_now
-
-float64 left_x_des
-float64 left_x_dot_des
-float64 left_theta_des
-float64 left_theta_dot_des
-float64 left_fai_des
-float64 left_fai_dot_des
-
-float64 left_tauw_out
-float64 left_tp_out
-
-float64 left_t1_out
-float64 left_t2_out
-
-float64 right_x_now
-float64 right_x_dot_now
-float64 right_theta_now
-float64 right_theta_dot_now
-float64 right_fai_now
-float64 right_fai_dot_now
-
-float64 right_x_des
-float64 right_x_dot_des
-float64 right_theta_des
-float64 right_theta_dot_des
-float64 right_fai_des
-float64 right_fai_dot_des
-
-float64 right_tauw_out
-float64 right_tp_out
-
-float64 right_t1_out
-float64 right_t2_out
+float64 x_now
+float64 x_dot_now
+float64 theta_now
+float64 theta_dot_now
+float64 fai_now
+float64 fai_dot_now
+float64 x_des
+float64 x_dot_des
+float64 theta_des
+float64 theta_dot_des
+float64 fai_des
+float64 fai_dot_des
+float64 tauw_out
+float64 tp_out
+float64 t1_out
+float64 t2_out

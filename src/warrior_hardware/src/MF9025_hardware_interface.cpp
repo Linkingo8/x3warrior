@@ -339,15 +339,9 @@ return_type MF9025HardwareInterface::read()
             /// recieve the data of 9025
             MF9025_data_process_->MF9025_message_rec(rec_,q1);
             /// loard to interface variables  // id: 1/2
-            LK_velocities_[1] = MF9025_data_process_->MF9025_velocitise_export(rec_,1);
-            LK_positions_[1] = MF9025_data_process_->MF9025_position_export(rec_,1);
-            LK_torque_[1] = MF9025_data_process_->MF9025_torque_export(rec_,1);
-            // RCLCPP_INFO(
-            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_velocities_:%f",LK_velocities_[0]);
-            // RCLCPP_INFO(
-            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_positions_:%f",LK_positions_[0]);
-            // RCLCPP_INFO(
-            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_torque_:%f",LK_torque_[0]);
+            LK_velocities_[1] = -MF9025_data_process_->MF9025_velocitise_export(rec_,2);
+            LK_positions_[1] = MF9025_data_process_->MF9025_position_export(rec_,2);
+            LK_torque_[1] = -MF9025_data_process_->MF9025_torque_export(rec_,2);
             break;
           }
           case RIGHT_ID:
@@ -356,12 +350,6 @@ return_type MF9025HardwareInterface::read()
             LK_velocities_[0] = MF9025_data_process_->MF9025_velocitise_export(rec_,2);
             LK_positions_[0] = MF9025_data_process_->MF9025_position_export(rec_,2);
             LK_torque_[0] = MF9025_data_process_->MF9025_torque_export(rec_,2);
-            // RCLCPP_INFO(
-            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_velocities_:%f",LK_velocities_[1]);
-            // RCLCPP_INFO(
-            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_positions_:%f",LK_positions_[1]);
-            // RCLCPP_INFO(
-            //    rclcpp::get_logger("MF9025HardwareInterface"), " LK_torque_:%f",LK_torque_[1]);
             break;
           }
           case IMU_PARAM_ID:
@@ -471,7 +459,15 @@ return_type MF9025HardwareInterface::read()
 return_type MF9025HardwareInterface::write()
 {
   /// left leg + f
-  MF9025_data_process_->MF9025_torque_set(2,LK_commands_torque_[0]);//0
+  // MF9025_data_process_->MF9025_torque_set(2,LK_commands_torque_[0]);//0
+  // MF9025_data_process_->MF9025_commond_send(LEFT_ID);
+  /* 
+    电机特性： 左腿力矩给正，
+              力矩反馈为负
+              此时观察发现电机旋转方向与正方向相反，所以添加负号调整正方向
+              此时反馈也为负方向，通过添加符号调整反馈正方向
+  */
+  MF9025_data_process_->MF9025_torque_set(2,-LK_commands_torque_[0]);//0
   MF9025_data_process_->MF9025_commond_send(LEFT_ID);
   /// right leg + b
   MF9025_data_process_->MF9025_torque_set(1,LK_commands_torque_[1]);//1

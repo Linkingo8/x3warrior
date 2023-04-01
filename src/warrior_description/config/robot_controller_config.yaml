@@ -17,39 +17,19 @@ wheel_balance_controller:
       joint2_name: left_9025
       joint3_name: right_9025
       joint_Go_LF_name: Go1_LF
-      joint_Go_LB_name: Go1_LB
+      joint_Go_LB_name: Go1_LB 
       joint_Go_RF_name: Go1_RF
       joint_Go_RB_name: Go1_RB
 
-      body_mg: 18.7
+      body_mg: -20.11
       
-      fy_left_pid_p: 70.0
-      fy_left_pid_i: 0.0
-      fy_left_pid_d: 300.0
+      fy_left_pid_p: 90.0
+      fy_left_pid_i: 0.0 
+      fy_left_pid_d: 160.0
 
       fy_right_pid_p: 0.0
       fy_right_pid_i: 0.0
       fy_right_pid_d: 0.0
-
-      left_x_q: 1.0
-      left_x_dot_q: 1.0
-      left_theta_q: 1.0
-      left_theta_dot_q: 1.0
-      left_fai_q: 1.0
-      left_fai_dot_q: 1.0
-
-      left_r1: 1.0
-      left_r2: 1.0
-
-      right_x_q: 1.0
-      right_x_dot_q: 1.0
-      right_theta_q: 1.0
-      right_theta_dot_q: 1.0
-      right_fai_q: 1.0
-      right_fai_dot_q: 1.0
-
-      right_r1: 1.0
-      right_r2: 1.0
 
       x_q: 100.0
       x_dot_q: 1.1
