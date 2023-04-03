@@ -1,6 +1,5 @@
 
 #include "warrior_hardware/imu_hardware_interface.hpp"
-#include "warrior_hardware/hardware_singleton.hpp"
 #include <chrono>
 #include <cmath>
 #include <limits>

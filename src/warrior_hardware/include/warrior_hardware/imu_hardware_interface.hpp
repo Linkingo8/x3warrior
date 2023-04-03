@@ -17,6 +17,7 @@
 #include "warrior_hardware/crc.hpp"
 #include "warrior_hardware/visibility_control.h"
 #include "warrior_hardware/can_driver.hpp"
+#include "warrior_hardware/hardware_singleton.hpp"
 
 using hardware_interface::return_type;
 

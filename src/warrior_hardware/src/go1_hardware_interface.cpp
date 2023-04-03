@@ -1,7 +1,7 @@
 
 #include "warrior_hardware/go1_hardware_interface.hpp"
 
-#include <chrono>
+#include <ctime>
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -199,7 +199,7 @@ return_type Go1HardwareInterface::start()
     // init transmission.
         return hardware_interface::return_type::ERROR;    
   }
-  
+      
   status_ = hardware_interface::status::STARTED;
   return return_type::OK;
 }
@@ -219,6 +219,7 @@ return_type Go1HardwareInterface::stop()
 
 return_type Go1HardwareInterface::read()
 {
+
   uint8_t buff[17]{0};
   Go1_port_config_->read_frames(buff,17);  
   uint8_t id = (buff[2] & 0xF);
@@ -240,7 +241,7 @@ return_type Go1HardwareInterface::read()
 
 return_type Go1HardwareInterface::write()
 {
-      Go1_data_process_->give_id_to_go1_processor();
+    Go1_data_process_->give_id_to_go1_processor();
     //transmit
     if(Go1_data_process_->id_now() != 4)
     {
@@ -257,21 +258,28 @@ return_type Go1HardwareInterface::write()
       /*write*/
       Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(Go1_data_process_->id_now()),17);
       // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "id %d",Go1_data_process_->id_now());
+    }
+  if(Debugsig::get_go_flag() == 0)//cycle 1
+  {
+    double beforeTime = clock();
+    Debugsig::set_go_start(beforeTime);
+    //reversed and record next
+    Debugsig::set_go_flag(1);
   }
-      // /*head*/
-      // Go1_data_process_->Go1_head_set(0);
-      // /*id*/
-      // Go1_data_process_->Go1_id_set(0);
-      // /*control data*/
-      // // Go1_data_process_->Go1_torque_set(0,Go1_commands_torques_[0]);
-      // Go1_data_process_->Go1_torque_set(0,0.1);
-      // // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "\n\n4: Go1_commands_torques_[0] %f:.....\n\n",Go1_commands_torques_[0]);
-      // /*crc*/
-      // Go1_data_process_->Go1_crc_append(0);
-      // /*write*/
-      // Go1_port_config_->write_frame(Go1_data_process_->Go1_buff_get(0),17);
-      // // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "id %d",Go1_data_process_->id_now());
-  return return_type::OK;
+  else
+  {
+    double endTime = clock();
+    Debugsig::set_go_end(endTime);
+    //reversed and record next cycle
+    Debugsig::set_go_flag(0);
+    // print time at the end of cycle
+    double duration = (Debugsig::get_go_end() - Debugsig::get_go_start())*1000/CLOCKS_PER_SEC;
+    RCLCPP_INFO(
+      rclcpp::get_logger("Go1HardwareInterface"), "go1 time: %f",duration);
+  }
+  RCLCPP_INFO(
+    rclcpp::get_logger("Go1HardwareInterface"), "go1 time recorder flag: %d",Debugsig::get_go_flag());
+    return return_type::OK;
 }
 }
   // namespace warrior_hardware

@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "rclcpp/macros.hpp"
-
+#include "warrior_hardware/hardware_singleton.hpp"
 #include "warrior_hardware/bsp_go1.hpp"
 #include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/handle.hpp"
