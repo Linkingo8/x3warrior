@@ -50,8 +50,8 @@
 #define GO1_0_ZEROS  0.7106166481971741f
 #define GO1_3_ZEROS  0.0668541805587236f
 /// right leg go1 param
-#define GO1_1_ZEROS  4.24088191986084f
-#define GO1_2_ZEROS  5.711969375610352f
+#define GO1_1_ZEROS  4.410770f
+#define GO1_2_ZEROS  5.662307f
 /// leg common range
 #define MAX_L0 0.40f
 #define MIN_L0 0.10f

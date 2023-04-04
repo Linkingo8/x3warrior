@@ -281,24 +281,31 @@ WheelBalancingController::updateDataFromInterface();
     /// use these data
     /// give the L0 , theata and five bar linkage to vmc
     left_vmc_->getDataOfLeg(left_five_bar_->exportBarLength(),left_five_bar_->exportLinkageParam());
+    right_vmc_->getDataOfLeg(right_five_bar_->exportBarLength(),right_five_bar_->exportLinkageParam());
     /// calc the Fy /// give the Fy to vmc
     double Fy_left_output = 0.0f;
+    double Fy_right_output = 0.0f;
     // Fy_left_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,rc_commmonds_.ch_r_y) ;
     Fy_left_output = Fy_left_output + body_mg_;
+    Fy_right_output = Fy_right_output + body_mg_;
     left_vmc_->setFTp(0.0f,Fy_left_output);
+    right_vmc_->setFTp(0.0f,Fy_right_output);
     /// calc the vmc output jacobian matrix
     left_vmc_->VMCControllerCalc();
+    right_vmc_->VMCControllerCalc();
     /// calc the vmc output 
     left_vmc_->calcT();
+    right_vmc_->calcT();
 /***************vmc*******************/
 
     #ifdef NO_SIMULATION  
     /// give to send data
     send_data_.left_T1 = left_vmc_->exportT1() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
     send_data_.left_T2 = left_vmc_->exportT2() / G01_REDUCTION_RATIO;  //adjust motor rotation dirextion.
-
-    // send_data_.right_T1 = right_vmc_->exportT1() / G01_REDUCTION_RATIO;
-    // send_data_.right_T2 = right_vmc_->exportT2() / G01_REDUCTION_RATIO;
+    // RCLCPP_INFO(get_node()->get_logger(), "left T1 \33[33m %f\33[0m",send_data_.left_T1);
+    // RCLCPP_INFO(get_node()->get_logger(), "left T2 \33[33m %f\33[0m",send_data_.left_T2);
+    send_data_.right_T1 = right_vmc_->exportT1() / G01_REDUCTION_RATIO;
+    send_data_.right_T2 = right_vmc_->exportT2() / G01_REDUCTION_RATIO;
     #else
     send_data_.left_T1 = left_vmc_->exportT1();  //adjust motor rotation dirextion.
     send_data_.left_T2 = -left_vmc_->exportT2();  //adjust motor rotation dirextion.
@@ -314,26 +321,20 @@ WheelBalancingController::updateDataFromInterface();
         // LK_L_handles_->set_torque(0.0f); // >0 forward
         // LK_R_handles_->set_torque(0.0f);
         // /// right leg //    - + up       + - down
-        // Go1_RF_handles_->set_torque(0.0f);
-        // Go1_RB_handles_->set_torque(0.0f);
+        Go1_RF_handles_->set_torque(0.0f);
+        Go1_RB_handles_->set_torque(0.0f);
         /// left leg //     + - down       - + up
         Go1_LF_handles_->set_torque(0.0f);
         Go1_LB_handles_->set_torque(0.0f);
     } else {//other modes
         LK_L_handles_->set_torque(0.0f); // >0 forward
         LK_R_handles_->set_torque(0.0f);
-        // // // /// right leg //    - + up       + - down
-        // Go1_LF_handles_->set_torque(0.0f);
-        // Go1_LB_handles_->set_torque(-0.0f);
-        // // // /// left leg
-        // Go1_RF_handles_->set_torque(0.0f);
-        // Go1_RB_handles_->set_torque(0.0f);
         /// left leg
         Go1_LB_handles_->set_torque(send_data_.left_T1);    //fai1
         Go1_LF_handles_->set_torque(send_data_.left_T2);    //fai4
         /// right leg
-        // Go1_RF_handles_->set_torque(send_data_.right_T1);
-        // Go1_RB_handles_->set_torque(send_data_.right_T2);
+        Go1_RB_handles_->set_torque(send_data_.right_T1);   //fai1
+        Go1_RF_handles_->set_torque(send_data_.right_T2);   //fai4
     }
 /***************transmit*******************/
 
@@ -1099,9 +1100,9 @@ void WheelBalancingController::updateDataFromInterface(void)
     need_data_form_hi_.lf_go1_vel = Go1_LF_handles_->get_velocity();
     need_data_form_hi_.lf_go1_tor = Go1_LF_handles_->get_acceleration();
 
-    need_data_form_hi_.rf_go1_pos = Go1_RB_handles_->get_position();
-    need_data_form_hi_.rf_go1_vel = Go1_RB_handles_->get_velocity();
-    need_data_form_hi_.rf_go1_tor = Go1_RB_handles_->get_acceleration();
+    need_data_form_hi_.rf_go1_pos = Go1_RF_handles_->get_position();
+    need_data_form_hi_.rf_go1_vel = Go1_RF_handles_->get_velocity();
+    need_data_form_hi_.rf_go1_tor = Go1_RF_handles_->get_acceleration();
 
     need_data_form_hi_.rb_go1_pos = Go1_RB_handles_->get_position();
     need_data_form_hi_.rb_go1_vel = Go1_RB_handles_->get_velocity();
@@ -1129,11 +1130,9 @@ void WheelBalancingController::updateDataFromInterface(void)
     /// left leg param    
     need_data_form_hi_.left_leg_fai4 = PI - (LEFT_LEG_FAI_ZERO - (need_data_form_hi_.lf_go1_pos  - GO1_0_ZEROS) / G01_REDUCTION_RATIO);
     need_data_form_hi_.left_leg_fai1 = (LEFT_LEG_FAI_ZERO + (need_data_form_hi_.lb_go1_pos  - GO1_3_ZEROS) / G01_REDUCTION_RATIO);
-    // std::cout << "fai4      " << need_data_form_hi_.left_leg_fai4 << endl;
-    // std::cout << "fai1      " << need_data_form_hi_.left_leg_fai1 << endl;
     /// right leg param
-    need_data_form_hi_.right_leg_fai4 = PI - (RIGHT_LEG_FAI_ZERO - (need_data_form_hi_.rb_go1_pos - GO1_2_ZEROS) / G01_REDUCTION_RATIO);
-    need_data_form_hi_.right_leg_fai1 = (RIGHT_LEG_FAI_ZERO - (need_data_form_hi_.rf_go1_pos  - GO1_1_ZEROS) / G01_REDUCTION_RATIO);
+    need_data_form_hi_.right_leg_fai4 = PI - (RIGHT_LEG_FAI_ZERO + (need_data_form_hi_.rf_go1_pos - GO1_1_ZEROS) / G01_REDUCTION_RATIO);
+    need_data_form_hi_.right_leg_fai1 = (RIGHT_LEG_FAI_ZERO - (need_data_form_hi_.rb_go1_pos  - GO1_2_ZEROS) / G01_REDUCTION_RATIO);
     /// get theta
     left_five_bar_->virtualLegCalc(need_data_form_hi_.left_leg_fai1, need_data_form_hi_.left_leg_fai4);
     right_five_bar_->virtualLegCalc(need_data_form_hi_.right_leg_fai1, need_data_form_hi_.right_leg_fai4);
