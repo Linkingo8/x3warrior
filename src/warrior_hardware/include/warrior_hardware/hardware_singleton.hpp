@@ -3,7 +3,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
-
+#include <chrono>
 #include <iostream>
 #include <string>
 
@@ -48,6 +48,12 @@ class Debugsig {
         static uint8_t get_go_flag(void) { return get().get_go_flag_();}
         static void set_go_flag(uint8_t flag) { get().set_flag_(flag);}
 
+        static std::chrono::system_clock::time_point get_go_start_ns(void) {return get().get_go_start_ns_();}
+        static void set_go_start_ns(std::chrono::system_clock::time_point ns) { get().set_go_start_ns_(ns);}
+
+        static std::chrono::system_clock::time_point get_go_end_ns(void) {return get().get_go_end_ns_();}
+        static void set_go_end_ns(std::chrono::system_clock::time_point ns) { get().set_go_end_ns_(ns);}
+
     private:
         Debugsig() = default;
         // start time
@@ -77,7 +83,28 @@ class Debugsig {
         {
             return go_flag_;
         }
+
+        void set_go_start_ns_(std::chrono::system_clock::time_point  ns)
+        {
+            go_start_ns_  = ns;
+        }
+        std::chrono::system_clock::time_point get_go_start_ns_(void)
+        {
+            return go_start_ns_;
+        }
+
+        
+        void set_go_end_ns_(std::chrono::system_clock::time_point  ns)
+        {
+            go_end_ns_  = ns;
+        }
+        std::chrono::system_clock::time_point get_go_end_ns_(void)
+        {
+            return go_end_ns_;
+        }
         double go_start_,go_end_,go_duration_;
+        std::chrono::system_clock::time_point go_start_ns_;
+        std::chrono::system_clock::time_point go_end_ns_;
         uint8_t go_flag_ = 0;
 };
 }

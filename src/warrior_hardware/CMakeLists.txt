@@ -32,7 +32,7 @@ add_library(
   src/crc.cpp
 #  src/imu_hardware_interface.cpp
 )
-#link extern lib
+#link extern lib  
 target_link_libraries (${PROJECT_NAME}  libcontrolcan_x86.so)
 #target_link_libraries (${PROJECT_NAME}  libcontrolcan_aarch64.so)
 target_link_libraries (

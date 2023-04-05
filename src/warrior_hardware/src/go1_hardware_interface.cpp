@@ -2,6 +2,7 @@
 #include "warrior_hardware/go1_hardware_interface.hpp"
 
 #include <ctime>
+#include <chrono>
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -266,26 +267,24 @@ return_type Go1HardwareInterface::write()
     }
     // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "\33[32m id %d\33[0m",Go1_data_process_->id_now());
     /*************timestamp**********/
-  // if(Debugsig::get_go_flag() == 0)//cycle 1
-  // {
-  //   double beforeTime = clock();
-  //   Debugsig::set_go_start(beforeTime);
-  //   //reversed and record next
-  //   Debugsig::set_go_flag(1);
-  // }
-  // else
-  // {
-  //   double endTime = clock();
-  //   Debugsig::set_go_end(endTime);
-  //   //reversed and record next cycle
-  //   Debugsig::set_go_flag(0);
-  //   // print time at the end of cycle
-  //   double duration = (Debugsig::get_go_end() - Debugsig::get_go_start())*1000/CLOCKS_PER_SEC;
-  //   RCLCPP_INFO(
-  //     rclcpp::get_logger("Go1HardwareInterface"), "go1 time: %f",duration);
-  // }
-  // RCLCPP_INFO(
-  //   rclcpp::get_logger("Go1HardwareInterface"), "go1 time recorder flag: %d",Debugsig::get_go_flag());
+  if(Debugsig::get_go_flag() == 0)//cycle 1
+  {
+    std::chrono::system_clock::time_point beforeTime_ns = std::chrono::system_clock::now();
+    Debugsig::set_go_start_ns(beforeTime_ns);
+    //reversed and record next
+    Debugsig::set_go_flag(1);
+  }
+  else
+  {
+    std::chrono::system_clock::time_point endTime_ns = std::chrono::system_clock::now();
+    Debugsig::set_go_end_ns(endTime_ns);
+    //reversed and record next cycle
+    Debugsig::set_go_flag(0);
+    // print time at the end of cycle
+    double duration = (Debugsig::get_go_end_ns() - Debugsig::get_go_start_ns()).count() / 1e6;
+    RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "go1 time: %f",duration);
+  }
+  // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "go1 time recorder flag: %d",Debugsig::get_go_flag());
    /*************timestamp**********/
     return return_type::OK;
 }
