@@ -12,12 +12,12 @@ Set-VMSwitch WSL -NetAdapterName WLAN
 #### wsl2
 sudo ip addr del $(ip addr show eth0 | grep 'inet\b' | awk '{print $2}' | head -n 1) dev eth0
 sudo ip addr add <ip_new>/24 broadcast <gateway.255> dev eth0  
-**sudo ip addr add 192.168.78.10/24 broadcast 192.168.78.255 dev eth0**
+**sudo ip addr add 192.168.67.10/24 broadcast 192.168.67.255 dev eth0**
 sudo ip route add 0.0.0.0/0 via <gateway> dev eth0 
-**sudo ip route add 0.0.0.0/0 via 192.168.78.162 dev eth0**
+**sudo ip route add 0.0.0.0/0 via 192.168.67.162 dev eth0**
 sudo vim /etc/resolv.conf  
 nameserver <gateway>
-**nameserver 192.168.78.162**
+**nameserver 192.168.67.162**
 
 # compile
 vim ./src/warrior_controller/src/wheel_balancing_controller.cpp
@@ -34,9 +34,9 @@ source install/setup.bash
 ros2 launch warrior_bringup warrior.py
 
 # ssh x3
-ssh sunrise@192.168.85.253
-scp -r ../x3warrior sunrise@192.168.85.253:/home/sunrise
-
+ssh sunrise@192.168.67.253
+scp -r ../x3warrior sunrise@192.168.67.253:/home/sunrise
+scp -r ./src/warrior_controller/src/wheel_balancing_controller.cpp  sunrise@192.168.67.253:~/x3warrior/src/warrior_controller/src
 # debug
 RCLCPP_INFO(rclcpp::get_logger("Go1_config"), "go1_control_data_[position].tx.data.comd.k_spd %x",go1_control_data_[index].tx.data.comd.k_spd);    
 ros2 topic echo /vmc_debug_feedback

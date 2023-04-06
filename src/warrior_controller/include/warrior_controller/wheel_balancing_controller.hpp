@@ -54,7 +54,7 @@
 #define GO1_2_ZEROS  5.662307f
 /// leg common range
 #define MAX_L0 0.40f
-#define MIN_L0 0.10f
+#define MIN_L0 0.05f
 #define LEFT_LEG_FAI_ZERO 3.48716784548467f
 #define RIGHT_LEG_FAI_ZERO 3.48716784548467f
 #define BODY_Mg  5.3 * 9.82f
@@ -209,7 +209,7 @@ namespace warrior_controller
                 uint8_t sw_r;
                 float wheel;
                 rc_commmonds() : ch_l_x(0.0), ch_l_y(0.0), ch_r_x(0.0)
-                                 ,ch_r_y(0.0), sw_l(1),sw_r(1),wheel(0) {}
+                                 ,ch_r_y(0.13), sw_l(1),sw_r(1),wheel(0) {}
             };
             /* balance controller */
             struct state_variables

@@ -285,7 +285,8 @@ WheelBalancingController::updateDataFromInterface();
     /// calc the Fy /// give the Fy to vmc
     double Fy_left_output = 0.0f;
     double Fy_right_output = 0.0f;
-    // Fy_left_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,rc_commmonds_.ch_r_y) ;
+    Fy_left_output = left_Fy_pid_->getOutput(left_five_bar_->exportBarLength()->L0,rc_commmonds_.ch_r_y) ;
+    Fy_right_output = right_Fy_pid_->getOutput(right_five_bar_->exportBarLength()->L0,rc_commmonds_.ch_r_y) ;
     Fy_left_output = Fy_left_output + body_mg_;
     Fy_right_output = Fy_right_output + body_mg_;
     left_vmc_->setFTp(0.0f,Fy_left_output);
@@ -903,7 +904,7 @@ controller_interface::return_type WheelBalancingController::updatingRemoteData(v
      rc_commmonds_.ch_l_y  = rc->ch_l_y   * 999;
      rc_commmonds_.ch_r_x  = rc->ch_r_x   * 999;
      /* L_-1 */
-     rc_commmonds_.ch_r_y  += (rc->ch_r_y * -1.001 * 0.001);
+     rc_commmonds_.ch_r_y  += (rc->ch_r_y * 0.001);
      if(rc_commmonds_.ch_r_y<MIN_L0)rc_commmonds_.ch_r_y = MIN_L0;
      if(rc_commmonds_.ch_r_y>MAX_L0)rc_commmonds_.ch_r_y = MAX_L0;
      
