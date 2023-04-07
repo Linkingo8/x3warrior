@@ -24,6 +24,7 @@ add_library(
   SHARED
   src/limiter.cpp
   src/lqr.cpp
+  src/dlqr.cpp
   src/five_bar_linkage.cpp
   src/vmc.cpp
   src/pid.cpp

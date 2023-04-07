@@ -19,6 +19,7 @@
 #include "warrior_controller/warrior_controller_compiler.h"
 ///common
 #include "warrior_common/lqr.hpp"
+#include "warrior_common/dlqr.hpp"
 #include "warrior_common/vmc.hpp"
 #include "warrior_common/pid.hpp"
 #include "warrior_common/five_bar_linkage.hpp"
@@ -242,7 +243,6 @@ namespace warrior_controller
                 MatrixXd P_;
                 leg_lqr_param() : A_(6,6),B_(6,2),Q_(6, 6), R_(2, 2) , K_(2, 6), P_(2, 2){}
             };
-
             /*GO1*/
             std::shared_ptr<Go1Handle> Go1_LF_handles_;
             std::shared_ptr<Go1Handle> Go1_RF_handles_;
@@ -256,22 +256,20 @@ namespace warrior_controller
             /*imu*/
             std::shared_ptr<ImuHandle> imu_handles_;
             std::vector<std::string> imu_joint_name_;
+
             send_data send_data_;
             data_used_from_interface need_data_form_hi_;
             rc_commmonds rc_commmonds_;
             controller_feedback real_feed_back_,simu_feedback_;
-            state_variables left_destination_,left_set_feedback_,state_var_tar_;
-            state_variables right_destination_,right_set_feedback_,state_var_now_;
-            leg_balance_controller leg_balance_controller_[2];
+            state_variables state_var_tar_;
+            state_variables state_var_now_;
             leg_balance_controller balance_controller_;
             double body_mg_;
             double temp_target_length_;
             double pitch_now_,pitch_last_;//use and update in updateX
-            leg_lqr_param left_leg_lqr_param_,right_leg_lqr_param_;
             leg_lqr_param leg_lqr_param_;
-            std::shared_ptr<LQR> left_lqr_;
-            std::shared_ptr<LQR> right_lqr_;
             std::shared_ptr<LQR> lqr_;
+            std::shared_ptr<dlqr> dlqr_;
             std::shared_ptr<five_bar_linkage::FiveBar> left_five_bar_;
             std::shared_ptr<five_bar_linkage::FiveBar> right_five_bar_;
             std::shared_ptr<VMC> left_vmc_;
@@ -344,18 +342,11 @@ namespace warrior_controller
             std::shared_ptr<Go1Handle> get_Go1_handle(const std::string & joint_name);
             std::shared_ptr<LK9025Handle> get_LK_handle(const std::string & joint_name);
             std::shared_ptr<ImuHandle> get_angle(const std::string & joint_name);
-            void initLQRParam(void);
-            void setLegLQRGain(MatrixXd K,uint8_t index);
             void setLegLQRGain(MatrixXd K);
-            void setLegLQRXd(uint8_t index);
             void setLegLQRXd(void);
-            void setLegLQRX(uint8_t index);
             void setLegLQRX(void);
-            void calclegLQRU(uint8_t index);
             void calclegLQRU(void);
-            void updateXdes(uint8_t index);
             void updateXdes(void);
-            void updateX(uint8_t index);
             void updateX(void);
             controller_interface::return_type updatingRemoteData(void);
             controller_interface::return_type updatingSimuImuData(void);
