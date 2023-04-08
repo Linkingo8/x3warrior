@@ -1,7 +1,8 @@
+/**:
+  ros__parameters:
+    update_rate: 500
 controller_manager:
   ros__parameters:
-    update_rate: 500  # Hz
-
     test_controller:
       type: warrior_controller/Testcontroller
     wheel_balance_controller:

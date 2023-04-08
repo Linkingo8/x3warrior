@@ -113,10 +113,12 @@ namespace warrior_controller
 
             WARRIOR_CONTROLLER_PUBLIC
             CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override;
+            
         private:
             /*get data from interface*/
             struct data_used_from_interface
             {
+                // raw data
                 double left_lk9025_pos;
                 double left_lk9025_vel;
                 double left_lk9025_tor;
@@ -132,15 +134,6 @@ namespace warrior_controller
                 uint16_t right_lk9025_ecoder_last;
                 int32_t right_lk9025_circle_cnt;
                 uint8_t right_init_flag;
-
-                double right_leg_total_dis;
-                double right_leg_dis_dot;
-                double left_leg_total_dis;
-                double left_leg_dis_dot;
-                double left_leg_fai1;
-                double left_leg_fai4;
-                double right_leg_fai1;
-                double right_leg_fai4;
 
                 double lf_go1_pos;
                 double lf_go1_vel;
@@ -176,6 +169,21 @@ namespace warrior_controller
                 double ax;
                 double ay;
                 double az;
+                /// vmc
+                double left_leg_fai1;
+                double left_leg_fai4;
+                double right_leg_fai1;
+                double right_leg_fai4;
+                double right_leg_theta;
+                double right_leg_l0;
+                double left_leg_theta;
+                double left_leg_l0;
+                /// lqr
+                double right_leg_total_dis;
+                double right_leg_dis_dot;
+                double left_leg_total_dis;
+                double left_leg_dis_dot;
+
                 data_used_from_interface() {memset(this,0,sizeof(data_used_from_interface));}
             };
             struct send_data
@@ -235,13 +243,14 @@ namespace warrior_controller
             };
             /*lqr controller*/
             struct leg_lqr_param{
-                MatrixXd A_;
-                MatrixXd B_;
-                MatrixXd Q_;
-                MatrixXd R_;
-                MatrixXd K_;
-                MatrixXd P_;
-                leg_lqr_param() : A_(6,6),B_(6,2),Q_(6, 6), R_(2, 2) , K_(2, 6), P_(2, 2){}
+                Eigen::Matrix<double,6,6> A_;
+                Eigen::Matrix<double,6,2> B_;
+                Eigen::Matrix<double,6,6> Q_;
+                Eigen::Matrix<double,2,2> R_;
+                Eigen::Matrix<double,2,6> K_;
+                Eigen::Matrix<double,6,6> P_;
+                EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+                leg_lqr_param() {memset(this,0,sizeof(leg_lqr_param));}
             };
             /*GO1*/
             std::shared_ptr<Go1Handle> Go1_LF_handles_;
@@ -258,7 +267,7 @@ namespace warrior_controller
             std::vector<std::string> imu_joint_name_;
 
             send_data send_data_;
-            data_used_from_interface need_data_form_hi_;
+            data_used_from_interface need_data_from_hi_;
             rc_commmonds rc_commmonds_;
             controller_feedback real_feed_back_,simu_feedback_;
             state_variables state_var_tar_;
@@ -266,7 +275,9 @@ namespace warrior_controller
             leg_balance_controller balance_controller_;
             double body_mg_;
             double temp_target_length_;
-            double pitch_now_,pitch_last_;//use and update in updateX
+            double pitch_now_,pitch_last_;//use and update in updateXCur
+            int update_rate_;
+            double T_;
             leg_lqr_param leg_lqr_param_;
             std::shared_ptr<LQR> lqr_;
             std::shared_ptr<dlqr> dlqr_;
@@ -343,11 +354,9 @@ namespace warrior_controller
             std::shared_ptr<LK9025Handle> get_LK_handle(const std::string & joint_name);
             std::shared_ptr<ImuHandle> get_angle(const std::string & joint_name);
             void setLegLQRGain(MatrixXd K);
-            void setLegLQRXd(void);
-            void setLegLQRX(void);
             void calclegLQRU(void);
-            void updateXdes(void);
-            void updateX(void);
+            void updateXDes(void);
+            void updateXCur(void);
             controller_interface::return_type updatingRemoteData(void);
             controller_interface::return_type updatingSimuImuData(void);
             controller_interface::return_type updatingSimuMotorData(void);

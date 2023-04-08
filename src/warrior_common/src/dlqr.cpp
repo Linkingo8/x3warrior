@@ -1,4 +1,10 @@
 #include "warrior_common/dlqr.hpp"
+using namespace Eigen;
+Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
+IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+IOFormat OctaveFmt(StreamPrecision, 0, ", ", ";\n", "", "", "[", "]");
+IOFormat HeavyFmt(FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]");
+
 /* constructor */
 dlqr::dlqr(Eigen::MatrixXd A, Eigen::MatrixXd B, 
            int dim_state_, int dim_control_, double T_,
@@ -7,7 +13,6 @@ dlqr::dlqr(Eigen::MatrixXd A, Eigen::MatrixXd B,
     dim_state = dim_state_;
     dim_control = dim_control_;
     T = T_;
-
     Q.resize(dim_state, dim_state);
     R.resize(dim_control, dim_control);
 
@@ -25,7 +30,8 @@ dlqr::dlqr(Eigen::MatrixXd A, Eigen::MatrixXd B,
     if(system_type_ == CONTINUOUS)
     {
         Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dim_state, dim_state);
-        Ad = (I - 0.5 * T * A).inverse() * (I + 0.5 * T * A);
+        Ad = (I + 0.5 * T * A) * (I - 0.5 * T * A).inverse();
+        //Ad = (I - 0.5 * T * A).inverse() * (I + 0.5 * T * A);
         Bd = (I - 0.5 * T * A).inverse() * B * T;
         #ifdef DLQR_APPROXIMATE_MODE
             Bd = B * T;
@@ -39,11 +45,11 @@ dlqr::dlqr(Eigen::MatrixXd A, Eigen::MatrixXd B,
 
     #ifdef DLQR_TEST_PRINT_Ad
         std::cout << "----------------------------------------- Ad -----------------------------------------" << std::endl;
-        PrintMatrix(Ad);
+        std::cout << (Ad.format(HeavyFmt)) << std::endl;
     #endif
     #ifdef DLQR_TEST_PRINT_Bd
         std::cout << "----------------------------------------- Bd -----------------------------------------" << std::endl;
-        PrintMatrix(Bd);
+        std::cout <<(Bd.format(HeavyFmt)) << std::endl;
     #endif
 
     std::cout << "dlqr Birth Done" << std::endl;
@@ -59,18 +65,25 @@ void dlqr::dlqrInit()
 {
     /* ************************************ option start ************************************ */
     /* Q init */
-    Q << 100.0, 0.0,
-         0.0, 100.0;
+    Q << 
+        2000,           0,         0,           0,           0,           0,
+           0,          10,         0,           0,           0,           0,
+           0,           0,        10,           0,           0,           0,
+           0,           0,         0,           1,           0,           0,
+           0,           0,         0,           0,         100,           0,
+           0,           0,         0,           0,           0,         100;
     #ifdef DLQR_TEST_PRINT_Q
         std::cout << "----------------------------------------- Q -----------------------------------------" << std::endl;
-        PrintMatrix(Q);
+        std::cout <<(Q)<< std::endl;
     #endif
 
     /* R init */
-    R << 100.0;
+    R << 
+           100,     0,
+             0,   100;
     #ifdef DLQR_TEST_PRINT_R
         std::cout << "----------------------------------------- R -----------------------------------------" << std::endl;
-        PrintMatrix(R);
+        std::cout <<(R)<< std::endl;
     #endif
     /* ************************************ option end ************************************ */
 }
@@ -81,7 +94,7 @@ void dlqr::dlqrRun()
     Eigen::MatrixXd P_1;
     Eigen::MatrixXd P_err;
     int iteration_num = 0;
-    double err = 10.0 * DLQR_TOLERANCE;
+    double err =   10 * DLQR_TOLERANCE;
     Eigen::MatrixXd::Index maxRow, maxCol;
 
     while(err > DLQR_TOLERANCE && iteration_num < DLQR_MAX_ITERATION)
@@ -98,7 +111,7 @@ void dlqr::dlqrRun()
         K = (R + Bd.transpose() * P * Bd).inverse() * Bd.transpose() * P * Ad;
         #ifdef DLQR_TEST_PRINT_K
             std::cout << "----------------------------------------- K -----------------------------------------" << std::endl;
-            PrintMatrix(K);
+            std::cout <<(K)<< std::endl;
         #endif
     }
     else
