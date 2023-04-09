@@ -214,20 +214,20 @@ controller_interface::return_type WheelBalancingController::update()
     /***************lqr*******************/
     dlqr_->dlqrRun();
     ///   calculate the lqr k.
-    leg_lqr_param_.K_ = dlqr_->K;
+    // leg_lqr_param_.K_ = dlqr_->K;
     //     lqr_->K  <<
     //     4.3741,    1.4480,   -0.3754,    0.0972,   10.3204,   -2.1473,
     //    -0.5014,   -0.1122,   -0.2845,   -0.0112,    0.3149,   -0.2761;
     //     /// set the x_d to struct
-    //     WheelBalancingController::updateXDes();
-    //     /// give k to controller
-    //     WheelBalancingController::setLegLQRGain(lqr_->K);
-    //     /// set the x_d to controller
-    //     WheelBalancingController::setLegLQRXd();
-    //     /// set the X to controller
-    //     WheelBalancingController::setLegLQRX();
-    //     /// calculate the input of system. tau_W tau_Tp
-    //     WheelBalancingController::calclegLQRU();
+    // WheelBalancingController::updateXDes();
+    // //     /// give k to controller
+    // WheelBalancingController::setLegLQRGain(leg_lqr_param_.K_);
+    // //     /// set the x_d to controller
+    // WheelBalancingController::updateXDes();
+    // //     /// set the X to controller
+    // WheelBalancingController::updateXCur();
+    // //     /// calculate the input of system. tau_W tau_Tp
+    // WheelBalancingController::calclegLQRU();
     //     temp_target_length_ = 0.3f;
     //     double Tp = 0.0;
     //     Tp = balance_controller_.U(1,0);   //adjust motor rotation dirextion.
@@ -1287,6 +1287,8 @@ void WheelBalancingController::calclegLQRU(void)
                     (balance_controller_.X_d.transpose() - balance_controller_.X.transpose());
         send_data_.left_tau_w = balance_controller_.U(0,0); // adjust motor rotation dirextion.
         send_data_.right_tau_w = balance_controller_.U(0,0); // adjust motor rotation dirextion.
+
+        std::cout << "send_data_.left_tau_w     " << send_data_.left_tau_w << std::endl;
 }
 
 std::shared_ptr<ImuHandle> WheelBalancingController::get_angle(const std::string & joint_name)

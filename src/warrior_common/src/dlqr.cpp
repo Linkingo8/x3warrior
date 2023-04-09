@@ -74,7 +74,7 @@ void dlqr::dlqrInit()
            0,           0,         0,           0,           0,         100;
     #ifdef DLQR_TEST_PRINT_Q
         std::cout << "----------------------------------------- Q -----------------------------------------" << std::endl;
-        std::cout <<(Q)<< std::endl;
+        std::cout << Q << std::endl;
     #endif
 
     /* R init */
@@ -83,13 +83,16 @@ void dlqr::dlqrInit()
              0,   100;
     #ifdef DLQR_TEST_PRINT_R
         std::cout << "----------------------------------------- R -----------------------------------------" << std::endl;
-        std::cout <<(R)<< std::endl;
+        std::cout << R << std::endl;
     #endif
     /* ************************************ option end ************************************ */
 }
 
 void dlqr::dlqrRun()
 {
+    Eigen::MatrixXd AdT = Ad.transpose();
+    Eigen::MatrixXd BdT = Bd.transpose();
+
     Eigen::MatrixXd P = Q;
     Eigen::MatrixXd P_1;
     Eigen::MatrixXd P_err;
@@ -99,23 +102,30 @@ void dlqr::dlqrRun()
 
     while(err > DLQR_TOLERANCE && iteration_num < DLQR_MAX_ITERATION)
     {
+
         iteration_num++;
-        P_1 = Q + Ad.transpose() * P * Ad - Ad.transpose() * P * Bd * (R + Bd.transpose() * P * Bd).inverse() * Bd.transpose() * P * Ad;
+        // P_1 = Q + Ad.transpose() * P * Ad - Ad.transpose() * P * Bd * (R + Bd.transpose() * P * Bd).inverse() * Bd.transpose() * P * Ad;
+        std::chrono::system_clock::time_point beforeTime_ns = std::chrono::system_clock::now();
+        P_1 = Q + AdT * P * Ad - AdT * P * Bd * (R + BdT * P * Bd).inverse() * BdT * P * Ad;
+        std::chrono::system_clock::time_point endTime_ns = std::chrono::system_clock::now();
         Eigen::MatrixXd P_err = P_1 - P;
         err = fabs(P_err.maxCoeff(&maxRow, &maxCol));
+        double duration = (endTime_ns - beforeTime_ns).count() / 1e6; 
+        std::cout << "运行周期" << duration << std::endl;
         P = P_1;
     }
 
-    if(iteration_num < DLQR_MAX_ITERATION)
-    {
-        K = (R + Bd.transpose() * P * Bd).inverse() * Bd.transpose() * P * Ad;
-        #ifdef DLQR_TEST_PRINT_K
-            std::cout << "----------------------------------------- K -----------------------------------------" << std::endl;
-            std::cout <<(K)<< std::endl;
-        #endif
-    }
-    else
-        std::cout << "DLQR Solve failed !!!" << std::endl;
+    // if(iteration_num < DLQR_MAX_ITERATION)
+    // {
+    //     K = (R + Bd.transpose() * P * Bd).inverse() * Bd.transpose() * P * Ad;
+    //     #ifdef DLQR_TEST_PRINT_K
+    //         std::cout << "----------------------------------------- K -----------------------------------------" << std::endl;
+    //         std::cout <<K<< std::endl;
+    //         std::cout << "iteration time" << iteration_num << std::endl;
+    //     #endif
+    // }
+    // else
+    //     std::cout << "DLQR Solve failed !!!" << std::endl;
     
     #ifdef DLQR_TEST_PRINT_ITERATION
         std::cout << "----------------------------------------- ITERATION -----------------------------------------" << std::endl;
