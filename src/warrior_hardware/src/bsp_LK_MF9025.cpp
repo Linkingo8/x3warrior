@@ -119,6 +119,7 @@ void MF9025DataProcess::MF9025_message_rec(VCI_CAN_OBJ *rec_,int16_t q1)
 
         rec_9025_[0].encoder = (uint16_t)rec_[q1].Data[6];//DATA[2] = *(uint8_t *)(&iq) 
         rec_9025_[0].encoder = rec_9025_[0].encoder | ((uint16_t)rec_[q1].Data[7] << 8);//DATA[3] = *((uint8_t *)(&iq)+1) 
+        // RCLCPP_FATAL(rclcpp::get_logger("MF9025_position_set"),"speed: %f", rec_9025_[0].speed);
         break;
     case LEFT_ID:
         rec_9025_[1].commond = (uint8_t)rec_[q1].Data[0];
@@ -148,7 +149,10 @@ double MF9025DataProcess::MF9025_velocitise_export(VCI_CAN_OBJ *rec_,uint8_t id)
     switch (id_temp)
     {
     case RIGHT_ID:
-        return rec_9025_[0].speed;
+        if(rec_9025_[0].speed!=0)
+            return -rec_9025_[0].speed;
+        else
+            return 0;
         break;
     case LEFT_ID:
         return rec_9025_[1].speed;
@@ -182,7 +186,7 @@ double MF9025DataProcess::MF9025_torque_export(VCI_CAN_OBJ *rec_,uint8_t id)
     switch (id_temp)
     {
     case RIGHT_ID:
-        return rec_9025_[0].iq;
+        return -rec_9025_[0].iq;
         break;
     case LEFT_ID:
         return rec_9025_[1].iq;

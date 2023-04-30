@@ -27,7 +27,7 @@ dlqr::dlqr(Eigen::MatrixXd A, Eigen::MatrixXd B,
         std::cout << "B is in wrong cols !!!" << std::endl; 
 
     /* discretization */
-    if(system_type_ == CONTINUOUS)
+    if(system_type_ == DISCRETE)
     {
         Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dim_state, dim_state);
         Ad = (I + 0.5 * T * A) * (I - 0.5 * T * A).inverse();
@@ -85,47 +85,47 @@ void dlqr::dlqrInit()
         std::cout << "----------------------------------------- R -----------------------------------------" << std::endl;
         std::cout << R << std::endl;
     #endif
+    P = Q;
+    P_1 = Q;
+    err = 10 * DLQR_TOLERANCE;
     /* ************************************ option end ************************************ */
 }
 
-void dlqr::dlqrRun()
+void dlqr::dlqrIterRun()
 {
+    Eigen::MatrixXd Ad_temp = Ad;
+    Eigen::MatrixXd Bd_temp = Bd;
+    
     Eigen::MatrixXd AdT = Ad.transpose();
     Eigen::MatrixXd BdT = Bd.transpose();
 
-    Eigen::MatrixXd P = Q;
-    Eigen::MatrixXd P_1;
-    Eigen::MatrixXd P_err;
     int iteration_num = 0;
-    double err =   10 * DLQR_TOLERANCE;
     Eigen::MatrixXd::Index maxRow, maxCol;
-
-    while(err > DLQR_TOLERANCE && iteration_num < DLQR_MAX_ITERATION)
+    std::chrono::system_clock::time_point beforeTime_ns = std::chrono::system_clock::now();
+    while(iteration_num < DLQR_MAX_ITERATION)
     {
-
         iteration_num++;
         // P_1 = Q + Ad.transpose() * P * Ad - Ad.transpose() * P * Bd * (R + Bd.transpose() * P * Bd).inverse() * Bd.transpose() * P * Ad;
-        std::chrono::system_clock::time_point beforeTime_ns = std::chrono::system_clock::now();
-        P_1 = Q + AdT * P * Ad - AdT * P * Bd * (R + BdT * P * Bd).inverse() * BdT * P * Ad;
-        std::chrono::system_clock::time_point endTime_ns = std::chrono::system_clock::now();
-        Eigen::MatrixXd P_err = P_1 - P;
-        err = fabs(P_err.maxCoeff(&maxRow, &maxCol));
-        double duration = (endTime_ns - beforeTime_ns).count() / 1e6; 
-        std::cout << "运行周期" << duration << std::endl;
+        P_1 = Q + AdT * P * Ad_temp -
+             AdT * P * Bd_temp * (R + BdT * P * Bd_temp).inverse() * BdT * P * Ad_temp;
+        // Eigen::MatrixXd P_err = P_1 - P;
+        // err = fabs(P_err.maxCoeff(&maxRow, &maxCol));
+        err = fabs((P_1 - P).maxCoeff());
         P = P_1;
+        if(err < DLQR_TOLERANCE)
+            return;
     }
+    std::chrono::system_clock::time_point endTime_ns = std::chrono::system_clock::now();
+    double duration = (endTime_ns - beforeTime_ns).count() / 1e6; 
+    std::cout << "运行周期" << duration << std::endl;
 
-    // if(iteration_num < DLQR_MAX_ITERATION)
-    // {
-    //     K = (R + Bd.transpose() * P * Bd).inverse() * Bd.transpose() * P * Ad;
-    //     #ifdef DLQR_TEST_PRINT_K
-    //         std::cout << "----------------------------------------- K -----------------------------------------" << std::endl;
-    //         std::cout <<K<< std::endl;
-    //         std::cout << "iteration time" << iteration_num << std::endl;
-    //     #endif
-    // }
-    // else
-    //     std::cout << "DLQR Solve failed !!!" << std::endl;
+    K = (R + Bd.transpose() * P * Bd).inverse() * Bd.transpose() * P * Ad;
+    #ifdef DLQR_TEST_PRINT_K
+        std::cout << "----------------------------------------- K -----------------------------------------" << std::endl;
+        std::cout <<K<< std::endl;
+        std::cout << "iteration time" << iteration_num << std::endl;
+    #endif
+    
     
     #ifdef DLQR_TEST_PRINT_ITERATION
         std::cout << "----------------------------------------- ITERATION -----------------------------------------" << std::endl;
@@ -135,4 +135,50 @@ void dlqr::dlqrRun()
         std::cout << "----------------------------------------- ULTI_ERROR -----------------------------------------" << std::endl;
         std::cout << err << std::endl;
     #endif
+}
+
+void dlqr::dlqrArimotoPotterRun()
+{
+    std::chrono::system_clock::time_point beforeTime_ns = std::chrono::system_clock::now();
+    const uint dim_x = Ad.rows();
+    const uint dim_u = Bd.cols();
+
+    // set Hamilton matrix
+    Eigen::MatrixXd Ham = Eigen::MatrixXd::Zero(2 * dim_x, 2 * dim_x);
+    Ham <<  Ad
+            ,-Bd * R.inverse() * Bd.transpose()
+            ,-Q
+            ,-Ad.transpose();
+
+    // calc eigenvalues and eigenvectors
+    Eigen::EigenSolver<Eigen::MatrixXd> Eigs(Ham);
+
+    // check eigen values
+    // std::cout << "eigen values：\n" << Eigs.eigenvalues() << std::endl;
+    // std::cout << "eigen vectors：\n" << Eigs.eigenvectors() << std::endl;
+
+    // extract stable eigenvectors into 'eigvec'
+    Eigen::MatrixXcd eigvec = Eigen::MatrixXcd::Zero(2 * dim_x, dim_x);
+    int j = 0;
+    for (int i = 0; i < 2 * dim_x; ++i) {
+        if (Eigs.eigenvalues()[i].real() < 0.) {
+        eigvec.col(j) = Eigs.eigenvectors().block(0, i, 2 * dim_x, 1);
+        ++j;
+        }
+    }
+
+    // calc P with stable eigen vector matrix
+    Eigen::MatrixXcd Vs_1, Vs_2;
+    Vs_1 = eigvec.block(0, 0, dim_x, dim_x);
+    Vs_2 = eigvec.block(dim_x, 0, dim_x, dim_x);
+    P = (Vs_2 * Vs_1.inverse()).real();
+    
+    K = (R + Bd.transpose() * P * Bd).inverse() * Bd.transpose() * P * Ad;
+    #ifdef DLQR_TEST_PRINT_K
+        std::cout << "----------------------------------------- K -----------------------------------------" << std::endl;
+        std::cout <<K<< std::endl;
+    #endif
+    std::chrono::system_clock::time_point endTime_ns = std::chrono::system_clock::now();
+    double duration = (endTime_ns - beforeTime_ns).count() / 1e6; 
+    std::cout << "运行周期" << duration << std::endl;
 }

@@ -1,6 +1,6 @@
 /**:
   ros__parameters:
-    update_rate: 500
+    update_rate: 250
 controller_manager:
   ros__parameters:
     test_controller:
@@ -41,3 +41,17 @@ wheel_balance_controller:
 
       r1: 1.0
       r2: 1.0
+                                                                                       
+      k00:   12.0061
+      k01:   9.2669
+      k02:  -2.0416
+      k03:   7.7998
+      k04:  44.2023 
+      k05:  -10.2829
+             
+      k10:  -0.6616
+      k11:  -0.7187
+      k12:  -1.5142
+      k13:  -0.4230
+      k14:  -1.3338
+      k15:  -4.3509    

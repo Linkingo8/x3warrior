@@ -1,6 +1,5 @@
 #ifndef __DLQR__H__
-#define __DLQR__H__
-
+#define __DLQR__H__ww
 #include <cstdio>
 #include <Eigen/Dense>
 #include <cmath>
@@ -8,7 +7,7 @@
 #include <chrono>
 /* ************************************ option start ************************************ */
 /* approximate mode: saves calculation time but reduces calculation accuracy */
- #define DLQR_APPROXIMATE_MODE
+// #define DLQR_APPROXIMATE_MODE
 /* print Ad */
 // #define DLQR_TEST_PRINT_Ad
 /* print Bd */
@@ -18,16 +17,16 @@
 /* print R */
  #define DLQR_TEST_PRINT_R
 /* print K */
-// #define DLQR_TEST_PRINT_K
+ #define DLQR_TEST_PRINT_K
 /* print number of iteration in solving Riccati */
 // #define DLQR_TEST_PRINT_ITERATION
 /* print number of ulti error in solving Riccati */
 // #define DLQR_TEST_PRINT_ULTI_ERROR
 
 /* number of max iteration in Ricatti solving */
-#define DLQR_MAX_ITERATION 500
+#define DLQR_MAX_ITERATION 50
 /* number of error tolerance in Riccati solving */
-#define DLQR_TOLERANCE 10
+#define DLQR_TOLERANCE 1e-2
 /* ************************************ option end ************************************ */
 enum SYSTEM_TYPE {CONTINUOUS, DISCRETE};
 
@@ -56,12 +55,16 @@ class dlqr
         /* matrix K */
         Eigen::MatrixXd K;
 
+        Eigen::MatrixXd P;
+        Eigen::MatrixXd P_1;
+        double err;
         dlqr(Eigen::MatrixXd A, Eigen::MatrixXd B,
              int dim_state_, int dim_control_, double T_, 
              SYSTEM_TYPE system_type_);
         ~dlqr();
         void dlqrInit();
-        void dlqrRun();
+        void dlqrIterRun();
+        void dlqrArimotoPotterRun();
 };
 
 #endif

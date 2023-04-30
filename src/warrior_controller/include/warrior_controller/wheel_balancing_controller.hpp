@@ -35,10 +35,10 @@
 // max leg length 0.41853056293485247
 // min leg length 0.11914338936606465
 // #define IMU_PLOT
-// #define LK_PLOT
+#define LK_PLOT
 #define GO1_PLOT
-#define VMC_DEBUG
-//#define LQR_DEBUG
+//#define VMC_DEBUG
+#define LQR_DEBUG
 #define LEFT_CONTROLLER_INDEX 0
 #define RIGHT_CONTROLLER_INDEX 1 
 #define DRIVER_RADIUS 0.0875f
@@ -59,6 +59,7 @@
 #define LEFT_LEG_FAI_ZERO 3.48716784548467f
 #define RIGHT_LEG_FAI_ZERO 3.48716784548467f
 #define BODY_Mg  5.3 * 9.82f
+#define LK_LIMIT 30.0f
 #else
 /// left leg go1 param
 #define GO1_0_ZEROS  -0.0866031f

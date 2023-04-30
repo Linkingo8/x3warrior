@@ -12,12 +12,12 @@ Set-VMSwitch WSL -NetAdapterName WLAN
 #### wsl2
 sudo ip addr del $(ip addr show eth0 | grep 'inet\b' | awk '{print $2}' | head -n 1) dev eth0
 sudo ip addr add <ip_new>/24 broadcast <gateway.255> dev eth0  
-**sudo ip addr add 192.168.67.10/24 broadcast 192.168.67.255 dev eth0**
+**sudo ip addr add 192.168.213.10/24 broadcast 192.168.213.255 dev eth0**
 sudo ip route add 0.0.0.0/0 via <gateway> dev eth0 
-**sudo ip route add 0.0.0.0/0 via 192.168.67.162 dev eth0**
+**sudo ip route add 0.0.0.0/0 via 192.168.213.162 dev eth0**
 sudo vim /etc/resolv.conf  
 nameserver <gateway>
-**nameserver 192.168.67.162**
+**nameserver 192.168.213.162**
 
 # compile
 vim ./src/warrior_controller/src/wheel_balancing_controller.cpp

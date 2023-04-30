@@ -282,10 +282,10 @@ return_type Go1HardwareInterface::write()
     Debugsig::set_go_flag(0);
     // print time at the end of cycle
     double duration = (Debugsig::get_go_end_ns() - Debugsig::get_go_start_ns()).count() / 1e6;
-    if(duration>=2.50f)
-      RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "go1 time: %f",duration);
+    // if(duration>=5.0f)
+      // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "go1 time: %f",duration);
   }
-  // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "go1 time recorder flag: %d",Debugsig::get_go_flag());
+  //  RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "go1 time recorder flag: %d",Debugsig::get_go_flag());
    /*************timestamp**********/
     return return_type::OK;
 }
