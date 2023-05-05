@@ -30,8 +30,8 @@ dlqr::dlqr(Eigen::MatrixXd A, Eigen::MatrixXd B,
     if(system_type_ == DISCRETE)
     {
         Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dim_state, dim_state);
-        Ad = (I + 0.5 * T * A) * (I - 0.5 * T * A).inverse();
-        //Ad = (I - 0.5 * T * A).inverse() * (I + 0.5 * T * A);
+        //Ad = (I + 0.5 * T * A) * (I - 0.5 * T * A).inverse();
+        Ad = (I - 0.5 * T * A).inverse() * (I + 0.5 * T * A);
         Bd = (I - 0.5 * T * A).inverse() * B * T;
         #ifdef DLQR_APPROXIMATE_MODE
             Bd = B * T;
@@ -66,12 +66,12 @@ void dlqr::dlqrInit()
     /* ************************************ option start ************************************ */
     /* Q init */
     Q << 
-        2000,           0,         0,           0,           0,           0,
-           0,          10,         0,           0,           0,           0,
-           0,           0,        10,           0,           0,           0,
-           0,           0,         0,           1,           0,           0,
-           0,           0,         0,           0,         100,           0,
-           0,           0,         0,           0,           0,         100;
+         500,           0,         0,           0,           0,           0,
+           0,          500,         0,           0,           0,           0,
+           0,           0,        500,           0,           0,           0,
+           0,           0,         0,           500,           0,           0,
+           0,           0,         0,           0,         1500,           0,
+           0,           0,         0,           0,           0,         8000;
     #ifdef DLQR_TEST_PRINT_Q
         std::cout << "----------------------------------------- Q -----------------------------------------" << std::endl;
         std::cout << Q << std::endl;
@@ -79,8 +79,8 @@ void dlqr::dlqrInit()
 
     /* R init */
     R << 
-           100,     0,
-             0,   100;
+           8,     0,
+             0,   10;
     #ifdef DLQR_TEST_PRINT_R
         std::cout << "----------------------------------------- R -----------------------------------------" << std::endl;
         std::cout << R << std::endl;
@@ -173,12 +173,12 @@ void dlqr::dlqrArimotoPotterRun()
     Vs_2 = eigvec.block(dim_x, 0, dim_x, dim_x);
     P = (Vs_2 * Vs_1.inverse()).real();
     
-    K = (R + Bd.transpose() * P * Bd).inverse() * Bd.transpose() * P * Ad;
+    K = R.inverse() * (Bd.transpose() * P);
     #ifdef DLQR_TEST_PRINT_K
         std::cout << "----------------------------------------- K -----------------------------------------" << std::endl;
         std::cout <<K<< std::endl;
     #endif
     std::chrono::system_clock::time_point endTime_ns = std::chrono::system_clock::now();
     double duration = (endTime_ns - beforeTime_ns).count() / 1e6; 
-    std::cout << "运行周期" << duration << std::endl;
+    // std::cout << "运行周期" << duration << std::endl;
 }

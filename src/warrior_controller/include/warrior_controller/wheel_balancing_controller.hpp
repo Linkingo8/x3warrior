@@ -37,7 +37,7 @@
 // #define IMU_PLOT
 #define LK_PLOT
 #define GO1_PLOT
-//#define VMC_DEBUG
+#define VMC_DEBUG
 #define LQR_DEBUG
 #define LEFT_CONTROLLER_INDEX 0
 #define RIGHT_CONTROLLER_INDEX 1 
@@ -48,14 +48,14 @@
 
 #ifdef NO_SIMULATION
 /// left leg go1 param
-#define GO1_0_ZEROS  0.7106166481971741f
-#define GO1_3_ZEROS  0.0668541805587236f
+#define GO1_0_ZEROS  2.87f
+#define GO1_3_ZEROS  0.68f
 /// right leg go1 param
-#define GO1_1_ZEROS  4.410770f
-#define GO1_2_ZEROS  5.662307f
+#define GO1_1_ZEROS  4.993f
+#define GO1_2_ZEROS  5.711f
 /// leg common range
-#define MAX_L0 0.40f
-#define MIN_L0 0.05f
+#define MAX_L0 0.15
+#define MIN_L0 0.11
 #define LEFT_LEG_FAI_ZERO 3.48716784548467f
 #define RIGHT_LEG_FAI_ZERO 3.48716784548467f
 #define BODY_Mg  5.3 * 9.82f
@@ -67,9 +67,6 @@
 /// right leg go1 param
 #define GO1_1_ZEROS  -0.0880985f
 #define GO1_2_ZEROS  -0.357563f
-/// leg common range
-#define MAX_L0 0.23853056293485247f
-#define MIN_L0 0.16914338936606465f
 #define LEFT_LEG_FAI_ZERO 3.48716784548467f
 #define RIGHT_LEG_FAI_ZERO 3.48716784548467f
 #define BODY_Mg  5.3 * 9.82f
@@ -116,6 +113,8 @@ namespace warrior_controller
             CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override;
             
         private:
+            /*test*/
+            uint8_t k_test = 0;
             /*get data from interface*/
             struct data_used_from_interface
             {

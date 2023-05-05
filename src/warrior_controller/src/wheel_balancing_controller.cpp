@@ -59,16 +59,16 @@ WheelBalancingController::WheelBalancingController()
     left_vmc_.reset();
     left_Fy_pid_.reset();
     leg_lqr_param_.A_ <<        
-         0,        0,         0,         0,    4.9000,   -4.9000,
-         0,        0,         0,         0,  -40.6842,  -40.6842,
-         0,        0,         0,         0, -213.6320, -213.6320,
-    1.0000,        0,         0,         0,         0,         0,
-         0,   1.0000,         0,         0,         0,         0,
-         0,        0,    1.0000,         0,         0,         0;
+         0,         0,         0,         0,    4.9350,   -4.9350,
+         0,         0,         0,         0,  -40.9748,  -40.9748,
+         0,         0,         0,         0, -215.5380, -215.5380,
+    1.0000,         0,         0,         0,         0,         0,
+         0,    1.0000,         0,         0,         0,         0,
+         0,         0,    1.0000,         0,         0,         0;
     leg_lqr_param_.B_ <<  
-   -1.8422,   -2.8126,
-   15.2956,  -34.3400,
-  -22.6242, -180.3192,
+   -1.2450,   -2.2319,
+   10.3369,  -27.2302,
+   -8.6135, -143.2382,
          0,         0,
          0,         0,
          0,         0;
@@ -204,24 +204,28 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
 
 controller_interface::return_type WheelBalancingController::update()
 {
+    /* 调节pid */
+    get_node()->get_parameter("fy_left_pid_p",left_Fy_pid_->P);
+    get_node()->get_parameter("fy_left_pid_i",left_Fy_pid_->I);
+    get_node()->get_parameter("fy_left_pid_d",left_Fy_pid_->D);
+
+    get_node()->get_parameter("fy_right_pid_p",right_Fy_pid_->P);
+    get_node()->get_parameter("fy_right_pid_i",right_Fy_pid_->I);
+    get_node()->get_parameter("fy_right_pid_d",right_Fy_pid_->D);
+
+    if(rc_commmonds_.ch_r_y > 0.12)
+    {
+        leg_lqr_param_.K_ << 
+               13.3255,    9.7897,   -1.9025,   11.0457,   47.3890,   -8.3751,
+               -0.9928,   -1.3791,   -1.4151,   -0.8232,   -2.8785,   -1.7677;
+    }
     /*controller read*/
     /////////////////////// data prehandle ///////////////////////////
     //update the remote date.
     WheelBalancingController::updatingRemoteData();
     // get the feedback 
     WheelBalancingController::updateDataFromInterface();
-
     /***************lqr*******************/
-    // dlqr_->dlqrArimotoPotterRun();
-    // dlqr_->dlqrIterRun();
-    ///   calculate the lqr k.
-    // leg_lqr_param_.K_ = dlqr_->K;
-
-//     leg_lqr_param_.K_  <<      
-// //     7.8730,    3.7621,   -0.9526,    5.3182,   21.7824,   -4.7254,
-// //    -0.3889,   -0.3243,   -0.9028,   -0.2732,    0.1039,   -1.4238;
-//     7.9376,    4.8595,   -1.1008,    8.1768,   25.1289,   -4.9699,
-//    -0.3602,   -0.4873,   -1.4175,   -0.4061,   -0.1020,   -0.8764;
     // give k to controller
     WheelBalancingController::setLegLQRGain(leg_lqr_param_.K_);
     // set the x_d to controller
@@ -232,7 +236,7 @@ controller_interface::return_type WheelBalancingController::update()
     WheelBalancingController::calclegLQRU();
     //     temp_target_length_ = 0.14f;
     double Tp = 0.0;
-    Tp = balance_controller_.U(1,0);   //adjust motor rotation dirextion.
+    Tp = balance_controller_.U(1,0)/2.0f;   //adjust motor rotation dirextion.
     // std::cout << "tp:     " << Tp << std::endl;
     /***************lqr*******************/
 
@@ -249,14 +253,8 @@ controller_interface::return_type WheelBalancingController::update()
     Fy_right_output = right_Fy_pid_->getOutput(right_five_bar_->exportBarLength()->L0,rc_commmonds_.ch_r_y) ;
     Fy_left_output = Fy_left_output + body_mg_;
     Fy_right_output = Fy_right_output + body_mg_;
-    if(left_five_bar_->exportBarLength()->L0 < 0.12 || right_five_bar_->exportBarLength()->L0 < 0.12)
-    {
-        Tp = 0;
-        Fy_left_output = 0;
-        Fy_right_output = 0;    
-    }
-    left_vmc_->setFTp(0.0f,0.0f);
-    right_vmc_->setFTp(0.0f,0.0f);
+    left_vmc_->setFTp(Tp,Fy_left_output);
+    right_vmc_->setFTp(Tp,Fy_right_output);
     /// calc the vmc output jacobian matrix
     left_vmc_->VMCControllerCalc();
     right_vmc_->VMCControllerCalc();
@@ -275,7 +273,7 @@ controller_interface::return_type WheelBalancingController::update()
     send_data_.right_T2 = right_vmc_->exportT2() / G01_REDUCTION_RATIO;
     #else
     send_data_.left_T1 = left_vmc_->exportT1();  //adjust motor rotation dirextion.
-    send_data_.left_T2 = -left_vmc_->exportT2();  //adjust motor rotation dirextion.
+    send_data_.left_T2 = left_vmc_->exportT2();  //adjust motor rotation dirextion.
 
     send_data_.right_T1 = right_vmc_->exportT1();
     send_data_.right_T2 = right_vmc_->exportT2();
@@ -293,26 +291,40 @@ controller_interface::return_type WheelBalancingController::update()
         /// left leg //     + - down       - + up
         Go1_LF_handles_->set_torque(0.0f);
         Go1_LB_handles_->set_torque(0.0f);
-    } else {//other modes
+    } 
+    else 
+    {
         if(send_data_.left_tau_w > LK_LIMIT)
-        send_data_.left_tau_w = LK_LIMIT;
+            send_data_.left_tau_w = LK_LIMIT;
         if(send_data_.left_tau_w < -LK_LIMIT)
-        send_data_.left_tau_w = -LK_LIMIT;
-
+            send_data_.left_tau_w = -LK_LIMIT;
         if(send_data_.right_tau_w > LK_LIMIT)
-        send_data_.right_tau_w = LK_LIMIT;
+            send_data_.right_tau_w = LK_LIMIT;
         if(send_data_.right_tau_w < -LK_LIMIT)
-        send_data_.right_tau_w = -LK_LIMIT;
-
-
+            send_data_.right_tau_w = -LK_LIMIT;
+        //other modes
         LK_L_handles_->set_torque(send_data_.left_tau_w); // >0 forward
         LK_R_handles_->set_torque(send_data_.right_tau_w);
+        // LK_L_handles_->set_torque(0.0f); // >0 forward
+        // LK_R_handles_->set_torque(0.0f);
         /// left leg
-        Go1_LB_handles_->set_torque(send_data_.left_T1);    //fai1
-        Go1_LF_handles_->set_torque(send_data_.left_T2);    //fai4
-        /// right leg
-        Go1_RB_handles_->set_torque(send_data_.right_T1);   //fai1
-        Go1_RF_handles_->set_torque(send_data_.right_T2);   //fai4
+        if(rc_commmonds_.sw_l == 2)
+        {
+            Go1_LB_handles_->set_torque(send_data_.left_T1);    //fai1
+            Go1_LF_handles_->set_torque(send_data_.left_T2);    //fai4
+            /// right leg
+            Go1_RB_handles_->set_torque(send_data_.right_T1);   //fai1
+            Go1_RF_handles_->set_torque(send_data_.right_T2);   //fai4
+        }
+        else
+        {
+            // /// right leg //    - + up       + - down
+            Go1_RF_handles_->set_torque(0.0f);
+            Go1_RB_handles_->set_torque(0.0f);
+            /// left leg //     + - down       - + up
+            Go1_LF_handles_->set_torque(0.0f);
+            Go1_LB_handles_->set_torque(0.0f);
+        }
     }
     /***************transmit*******************/
 
@@ -405,19 +417,19 @@ controller_interface::return_type WheelBalancingController::update()
             if (realtime_Go1_data_publisher_->trylock())
             {
             auto & Go1_data_message = realtime_Go1_data_publisher_->msg_;
-            Go1_data_message.lfpositions = Go1_LF_handles_->get_position() / G01_REDUCTION_RATIO * (180.0f/PI);
+            Go1_data_message.lfpositions = Go1_LF_handles_->get_position();
             Go1_data_message.lfvelocities = Go1_LF_handles_->get_velocity();
             Go1_data_message.lftorques = Go1_LF_handles_->get_acceleration() * G01_REDUCTION_RATIO;
 
-            Go1_data_message.rfpositions = Go1_RF_handles_->get_position() / G01_REDUCTION_RATIO *(180.0f/PI);
+            Go1_data_message.rfpositions = Go1_RF_handles_->get_position();
             Go1_data_message.rfvelocities = Go1_RF_handles_->get_velocity();
             Go1_data_message.rftorques = Go1_RF_handles_->get_acceleration() * G01_REDUCTION_RATIO;
 
-            Go1_data_message.rbpositions = Go1_RB_handles_->get_position() / G01_REDUCTION_RATIO* (180.0f/PI);
+            Go1_data_message.rbpositions = Go1_RB_handles_->get_position();
             Go1_data_message.rbvelocities = Go1_RB_handles_->get_velocity();
             Go1_data_message.rbtorques = Go1_RB_handles_->get_acceleration() * G01_REDUCTION_RATIO;
             
-            Go1_data_message.lbpositions = Go1_LB_handles_->get_position() / G01_REDUCTION_RATIO*(180.0f/PI);
+            Go1_data_message.lbpositions = Go1_LB_handles_->get_position();
             Go1_data_message.lbvelocities = Go1_LB_handles_->get_velocity();
             Go1_data_message.lbtorques = Go1_LB_handles_->get_acceleration() * G01_REDUCTION_RATIO;
             realtime_Go1_data_publisher_->unlockAndPublish();
@@ -553,7 +565,7 @@ CallbackReturn WheelBalancingController::on_configure(const rclcpp_lifecycle::St
 
     std::cout << leg_lqr_param_.K_ << std::endl;
     T_ = 1.0f/update_rate_;
-    dlqr_ = std::make_shared<dlqr>(leg_lqr_param_.A_,leg_lqr_param_.B_,6,2,T_,DISCRETE);
+    dlqr_ = std::make_shared<dlqr>(leg_lqr_param_.A_,leg_lqr_param_.B_,6,2,T_,CONTINUOUS);
     dlqr_->dlqrInit();
     RCLCPP_INFO(get_node()->get_logger(), "controler run period:%.4f",T_);
 
@@ -901,11 +913,19 @@ controller_interface::return_type WheelBalancingController::updatingRemoteData(v
      rc_commmonds_.ch_l_y  = rc->ch_l_y   * 999;
      rc_commmonds_.ch_r_x  = rc->ch_r_x   * 999;
      /* L_-1 */
-     rc_commmonds_.ch_r_y  += (rc->ch_r_y * 0.001);
-     if(rc_commmonds_.ch_r_y<MIN_L0)rc_commmonds_.ch_r_y = MIN_L0;
-     if(rc_commmonds_.ch_r_y>MAX_L0)rc_commmonds_.ch_r_y = MAX_L0;
+    rc_commmonds_.ch_r_y  += (rc->ch_r_y * 0.001);
+     if(rc_commmonds_.ch_r_y<MIN_L0)
+     {
+        rc_commmonds_.ch_r_y = MIN_L0;
+     }
+
+     if(rc_commmonds_.ch_r_y>MAX_L0)
+     {
+        rc_commmonds_.ch_r_y = MAX_L0;  
+     }
+    
      
-    //  std::cout << "ch_y: " << "      " << rc_commmonds_.ch_r_y << std::endl;
+    // std::cout << "ch_y: " << "      " << rc_commmonds_.ch_r_y << std::endl;
      rc_commmonds_.sw_l = rc->s_l;
      rc_commmonds_.sw_r = rc->s_r;
      rc_commmonds_.wheel = rc->wheel;
@@ -1271,6 +1291,7 @@ void WheelBalancingController::update9025TotalDis(void)
 void WheelBalancingController::setLegLQRGain(MatrixXd K)
 {
     balance_controller_.K = K;
+    // std::cout << balance_controller_.K << std::endl;
 }
 
 void WheelBalancingController::updateXDes(void)
@@ -1296,7 +1317,7 @@ void WheelBalancingController::updateXCur(void)
     state_var_now_.x = (need_data_from_hi_.right_leg_total_dis + need_data_from_hi_.left_leg_total_dis) / 2;//synthsis of velocities.        //m
     //state_var_now_.x = 0;//synthsis of velocities.        //m
     state_var_now_.x_dot = (need_data_from_hi_.right_leg_dis_dot + need_data_from_hi_.left_leg_dis_dot) / 2;//velocities of left lk9025              //m/s
-    state_var_now_.theta_now = -(PI/2) + right_five_bar_->exportBarLength()->q0 - pitch_now_;//           //rad
+    state_var_now_.theta_now = -(PI/2) + (right_five_bar_->exportBarLength()->q0 + left_five_bar_->exportBarLength()->q0)/2 - pitch_now_;//           //rad
     state_var_now_.theta_dot = (state_var_now_.theta_now - state_var_now_.theta_last)/0.004f;  //rad/s
     state_var_now_.fai = pitch_now_;                                                                    //rad
     state_var_now_.fai_dot = need_data_from_hi_.wy;  

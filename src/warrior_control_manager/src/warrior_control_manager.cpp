@@ -23,6 +23,7 @@ int main(int argc, char * argv[])
       while (rclcpp::ok()) {
         std::chrono::system_clock::time_point begin = std::chrono::system_clock::now();
         // double beforeTime = clock();
+        std::chrono::system_clock::time_point end_sleep = std::chrono::system_clock::now();
         controller_manager_node->read();
         controller_manager_node->update();
         controller_manager_node->write();
@@ -32,10 +33,7 @@ int main(int argc, char * argv[])
             std::chrono::nanoseconds(0),
             std::chrono::nanoseconds(1000000000 / update_rate) -
             std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin)));
-        // double endTime = clock();
-        // double duration = (endTime - beforeTime)*1000/CLOCKS_PER_SEC;
-        std::chrono::system_clock::time_point end_sleep = std::chrono::system_clock::now();
-        // double duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_sleep - begin).count()/1e6;
+        double duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_sleep - begin).count()/1e6;
         // RCLCPP_INFO(controller_manager_node->get_logger(), "update time is \33[32m%f\33[0m", duration); 
       }
      });

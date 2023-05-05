@@ -12,7 +12,6 @@
 #include <cstring>
 #include <fcntl.h> /* File control definitions */
 #include <unistd.h>
-
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -220,23 +219,23 @@ return_type Go1HardwareInterface::stop()
 
 return_type Go1HardwareInterface::read()
 {
-
-  uint8_t buff[17]{0};
-  Go1_port_config_->read_frames(buff,17);  
-  uint8_t id = (buff[2] & 0xF);
-  if(id<4 && buff[0] == 0xFD && buff[1]==0xEE)
-  {
-    
-    Go1_data_process_->Go1_data_rec(id,buff);
-    Go1_velocities_[id]     =   Go1_data_process_->Go1_velocities_export(id);
-    Go1_positions_[id]      =   Go1_data_process_->Go1_positions_export(id);
-    Go1_accelerations_[id]  =   Go1_data_process_->Go1_torques_export(id);
-    // Go1_data_process_->give_id_to_go1_processor(id);
-    // for(int i = 0; i<4; i++)
-    //   RCLCPP_INFO(
-    //     rclcpp::get_logger("Go1HardwareInterface"), "Go1_positions_[%d]:%.5f",i,Go1_positions_[i]);
-  }
-  memset(buff,0,17);
+    uint8_t buff[17]{0};
+    Go1_port_config_->read_frames(buff,17);  
+    uint8_t id = (buff[2] & 0xF);
+   
+    if(id<4 && buff[0] == 0xFD && buff[1]==0xEE)
+    {
+      //  RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "id_reading now \33[32m%d\33[0m",id);
+      Go1_data_process_->Go1_data_rec(id,buff);
+      Go1_velocities_[id]     =   Go1_data_process_->Go1_velocities_export(id);
+      Go1_positions_[id]      =   Go1_data_process_->Go1_positions_export(id);
+      Go1_accelerations_[id]  =   Go1_data_process_->Go1_torques_export(id);
+      // Go1_data_process_->give_id_to_go1_processor(id);
+      // for(int i = 0; i<4; i++)
+      //   RCLCPP_INFO(
+      //     rclcpp::get_logger("Go1HardwareInterface"), "Go1_positions_[%d]:%.5f",i,Go1_positions_[i]);
+    }
+    memset(buff,0,17);
   return return_type::OK;
 }
 
@@ -246,6 +245,7 @@ return_type Go1HardwareInterface::write()
     //transmit
     if(Go1_data_process_->id_now() < 4)
     {
+      // RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "id_writting now \33[32m%d\33[0m",Go1_data_process_->id_now());
       /*head*/
       Go1_data_process_->Go1_head_set(Go1_data_process_->id_now());
       /*id*/

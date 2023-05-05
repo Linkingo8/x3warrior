@@ -83,7 +83,7 @@ void DBus::read()
   unpack();
   if (count < 17)
   {
-    memset(&d_bus_data_, 0, sizeof(d_bus_data_));
+//    memset(&d_bus_data_, 0, sizeof(d_bus_data_));
     is_update_ = false;
   }
   else
