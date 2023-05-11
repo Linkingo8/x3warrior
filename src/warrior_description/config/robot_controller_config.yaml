@@ -24,13 +24,13 @@ wheel_balance_controller:
 
       body_mg: 35.84 # half body mass
       
-      fy_left_pid_p: 1400.0
-      fy_left_pid_i: 0.0 
-      fy_left_pid_d: 500.0
+      fy_left_pid_p: 600.0
+      fy_left_pid_i: 1.0 
+      fy_left_pid_d: 800.0
 
-      fy_right_pid_p: 1400.0
-      fy_right_pid_i: 0.0
-      fy_right_pid_d: 500.0
+      fy_right_pid_p: 600.0
+      fy_right_pid_i: 1.0
+      fy_right_pid_d: 800.0
 
       x_q: 100.0
       x_dot_q: 1.1
@@ -41,17 +41,20 @@ wheel_balance_controller:
 
       r1: 1.0
       r2: 1.0
-      
-      k00:   12.9403 
-      k01: 9.2683
-      k02: -2.0039 
-      k03: 10.7126 
-      k04:  44.8355
-      k05:   -9.2637  
-             
-      k10: -0.5219
-      k11: -0.4315
-      k12: -1.1803
-      k13: -0.4800
-      k14: -2.3868
-      k15: -9.8644
+                                                                                                                                       
+      k00: -12.5897  # x_dot
+      k01: -5.6684  # theta_dot
+      k02: 1.9141  # fai_dot
+      k03: -9.9619 # x
+      k04: -30.7295 # theta
+      k05: 10.9396   # fai
+                        
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+      k10: -1.2858   # x_dot
+      k11: 0.3152 # theta_dot
+      k12: 1.9418     # fai_dot
+      k13: -0.9298   # x
+      k14:  0.0544  # theta
+      k15: 16.8561 # fai 
+
+      machine_status_flag: 1

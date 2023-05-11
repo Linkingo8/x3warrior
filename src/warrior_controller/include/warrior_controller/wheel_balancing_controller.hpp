@@ -54,12 +54,12 @@
 #define GO1_1_ZEROS  4.993f
 #define GO1_2_ZEROS  5.711f
 /// leg common range
-#define MAX_L0 0.15
+#define MAX_L0 0.20
 #define MIN_L0 0.11
 #define LEFT_LEG_FAI_ZERO 3.48716784548467f
 #define RIGHT_LEG_FAI_ZERO 3.48716784548467f
 #define BODY_Mg  5.3 * 9.82f
-#define LK_LIMIT 30.0f
+#define LK_LIMIT 100.0f
 #else
 /// left leg go1 param
 #define GO1_0_ZEROS  -0.0866031f
@@ -113,8 +113,8 @@ namespace warrior_controller
             CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override;
             
         private:
-            /*test*/
-            uint8_t k_test = 0;
+            /* parameters machine mode*/
+            
             /*get data from interface*/
             struct data_used_from_interface
             {

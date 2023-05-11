@@ -225,11 +225,21 @@ return_type Go1HardwareInterface::read()
    
     if(id<4 && buff[0] == 0xFD && buff[1]==0xEE)
     {
-      //  RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "id_reading now \33[32m%d\33[0m",id);
-      Go1_data_process_->Go1_data_rec(id,buff);
-      Go1_velocities_[id]     =   Go1_data_process_->Go1_velocities_export(id);
-      Go1_positions_[id]      =   Go1_data_process_->Go1_positions_export(id);
-      Go1_accelerations_[id]  =   Go1_data_process_->Go1_torques_export(id);
+      if(id == 1 || id == 2)
+      {
+        Go1_data_process_->Go1_data_rec(id,buff);
+        Go1_velocities_[id]     =   Go1_data_process_->Go1_velocities_export(id);
+        Go1_positions_[id]      =   Go1_data_process_->Go1_positions_export(id);
+        Go1_accelerations_[id]  =   -Go1_data_process_->Go1_torques_export(id);
+      }
+      else
+      {
+        //  RCLCPP_INFO(rclcpp::get_logger("Go1HardwareInterface"), "id_reading now \33[32m%d\33[0m",id);
+        Go1_data_process_->Go1_data_rec(id,buff);
+        Go1_velocities_[id]     =   Go1_data_process_->Go1_velocities_export(id);
+        Go1_positions_[id]      =   Go1_data_process_->Go1_positions_export(id);
+        Go1_accelerations_[id]  =   Go1_data_process_->Go1_torques_export(id);
+      }
       // Go1_data_process_->give_id_to_go1_processor(id);
       // for(int i = 0; i<4; i++)
       //   RCLCPP_INFO(

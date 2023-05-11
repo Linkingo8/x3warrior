@@ -192,6 +192,14 @@ double MiniPID::getOutput(double actual, double setpoint){
 	Poutput = P * this->error_now;	 
 	Ioutput += I * this->error_now;
 	Doutput = D * (this->error_now - this->error_last);
+	if(Ioutput > 20)
+	{
+		Ioutput = 20;
+	}
+	if(Ioutput < -20)
+	{
+		Ioutput = -20;
+	}
 	//If this->is our first time running this-> we don't actually _have_ a previous input or output. 
 	//For sensor, sanely assume it was exactly where it is now.
 	//For last output, we can assume it's the current time-independent outputs. 
@@ -206,7 +214,6 @@ double MiniPID::getOutput(double actual, double setpoint){
 	// 3. prevent windup by not increasing errorSum if output is output=maxOutput	
 	//And, finally, we can just add the terms up
 	output=Foutput + Poutput + Ioutput + Doutput;
-
 	//Restrict output to our specified output and ramp limits
 
 	this->error_last=this->error_now;
