@@ -276,12 +276,12 @@ if(CanConfig::get_status() == 0)
   }
   if(VCI_ReadBoardInfo(VCI_USBCAN2,0,&pInfo_)==1)//读取设备序列号、版本等信息。
   {
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Get VCI_ReadBoardInfo success!\n");  
-    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Serial_Num:%c\n", pInfo_.str_Serial_Num[0]); 
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Get VCI_ReadBoardInfo success!");  
+    RCLCPP_INFO(rclcpp::get_logger("MF9025HardwareInterface"), ">>Serial_Num:%c", pInfo_.str_Serial_Num[0]); 
   }
   else
   {
-    printf(">>Get VCI_ReadBoardInfo error!\n");
+    printf(">>Get VCI_ReadBoardInfo error!");
     return hardware_interface::return_type::ERROR;
   }
   
@@ -327,7 +327,6 @@ return_type MF9025HardwareInterface::stop()
 
 return_type MF9025HardwareInterface::read()
 {
-  //  std::cout << "reading..." << std::endl;
     if((reclen_=VCI_Receive(VCI_USBCAN2,0,ind_,rec_,3000,100))>0)//调用接收函数，如果有数据，进行数据处理显示。
 		{
 			for(int q1=0;q1<reclen_;q1++)

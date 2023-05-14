@@ -13,48 +13,47 @@ test_controller:
     joint1_name: test_joint1
     joint2_name: test_joint2
 wheel_balance_controller:
-    ros__parameters:
-      joint1_name: imu
-      joint2_name: left_9025
-      joint3_name: right_9025
-      joint_Go_LF_name: Go1_LF
-      joint_Go_LB_name: Go1_LB 
-      joint_Go_RF_name: Go1_RF
-      joint_Go_RB_name: Go1_RB
+  ros__parameters:
+    joint1_name: imu
+    joint2_name: left_9025
+    joint3_name: right_9025
+    joint_Go_LF_name: Go1_LF
+    joint_Go_LB_name: Go1_LB
+    joint_Go_RF_name: Go1_RF
+    joint_Go_RB_name: Go1_RB
 
-      body_mg: 35.84 # half body mass
-      
-      fy_left_pid_p: 600.0
-      fy_left_pid_i: 1.0 
-      fy_left_pid_d: 800.0
+    body_mg: 35.84 # half body mass
 
-      fy_right_pid_p: 600.0
-      fy_right_pid_i: 1.0
-      fy_right_pid_d: 800.0
+    fy_left_pid_p: 600.0
+    fy_left_pid_i: 1.0
+    fy_left_pid_d: 800.0
 
-      x_q: 100.0
-      x_dot_q: 1.1
-      theta_q: 100.0
-      theta_dot_q: 1.1
-      fai_q: 100.0
-      fai_dot_q: 1.1
+    fy_right_pid_p: 600.0
+    fy_right_pid_i: 1.0
+    fy_right_pid_d: 800.0
 
-      r1: 1.0
-      r2: 1.0
-                                                                                                                                       
-      k00: -12.5897  # x_dot
-      k01: -5.6684  # theta_dot
-      k02: 1.9141  # fai_dot
-      k03: -9.9619 # x
-      k04: -30.7295 # theta
-      k05: 10.9396   # fai
-                        
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
-      k10: -1.2858   # x_dot
-      k11: 0.3152 # theta_dot
-      k12: 1.9418     # fai_dot
-      k13: -0.9298   # x
-      k14:  0.0544  # theta
-      k15: 16.8561 # fai 
+    x_q: 100.0
+    x_dot_q: 1.1
+    theta_q: 100.0
+    theta_dot_q: 1.1
+    fai_q: 100.0
+    fai_dot_q: 1.1
 
-      machine_status_flag: 1
+    r1: 1.0
+    r2: 1.0
+
+    k00: -13.9205 # x_dot
+    k01: -6.1740 # theta_dot
+    k02: 2.0065 # fai_dot
+    k03: -10.2643 # x
+    k04: -33.7958 # theta
+    k05: 11.0625 # fai
+
+    k10: -1.0957 # x_dot
+    k11: 0.3302 # theta_dot
+    k12: 1.9491 # fai_dot
+    k13: -0.6875 # x
+    k14: 0.1205 # theta
+    k15: 16.8813 # fai
+
+    machine_balance_flag: 1 # 1:balance first 0:stretch leg flag
