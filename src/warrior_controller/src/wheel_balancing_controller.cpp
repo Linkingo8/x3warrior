@@ -140,11 +140,11 @@ controller_interface::return_type WheelBalancingController::init(const std::stri
     /// real leg data L1 L2 L3 L4 L5
     left_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(0.136, 0.2774, 0.2774, 0.136, 0.200);
     left_vmc_ = std::make_shared<VMC>();
-    left_Fy_pid_ = std::make_shared<PID>(0, 0, 0, 0, 0, 0);
+    left_Fy_pid_ = std::make_shared<PID>(POSITION_PID, 20, 20, 0, 0, 0);
 
     right_five_bar_ = std::make_shared<five_bar_linkage::FiveBar>(0.1478, 0.285, 0.285, 0.1478, 0.18);
     right_vmc_ = std::make_shared<VMC>();
-    right_Fy_pid_ = std::make_shared<PID>(0, 0, 0, 0, 0, 0);
+    right_Fy_pid_ = std::make_shared<PID>(POSITION_PID, 20, 20, 0, 0, 0);
 
     try
     {

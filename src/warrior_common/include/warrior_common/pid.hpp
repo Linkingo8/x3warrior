@@ -70,7 +70,7 @@ public:
 		uint32_t intergral_limit,
 		float kp,
 		float ki,
-		float kde);
+		float kd);
 	void Init(uint32_t mode,
 			  uint32_t maxout,
 			  uint32_t intergral_limit,

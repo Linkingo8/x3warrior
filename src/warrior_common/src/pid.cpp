@@ -44,6 +44,7 @@ void PID::pid_reset(float kp,
 
 float PID::pid_calc(float get, float set)
 {
+	
 	get_[NOW] = get;
 	set_[NOW] = set;
 	err_[NOW] = set - get; // set - measure
@@ -74,7 +75,7 @@ float PID::pid_calc(float get, float set)
 		abs_limit(&(delta_out_), MaxOutput_, 0);
 		last_delta_out_ = delta_out_; // update last time
 	}
-
+	std::cout << "Pout = " << pos_out_ << std::endl;	
 	err_[LLAST] = err_[LAST];
 	err_[LAST] = err_[NOW];
 	get_[LLAST] = get_[LAST];
